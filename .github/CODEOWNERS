@@ -1,0 +1,10 @@
+# Code Owners — agentskel
+# Policy: see dependency management standard
+
+# All skeleton files — lead engineer
+/core/                                       @AhmadulHoq
+/roles/                                      @AhmadulHoq
+/VERSION                                     @AhmadulHoq
+
+# CODEOWNERS itself
+/.github/CODEOWNERS                          @AhmadulHoq
