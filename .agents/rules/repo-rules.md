@@ -6,7 +6,7 @@ description: Rules specific to the agentskel repository. Never overwritten by se
 # Repo Rules — agentskel
 
 These rules apply only to this repository. They survive skeleton syncs because
-this file has no upstream template.
+this file has no skeleton template.
 
 ## Architecture Documentation
 
