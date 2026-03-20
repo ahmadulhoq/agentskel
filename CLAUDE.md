@@ -1,0 +1,10 @@
+# agentskel Framework — Claude Code Instructions
+
+Read and follow all rules in `.memory/RULES.md` before starting any task.
+Read `.memory/CONFIG.md` for repo identity and current skeleton version.
+Read `.memory/MAP.md` and `.memory/SYMBOLS.md` for codebase context.
+Read `.memory/RESUME.md` to restore session state and context.
+Read `.memory/LESSONS.md` to avoid repeating past mistakes.
+Read `.memory/SACRED.md` to know what must never be modified.
+Read `.memory/VERSIONS.md` to know the current toolchain and dependency versions.
+Read `.memory/DEPENDENCY_ALERTS.md` and surface any OPEN alerts before starting work.

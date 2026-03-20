@@ -1,0 +1,8 @@
+# [APP_NAME] [PLATFORM] — Antigravity Instructions
+
+Read and follow all rules in `.agent/rules/`.
+Read all skills in `.agent/skills/` — descriptions tell you when each applies.
+
+Before starting any task, execute the `session-start` skill.
+After completing any development task, execute the `task-completion` skill.
+When creating branches, committing, or opening PRs, follow the `git-flow` skill.
