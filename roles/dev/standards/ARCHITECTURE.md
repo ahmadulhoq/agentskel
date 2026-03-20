@@ -1,27 +1,24 @@
 # Architecture Principles
 
-> High-level architecture guidelines for all app codebases.
+> High-level architecture guidelines for all codebases.
+> During setup, trim platform-specific sections to match the project's stack.
 
 ---
 
 ## 1. Layered Architecture
 
-All mobile apps — Android and iOS — follow the same layered architecture. The layers and their rules are platform-agnostic. Each platform implements them using its native tools and patterns.
-
-Platform-specific implementation guides:
-- Android: `standards/ANDROID_ARCHITECTURE.md` (based on [developer.android.com/topic/architecture](https://developer.android.com/topic/architecture))
-- iOS: `standards/IOS_ARCHITECTURE.md`
+All projects follow a layered architecture. The layers and their rules are platform-agnostic. Each platform implements them using its native tools and patterns.
 
 ```
 ┌─────────────────────────────────────────────┐
-│  UI Layer                                   │
-│  Composables / SwiftUI Views                │
-│  ViewModels (screen-level state holders)     │
+│  Presentation Layer                         │
+│  UI / API handlers / CLI                    │
+│  State holders (ViewModels, controllers)    │
 ├─────────────────────────────────────────────┤
 │  Domain Layer  (optional)                   │
-│  Use Cases / Interactors                     │
+│  Use Cases / Services                       │
 │  (use only when logic is complex or shared  │
-│   across multiple ViewModels)               │
+│   across multiple consumers)               │
 ├─────────────────────────────────────────────┤
 │  Data Layer                                 │
 │  Repositories                               │
@@ -29,27 +26,35 @@ Platform-specific implementation guides:
 └─────────────────────────────────────────────┘
 ```
 
-Data flows upward (data layer → UI). Events flow downward (UI → ViewModel → data layer). No layer communicates with a layer above it.
+Data flows upward (data layer → presentation). Events flow downward (presentation → domain → data). No layer communicates with a layer above it.
 
 ### Layer Rules
 
 | Rule | Description |
 |------|-------------|
 | **Dependency direction** | Data flows up; events flow down. No reverse edges. |
-| **Domain layer is optional** | Use it only for complex logic or logic reused by multiple ViewModels. Do not create use cases for every simple operation. |
-| **Data layer is always present** | Every app has repositories. Data sources sit inside the data layer and are never accessed directly from UI or domain layers. |
-| **Domain has no framework deps** | Use cases are pure Kotlin — no Android SDK, no UIKit. |
-| **Data hides implementation** | The UI never knows if data comes from network, database, or cache — that is the repository's concern. |
-| **Screen-level state → ViewModel** | One ViewModel per navigation destination. Survives config changes. Accesses data/domain layers. |
-| **Local UI state → native local state** | Toggle, animation, keyboard visibility — use `remember`/`@State`. No ViewModel needed. |
-| **ViewModels don't know about Views** | ViewModels expose immutable state; Views observe and render. |
+| **Domain layer is optional** | Use it only for complex logic or logic reused by multiple consumers. Do not create use cases for every simple operation. |
+| **Data layer is always present** | Every project has repositories. Data sources sit inside the data layer and are never accessed directly from the presentation layer. |
+| **Domain has no framework deps** | Use cases and domain services are pure language code — no platform SDK imports. |
+| **Data hides implementation** | The presentation layer never knows if data comes from network, database, or cache — that is the repository's concern. |
 | **Single Source of Truth** | Every data type has exactly one owner. Only the owner mutates it; others observe the immutable form. |
 
 ---
 
 ## 2. Module Structure
 
-### 2.1 Android (Gradle Modules)
+Organise code into modules with clear boundaries. The naming conventions below are platform-specific; the principles are universal.
+
+### Principles (all platforms)
+
+- **Feature modules are independent** — they never depend on each other.
+- **Data modules are independent** — they never depend on each other.
+- **Dependency direction**: feature → data → core. Never reverse.
+- **Contracts module** (interfaces/protocols) is pure abstractions — no implementations, no dependencies.
+- **Cross-module communication** uses typed interfaces injected at the composition root, not shared mutable state or event buses.
+
+<!-- PLATFORM: Android -->
+### Android (Gradle Modules)
 
 ```
 :app                          → Application shell, navigation, DI root
@@ -57,8 +62,10 @@ Data flows upward (data layer → UI). Events flow downward (UI → ViewModel �
 :core:[name]                  → Shared infrastructure (e.g., :core:network, :core:auth)
 :lib:[name]                   → Internal libraries/engines (e.g., :lib:analytics-engine)
 ```
+<!-- END PLATFORM: Android -->
 
-### 2.2 iOS (Swift Packages / Targets)
+<!-- PLATFORM: iOS -->
+### iOS (Swift Packages / Targets)
 
 ```
 App                           → Application shell, navigation, DI root
@@ -66,161 +73,283 @@ Feature/[Name]                → Self-contained features
 Core/[Name]                   → Shared infrastructure
 Lib/[Name]                    → Internal libraries/engines
 ```
+<!-- END PLATFORM: iOS -->
 
-### Module Dependency Rules
+<!-- PLATFORM: Backend -->
+### Backend
 
-| Dependency | Allowed? |
-|------------|----------|
-| `:feature` → `:data` | Yes |
-| `:feature` → `:core` / `:lib` | Yes |
-| `:feature` → `:feature` | **No** — feature modules are independent |
-| `:data` → `:core:model` / `:core:contracts` | Yes |
-| `:data` → `:data` | **No** — data modules are independent |
-| `:data` → `:feature` | **No** — never reverse the dependency |
-| `:core:contracts` → anything | **No** — contracts module is pure interfaces only |
-| `:lib` → anything | **No** — lib modules are fully standalone |
+```
+cmd/ or src/                  → Application entry points
+internal/ or app/             → Business logic (features, services)
+pkg/ or lib/                  → Shared libraries
+infrastructure/               → Database, messaging, external service clients
+```
 
-**Standalone-app principle:** Every feature module must be buildable as an independent app when paired with `:core:base` and stub data implementations. This is enforced by maintaining `:demo:[feature-name]` application modules. If a feature cannot be extracted into a demo app, it has hidden coupling that must be resolved.
+Adapt to your language's conventions (Go packages, Python packages, Node.js modules, Java packages).
+<!-- END PLATFORM: Backend -->
 
-**Cross-module communication:** Feature and data modules must not communicate via shared mutable state or event buses. Use typed interfaces defined in `:core:contracts`, injected at the `:app` level via dependency injection.
+<!-- PLATFORM: Web -->
+### Web (Frontend)
+
+```
+src/
+  app/                        → Application shell, routing, providers
+  features/[name]/            → Self-contained features (components, hooks, state)
+  shared/                     → Shared components, utilities, types
+  lib/                        → Internal libraries
+```
+<!-- END PLATFORM: Web -->
 
 ---
 
 ## 3. Dependency Injection
 
+### Principles (all platforms)
+
+- Prefer constructor injection over service locators.
+- Dependencies are injected as abstractions (interfaces/protocols), not concrete types.
+- The composition root (app entry point) wires concrete implementations.
+- Scoping: app-wide singletons for shared state, request/screen-scoped for transient state.
+
+<!-- PLATFORM: Android -->
 ### Android: Hilt
 
 - All injectable classes use constructor injection.
 - Module-level `@Module` classes provide external dependencies.
 - Scoping: `@Singleton` for app-wide, `@ViewModelScoped` for ViewModel-bound.
+<!-- END PLATFORM: Android -->
 
+<!-- PLATFORM: iOS -->
 ### iOS: Constructor Injection / Manual Composition Root
 
-- Dependencies injected via protocol abstractions (constructor injection).
+- Dependencies injected via protocol abstractions.
 - Composition root (app entry point) wires concrete implementations.
 - `@EnvironmentObject` for app-wide dependencies passed through the SwiftUI hierarchy — use sparingly.
-- No service locator pattern — always explicit injection.
+- No service locator pattern.
+<!-- END PLATFORM: iOS -->
+
+<!-- PLATFORM: Backend -->
+### Backend
+
+- Use the framework's native DI (e.g., Spring DI, NestJS providers, Go wire, Python dependency-injector).
+- If no framework DI: manual constructor injection at the composition root.
+- Avoid global singletons and mutable module-level state.
+<!-- END PLATFORM: Backend -->
 
 ---
 
 ## 4. Navigation
 
+<!-- PLATFORM: Android -->
 ### Android
 
 - Single-Activity architecture with **Compose Navigation**.
 - Feature modules define their own nav graphs as `NavGraphBuilder` extensions.
 - Type-safe routes using Compose Navigation 2.8+ serializable objects.
 - Deep links registered in the main nav graph.
+<!-- END PLATFORM: Android -->
 
+<!-- PLATFORM: iOS -->
 ### iOS
 
 - **`NavigationStack`**-based navigation (iOS 16+).
 - Feature modules own their navigation paths.
 - `NavigationPath` for programmatic / deep-link navigation.
-- No Coordinator pattern — SwiftUI navigation is declarative and self-contained.
+<!-- END PLATFORM: iOS -->
+
+<!-- PLATFORM: Web -->
+### Web
+
+- Use the framework's native router (React Router, Next.js App Router, Vue Router, Angular Router).
+- Route definitions co-located with feature modules.
+- Lazy-load feature routes for code splitting.
+<!-- END PLATFORM: Web -->
+
+<!-- PLATFORM: Backend -->
+### Backend
+
+- Route definitions co-located with feature/handler modules.
+- Use the framework's native routing (Express/NestJS routers, Go mux, Django urlpatterns, FastAPI routers).
+- API versioning via URL prefix (`/api/v1/`) or header — see `API_CONTRACT.md`.
+<!-- END PLATFORM: Backend -->
 
 ---
 
 ## 5. Networking
 
-- Single API client abstraction per app (e.g., `ApiService`).
+- Single API client abstraction per app/service.
 - Requests and responses use dedicated model classes (not domain models).
 - Mappers convert API models ↔ domain models.
-- All network calls handle: success, error, loading, and offline states.
+- All network calls handle: success, error, loading, and timeout states.
 - Retry logic uses exponential backoff with configurable limits.
 
 ---
 
 ## 6. Data Persistence
 
-- **Room** (Android) / **SwiftData** (iOS 17+) or **Core Data** (iOS 16 and below) for structured local storage.
-- **DataStore/UserDefaults** for key-value preferences.
-- **Encrypted storage** for sensitive data (tokens, credentials).
+### Principles (all platforms)
+
 - Repository pattern abstracts storage implementation from domain.
+- Encrypted storage for sensitive data (tokens, credentials).
+- Separate config/preferences storage from structured data storage.
+
+<!-- PLATFORM: Android -->
+### Android
+
+- **Room** for structured local storage.
+- **DataStore** for key-value preferences.
+- **EncryptedSharedPreferences** / **security-crypto** for sensitive data.
+<!-- END PLATFORM: Android -->
+
+<!-- PLATFORM: iOS -->
+### iOS
+
+- **SwiftData** (iOS 17+) or **Core Data** for structured local storage.
+- **UserDefaults** for key-value preferences.
+- **Keychain** for sensitive data.
+<!-- END PLATFORM: iOS -->
+
+<!-- PLATFORM: Backend -->
+### Backend
+
+- Use an ORM or query builder appropriate to the language (SQLAlchemy, Prisma, GORM, Room, etc.).
+- Migrations managed via version-controlled migration files.
+- Connection pooling for database access.
+- Never store secrets in the database — use a secrets manager or environment variables.
+<!-- END PLATFORM: Backend -->
 
 ---
 
-## 7. State Management — UDF (Unidirectional Data Flow)
+## 7. State Management
 
-All ViewModels follow strict UDF: data flows in one direction only — from the data layer up to the UI. The UI sends events down; the ViewModel produces state up. No circular paths.
+### Principles (all platforms)
+
+- **Unidirectional data flow (UDF):** Data flows in one direction. State holders produce state; consumers observe and render. No circular dependencies.
+- **Single Source of Truth:** Each piece of state has exactly one owner.
+- **Immutable state:** Expose immutable state objects. Mutations happen through defined actions/events only.
+
+<!-- PLATFORM: Android / iOS -->
+### Mobile (Android / iOS)
 
 ```
 User Action → UI Event → ViewModel.onEvent() → State update → UI re-renders
 ```
 
-### Screen-level state (ViewModel)
-
-Used when state must survive configuration changes, is shared across composables/views on the screen, or requires access to the data/domain layer.
-
+- One ViewModel/state holder per screen or navigation destination.
 - ViewModels expose a **single immutable state object** per screen.
 - UI never writes state directly — it sends events.
-- Side effects (navigation, toasts, dialogs) are **one-shot** — not persistent state fields.
-- ViewModels never hold references to Views, Composables, Activities, or UIViewControllers.
-- ViewModels never call other ViewModels.
+- Side effects (navigation, toasts) are one-shot — not persistent state fields.
+- ViewModels never hold references to Views or UI framework types.
 
-### Local UI state (no ViewModel needed)
+#### Local UI state (no ViewModel needed)
 
-Used for state that is purely presentational, scoped to a single component, and does not need to survive configuration changes or access any data layer.
+For state that is purely presentational and scoped to a single component:
 
 | Platform | Tool |
 |----------|------|
 | Android (Compose) | `remember { mutableStateOf(...) }` |
 | iOS (SwiftUI) | `@State` |
+<!-- END PLATFORM: Android / iOS -->
 
-Examples: dropdown open/closed, text field focus, animation progress, toggle within a single component.
+<!-- PLATFORM: Backend -->
+### Backend
 
-```kotlin
-// Good: Single state object for screen-level state
-data class FeatureUiState(
-    val items: List<Item> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null
-)
+- Request-scoped state: passed through the handler chain, not stored globally.
+- Application state: managed via DI-scoped singletons (database connections, config, caches).
+- Avoid mutable global state — it breaks under concurrency.
+<!-- END PLATFORM: Backend -->
 
-// Good: Local state — no ViewModel needed
-var isDropdownExpanded by remember { mutableStateOf(false) }
+<!-- PLATFORM: Web -->
+### Web (Frontend)
 
-// Bad: Scattered ViewModel state
-val items = MutableStateFlow<List<Item>>(emptyList())
-val isLoading = MutableStateFlow(false)
-val error = MutableStateFlow<String?>(null)
-```
+- Use the framework's recommended state management (React Context + hooks, Vuex/Pinia, NgRx, Zustand, etc.).
+- Server state (API data) managed separately from client state (UI state).
+- Prefer derived/computed state over duplicated state.
+<!-- END PLATFORM: Web -->
 
 ---
 
-## 8. Background Work
+## 8. Background Work & Concurrency
 
-| Platform | Tool | Use For |
-|----------|------|---------|
-| Android  | WorkManager | Deferred, guaranteed work (sync, upload) |
-| Android  | AlarmManager | Exact-time triggers (scheduled notifications) |
-| Android  | Foreground Service | Long-running user-visible work |
-| iOS      | BGTaskScheduler | Background fetch and processing |
-| iOS      | UNNotificationCenter | Scheduled notifications |
+### Principles (all platforms)
 
-### Battery Considerations
+- Never block the main thread / event loop.
+- Use platform-recommended concurrency primitives.
+- Long-running work must support cancellation and timeout.
 
-- Minimize wake-ups. Batch background work where possible.
-- Use platform-recommended APIs. No custom polling loops.
-- Exact-time alarm scheduling requires exact-time alarms — this is an accepted exception when needed.
-- See `.memory/SACRED.md` for device-specific workarounds that must be preserved.
+<!-- PLATFORM: Android -->
+### Android
+
+| Tool | Use For |
+|------|---------|
+| WorkManager | Deferred, guaranteed work (sync, upload) |
+| AlarmManager | Exact-time triggers (scheduled notifications) |
+| Foreground Service | Long-running user-visible work |
+| Coroutines | Async operations within app lifecycle |
+
+Battery: minimize wake-ups, batch background work, use platform-recommended APIs.
+<!-- END PLATFORM: Android -->
+
+<!-- PLATFORM: iOS -->
+### iOS
+
+| Tool | Use For |
+|------|---------|
+| BGTaskScheduler | Background fetch and processing |
+| UNNotificationCenter | Scheduled notifications |
+| Swift Concurrency (async/await) | Async operations |
+
+Battery: minimize wake-ups, use BGTaskScheduler over custom timers.
+<!-- END PLATFORM: iOS -->
+
+<!-- PLATFORM: Backend -->
+### Backend
+
+- Use async I/O where available (asyncio, goroutines, Node.js event loop, virtual threads).
+- Background jobs via a job queue (Celery, Bull, Sidekiq, or cloud-native: SQS, Cloud Tasks).
+- Scheduled tasks via cron or the framework's scheduler — not sleep loops.
+- Graceful shutdown: drain in-flight requests and complete running jobs before exit.
+<!-- END PLATFORM: Backend -->
 
 ---
 
 ## 9. Security
 
-- **Credentials** stored in platform keychain/keystore only.
-- **API keys** provided via build configuration, never hardcoded.
-- **Network** traffic over HTTPS only. Certificate pinning for auth endpoints.
-- **Input validation** at every trust boundary (API responses, user input, deep links).
+- **Credentials** stored in platform keychain/keystore/secrets manager only.
+- **API keys** provided via build configuration or environment variables, never hardcoded.
+- **Network** traffic over HTTPS only. Certificate pinning for auth endpoints (mobile).
+- **Input validation** at every trust boundary (API responses, user input, deep links, request bodies).
 - Refer to `security-non-negotiables.md` for the full list.
 
 ---
 
 ## 10. Performance Guidelines
 
-- **Main thread** is sacred. No blocking I/O, no heavy computation.
+- **Main thread / event loop** is sacred. No blocking I/O, no heavy computation.
+- **Memory** leaks are P0 bugs. Use platform leak detection tools.
+- **Startup time:** minimize — lazy-load what is not needed immediately.
+- Profile before and after significant changes.
+
+<!-- PLATFORM: Android / iOS -->
+### Mobile
+
 - **UI rendering** target: 60fps minimum. Profile with platform tools.
 - **App startup** must complete within 2 seconds on mid-range devices.
-- **Memory** leaks are P0 bugs. Use platform leak detection tools.
-- **Image loading** uses caching libraries (Coil/Glide on Android, Kingfisher on iOS).
+- **Image loading** uses caching libraries (Coil/Glide on Android, Kingfisher/SDWebImage on iOS).
+<!-- END PLATFORM: Android / iOS -->
+
+<!-- PLATFORM: Backend -->
+### Backend
+
+- **Response time** targets: define per endpoint (p50, p95, p99).
+- **Database queries:** avoid N+1, use indexes, monitor slow query logs.
+- **Connection pooling** for databases and external HTTP clients.
+<!-- END PLATFORM: Backend -->
+
+<!-- PLATFORM: Web -->
+### Web
+
+- **Core Web Vitals** (LCP, FID, CLS) as performance targets.
+- **Bundle size:** monitor and enforce budgets. Code-split by route.
+- **Image loading:** use lazy loading, responsive images, and CDN.
+<!-- END PLATFORM: Web -->

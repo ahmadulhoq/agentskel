@@ -1,1 +1,0 @@
-../../core/rules/core-behavior.md

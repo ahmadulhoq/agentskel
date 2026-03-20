@@ -37,7 +37,7 @@ If you are not sure whether the current user is authorized, ask before proceedin
      > **B)** Read from GitHub directly (requires internet; will not see any local changes that haven't been pushed)"
    - If the user chooses **A** — run the clone, then use the local path as `[SKELETON_PATH]`.
    - If the user chooses **B** — use the `gh api` commands in the [GitHub Fetch Reference](#github-fetch-reference) section below. Confirm `gh auth status` passes before continuing.
-4. Read the current skeleton version from `[SKELETON_PATH]/agent-hq/VERSION`.
+4. Read the current skeleton version from `[SKELETON_PATH]/VERSION`.
 5. Read the project's recorded version from `.memory/CONFIG.md` (`Skeleton Version` field).
 6. If `.memory/CONFIG.md` does not exist, the project is on a pre-v3.5 setup. Note this — a migration step is required (see Step 5b).
 7. If versions match — no sync needed. Confirm to the user and stop.
@@ -69,7 +69,7 @@ the project's copy is outdated, it may reference wrong paths or miss migration s
 
 ## Step 1 — Identify Changes
 
-1. Read `[SKELETON_PATH]/agent-hq/CHANGELOG.md`.
+1. Read `[SKELETON_PATH]/CHANGELOG.md`.
 2. Extract all entries **after** the project's recorded version up to and including
    the current version (e.g. if project is on 1.2 and skeleton is at 1.5, extract
    entries for 1.3, 1.4, and 1.5).
@@ -111,6 +111,7 @@ Apply all **Apply** and **Adapt** decisions:
 
 - Updated workflow templates: `.agents/workflows/`
 - Updated rule templates: `.agents/rules/`
+- Updated standard templates: `.agents/standards/` (trim platform sections as with setup)
 - Updated skill templates: `.agents/skills/`
 - Updated `CLAUDE.md` template: project root `CLAUDE.md`
 - Updated `CODEOWNERS` pattern: `.github/CODEOWNERS`
@@ -119,8 +120,8 @@ Read individual template files from the appropriate `[SKELETON_PATH]` directory:
 - Memory templates: `[SKELETON_PATH]/core/memory/[FILENAME]`
 - Rules: `[SKELETON_PATH]/core/rules/[FILENAME]`
 - Procedural skills: `[SKELETON_PATH]/core/skills/[SKILL_NAME]/SKILL.md`
+- Domain skills: `[SKELETON_PATH]/roles/dev/skills/[SKILL_NAME]/SKILL.md`
 - Workflows: `[SKELETON_PATH]/roles/dev/workflows/[FILENAME]`
-- Claude Code skill stubs: `[SKELETON_PATH]/core/claude-skills/` and `[SKELETON_PATH]/roles/dev/claude-skills/`
 - Standards: `[SKELETON_PATH]/roles/dev/standards/[FILENAME]`
 - Entry point templates: `[SKELETON_PATH]/core/CLAUDE.md.template`, `[SKELETON_PATH]/core/GEMINI.md.template`
 
@@ -247,8 +248,8 @@ Use these commands only when no local skeleton clone is available and the user c
 
 | File | Command |
 |------|---------|
-| `VERSION` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/agent-hq/VERSION --jq '.content' \| base64 -d` |
-| `CHANGELOG.md` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/agent-hq/CHANGELOG.md --jq '.content' \| base64 -d` |
+| `VERSION` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/VERSION --jq '.content' \| base64 -d` |
+| `CHANGELOG.md` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/CHANGELOG.md --jq '.content' \| base64 -d` |
 | Memory template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/memory/[FILENAME] --jq '.content' \| base64 -d` |
 | Rule template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/rules/[FILENAME] --jq '.content' \| base64 -d` |
 | Workflow template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/roles/dev/workflows/[FILENAME] --jq '.content' \| base64 -d` |

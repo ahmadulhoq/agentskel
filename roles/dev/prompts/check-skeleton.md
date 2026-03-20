@@ -9,7 +9,7 @@ trigger: "Check if skeleton is current" / "Check skeleton version" / "Skeleton u
 
 Before starting, read:
 - `.memory/CONFIG.md` — note `Skeleton Version` and `Last Skeleton Check`
-- `[SKELETON_PATH]/agent-hq/VERSION` — the current skeleton version
+- `[SKELETON_PATH]/VERSION` — the current skeleton version
 
 ## Goal
 

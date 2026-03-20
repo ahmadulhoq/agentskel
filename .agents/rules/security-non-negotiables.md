@@ -1,1 +1,0 @@
-../../core/rules/security-non-negotiables.md

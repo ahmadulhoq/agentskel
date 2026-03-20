@@ -42,10 +42,8 @@ modules already marked complete. Record the current HEAD commit SHA in
    a. Identify the platform and primary tech stack from build configuration files
       (e.g., `build.gradle.kts` / `build.gradle` for Android, `Package.swift` for iOS,
       `pubspec.yaml` for Flutter, `package.json` for React Native).
-   b. Read the matching architecture standard for this project's platform:
-      - Android: the project's Android architecture standard
-      - iOS: the project's iOS architecture standard
-      - If no matching standard exists: proceed to step c, then create one afterward.
+   b. Read the project's architecture standard (`.agents/standards/ARCHITECTURE.md`).
+      If no architecture standard exists: proceed to step c, then create one afterward.
    c. Web-search for current best practices, architecture patterns, and common anti-patterns
       for the detected stack. Cover: layered architecture, DI, async/concurrency,
       state management, navigation, and testing. Use only sources less than 2 years old.

@@ -1,5 +1,0 @@
----
-description: Code quality standards, SOLID principles, design philosophy, and UX requirements. Use when writing, modifying, or refactoring application code.
----
-
-Read and follow the full skill at `.agents/skills/senior-developer/SKILL.md`.

@@ -1,6 +1,8 @@
 # Dependency & Toolchain Management
-> Last updated: 2026-03-12
-> Applies to: all repositories (Android, iOS, Backend)
+
+> Last updated: 2026-03-19
+> Applies to: all repositories
+> During setup, trim platform-specific sections to match the project's stack.
 
 This document defines how dependencies and toolchain versions are managed, updated, and approved. The goal is controlled modernisation — staying current without surprising the team.
 
@@ -8,7 +10,7 @@ This document defines how dependencies and toolchain versions are managed, updat
 
 ## Principles
 
-- **One thing at a time.** Never upgrade Gradle + AGP + Kotlin in a single PR. Each upgrade is its own PR so failures are isolated.
+- **One thing at a time.** Never upgrade multiple interdependent tools in a single PR. Each upgrade is its own PR so failures are isolated.
 - **CI is the gate.** No upgrade merges unless CI passes completely — lint, tests, and build.
 - **Structural enforcement over process.** Lead engineer approval is enforced by GitHub CODEOWNERS on version-controlling files, not by asking nicely.
 - **Agents propose, humans approve.** An agent may prepare and open an upgrade PR. It must never merge it.
@@ -23,9 +25,8 @@ This document defines how dependencies and toolchain versions are managed, updat
 Library bugfix releases. No new APIs, no behaviour changes, no compatibility risk.
 
 Examples:
-- `retrofit 2.9.0 → 2.9.1`
-- `coil 2.5.0 → 2.5.1`
-- Kotlin `2.0.20 → 2.0.21`
+- A library patch release (e.g., `2.9.0 → 2.9.1`)
+- A language patch release (e.g., `3.11.4 → 3.11.5`)
 
 Process: normal PR, any reviewer, merge after CI passes.
 
@@ -36,11 +37,9 @@ Process: normal PR, any reviewer, merge after CI passes.
 Minor version bumps. New APIs available but no breaking changes. Low risk but deserves a second set of eyes.
 
 Examples:
-- `gradle 8.5 → 8.6`
-- `AGP 8.2 → 8.3`
-- Kotlin `2.0 → 2.1`
-- `compileSdk 34 → 35`
-- Swift package minor bumps
+- Framework minor releases (e.g., `8.5 → 8.6`)
+- Language minor releases (e.g., `2.0 → 2.1`)
+- Build tool minor bumps
 
 Process: PR opened by agent or dev, tech lead reviews and approves, merge after CI passes. Batched into a monthly "dependency sprint".
 
@@ -51,16 +50,14 @@ Process: PR opened by agent or dev, tech lead reviews and approves, merge after 
 Major version bumps or upgrades that change build behaviour, require code migration, or carry compatibility risk between interdependent tools.
 
 Examples:
-- Kotlin `1.x → 2.x`
-- AGP `7.x → 8.x`
-- Gradle `7.x → 8.x`
-- `targetSdk` bump (new runtime behaviour — background limits, permission dialogs)
-- Swift major version
-- Xcode major version
+- Language major version (e.g., `1.x → 2.x`)
+- Build system major version
+- Framework major version with breaking API changes
+- Runtime target bump that changes runtime behaviour
 
 **Approval required: lead engineer sign-off before merge.**
 
-Enforcement: CODEOWNERS on the files that control these versions (see below). GitHub will not allow merge without the designated lead engineer's approval.
+Enforcement: CODEOWNERS on the files that control these versions. GitHub will not allow merge without the designated lead engineer's approval.
 
 Process:
 1. Agent or dev opens a dedicated upgrade PR.
@@ -73,32 +70,43 @@ Process:
 
 ### Tier 4 — Business Impact (lead engineer + PM required)
 
-Changes that alter which devices the app supports or affect production behaviour at a platform policy level.
+Changes that alter which devices/runtimes the app supports or affect production behaviour at a platform policy level.
 
 Examples:
-- `minSdk` bump (drops older Android versions — reduces addressable install base)
-- iOS deployment target bump (drops older iOS versions)
-- Google Play `targetSdk` deadline compliance
+- Minimum supported version bump (drops older clients — reduces addressable user base)
+- Platform compliance deadlines (e.g., Google Play targetSdk, Apple deployment target)
+- Dropping support for a runtime version (e.g., Node.js 18 → 20 only)
 
-These require PM acknowledgement because they affect reach/installs. Lead engineer prepares the analysis (% of users affected); PM signs off.
+These require PM acknowledgement because they affect reach. Lead engineer prepares the analysis; PM signs off.
 
 ---
 
-## Compatibility Matrix (Android)
+## Compatibility Matrices
 
-Gradle, AGP, and Kotlin are tightly coupled. Always check the official matrix before upgrading any of the three:
+When upgrading interdependent toolchain components, always check the official compatibility matrix before upgrading any of them. Common examples:
 
+<!-- PLATFORM: Android -->
+### Android: Gradle / AGP / Kotlin
+
+Gradle, AGP, and Kotlin are tightly coupled. Always check the official matrix:
 **https://developer.android.com/build/releases/gradle-plugin#updating-gradle**
 
-| AGP | Min Gradle | Min Kotlin |
-|-----|-----------|-----------|
-| 8.4 | 8.6 | 1.9 |
-| 8.5 | 8.7 | 1.9 |
-| 8.6 | 8.7 | 2.0 |
-
-*(Always verify against the official table — this snapshot may be outdated.)*
-
 Upgrade order when multiple need bumping: **Gradle wrapper → AGP → Kotlin**.
+
+*(Always verify against the official table — any snapshot here may be outdated.)*
+<!-- END PLATFORM: Android -->
+
+<!-- PLATFORM: iOS -->
+### iOS: Xcode / Swift / iOS SDK
+
+Xcode versions bundle specific Swift compiler and iOS SDK versions. Check Apple's release notes to confirm compatibility.
+<!-- END PLATFORM: iOS -->
+
+<!-- PLATFORM: Backend -->
+### Backend
+
+Check framework compatibility with runtime versions (e.g., Django + Python version matrix, Spring Boot + Java version matrix, NestJS + Node.js version matrix).
+<!-- END PLATFORM: Backend -->
 
 ---
 
@@ -106,27 +114,28 @@ Upgrade order when multiple need bumping: **Gradle wrapper → AGP → Kotlin**.
 
 Each repository must have a `.github/CODEOWNERS` file. Ownership is split into two tiers:
 
-- **Toolchain files** — lead engineer only. These control the build system itself (Gradle, AGP, Kotlin, SDK levels). Changes here are Tier 2–3 by definition.
+- **Toolchain files** — lead engineer only. These control the build system itself. Changes here are Tier 2–3 by definition.
 - **Project dependency files** — lead engineer + leads team. Any approved lead may review library version bumps.
 
 Approval is **either/or**: one approval from any listed owner satisfies the requirement (enforced by branch protection "require 1 CODEOWNERS approval").
 
+<!-- PLATFORM: Android -->
 ### Android
 
 ```
 # Toolchain — lead engineer only
 /gradle/wrapper/gradle-wrapper.properties    @[lead-engineer]
-/buildSrc/src/main/java/BuildInfo.kt         @[lead-engineer]
 /build.gradle                                @[lead-engineer]
 
 # Project dependencies — lead engineer or any team lead
-/gradle/libs.versions.toml                   @[lead-engineer] @[org]/[android-leads-team]
-/buildSrc/src/main/java/Dependencies.kt      @[lead-engineer] @[org]/[android-leads-team]
+/gradle/libs.versions.toml                   @[lead-engineer] @[org]/[leads-team]
 
 # CODEOWNERS itself — leads team
-/.github/CODEOWNERS                          @[org]/[android-leads-team]
+/.github/CODEOWNERS                          @[org]/[leads-team]
 ```
+<!-- END PLATFORM: Android -->
 
+<!-- PLATFORM: iOS -->
 ### iOS
 
 ```
@@ -134,20 +143,40 @@ Approval is **either/or**: one approval from any listed owner satisfies the requ
 /.xcode-version                              @[lead-engineer]
 
 # Project dependencies — lead engineer or any team lead
-/Package.swift                               @[lead-engineer] @[org]/[ios-leads-team]
-/Podfile                                     @[lead-engineer] @[org]/[ios-leads-team]  # if using CocoaPods
+/Package.swift                               @[lead-engineer] @[org]/[leads-team]
+/Podfile                                     @[lead-engineer] @[org]/[leads-team]
 
 # CODEOWNERS itself — leads team
-/.github/CODEOWNERS                          @[org]/[ios-leads-team]
+/.github/CODEOWNERS                          @[org]/[leads-team]
+```
+<!-- END PLATFORM: iOS -->
+
+<!-- PLATFORM: Backend / Web -->
+### Backend / Web
+
+```
+# Toolchain and dependencies — lead engineer or any team lead
+/package.json                                @[lead-engineer] @[org]/[leads-team]
+/package-lock.json                           @[lead-engineer] @[org]/[leads-team]
+/requirements.txt                            @[lead-engineer] @[org]/[leads-team]
+/pyproject.toml                              @[lead-engineer] @[org]/[leads-team]
+/go.mod                                      @[lead-engineer] @[org]/[leads-team]
+/Gemfile                                     @[lead-engineer] @[org]/[leads-team]
+
+# CODEOWNERS itself — leads team
+/.github/CODEOWNERS                          @[org]/[leads-team]
 ```
 
-Branch protection must be configured to require CODEOWNERS approval before merge. This is set in GitHub repo Settings → Branches → Branch protection rules → "Require review from Code Owners".
+Trim to the files relevant to the project's language.
+<!-- END PLATFORM: Backend / Web -->
+
+Branch protection must be configured to require CODEOWNERS approval before merge.
 
 ---
 
 ## Release Notes Policy
 
-Every tracked dependency must have its official release notes URL recorded in `.memory/VERSIONS.md`. The same URL should be added as a comment in the version source file (`libs.versions.toml` or `Dependencies.kt`) so developers see it inline.
+Every tracked dependency must have its official release notes URL recorded in `.memory/VERSIONS.md`.
 
 **Before any upgrade decision — Tier 1 through Tier 4 — the agent must read the release notes for the target version.** Do not rely on version numbers alone. Release notes reveal behaviour changes, deprecations, migration requirements, and security fixes that are not visible from the version bump itself.
 
@@ -168,7 +197,7 @@ The agent never decides a major upgrade is "safe" on its own. The plan is the de
 
 `-alpha`, `-beta`, `-rc`, `-canary`, `-snapshot`, `-nightly`, `-dev`, `-eap`, `-milestone`
 
-This applies equally to toolchain versions (Gradle, AGP, Kotlin) and library versions. If only a pre-release is available for a given library, stay on the current stable version and note it in `VERSIONS.md`.
+This applies equally to toolchain and library versions. If only a pre-release is available, stay on the current stable version and note it in `VERSIONS.md`.
 
 ---
 
@@ -202,7 +231,7 @@ Use **WebFetch** to the release notes URL already recorded in `VERSIONS.md` for 
 
 ## Dependency Tracking in VERSIONS.md
 
-`VERSIONS.md` is the source of truth for all tracked dependencies. It must stay in sync with the actual version files (`libs.versions.toml`, `Dependencies.kt`, etc.).
+`VERSIONS.md` is the source of truth for all tracked dependencies. It must stay in sync with the actual version files in the project.
 
 ### Schema
 
@@ -227,13 +256,11 @@ Run the `sync-versions` workflow after any PR that modifies version files:
 - Dependency removed → remove the row
 - Version bumped → update `Current` and `Last Updated`
 
-**Future automation:** A GitHub Actions workflow triggered on changes to `libs.versions.toml` / `Dependencies.kt` can run `sync-versions` automatically in CI, eliminating the manual step.
-
 ---
 
 ## Dependency Version History (Legal Compliance)
 
-Each project must maintain a `DEPENDENCY_HISTORY.md` in `.memory/`. This is an append-only legal record of which SDK versions were active at each app release.
+Each project must maintain a `DEPENDENCY_HISTORY.md` in `.memory/`. This is an append-only legal record of which SDK versions were active at each release.
 
 **Populated by:** the `cut-release` workflow — one entry per release, immediately before opening the release PR.
 
@@ -242,8 +269,7 @@ Each project must maintain a `DEPENDENCY_HISTORY.md` in `.memory/`. This is an a
 ## vX.Y.Z (Build: XXXXXXXX | YYYY-MM-DD)
 | Dependency | Version |
 |---|---|
-| Kotlin | 2.0.20 |
-| Firebase BOM | 34.0.0 |
+| [name] | [version] |
 ```
 
 **Rules:**
@@ -257,11 +283,11 @@ Each project must maintain a `DEPENDENCY_HISTORY.md` in `.memory/`. This is an a
 
 - **Read release notes first.** Before proposing or executing any upgrade, read the official release notes for the target version. Record the URL in `VERSIONS.md`.
 - **Stable only.** Never target alpha, beta, RC, canary, snapshot, or nightly versions.
-- **Discover** available upgrades via `check-dependencies` workflow (WebFetch to known URLs) — do not blindly run `dependencyUpdates`.
+- **Discover** available upgrades via `check-dependencies` workflow (WebFetch to known URLs) — do not blindly run package manager update commands.
 - **Plan before acting (Tier 3/4).** For major upgrades, write a full upgrade plan (breaking changes, migration steps, compatibility matrix, risk assessment) and get human approval before touching any file.
 - **Prepare** upgrade PRs on a dedicated branch (`dep-update-[package]-[version]`).
 - **Run** the full build and test suite before opening the PR.
-- **Verify** that the app builds, tests pass, and no runtime regressions are introduced. Do not open the PR until this is confirmed.
+- **Verify** that the project builds, tests pass, and no regressions are introduced. Do not open the PR until this is confirmed.
 - **Document** in the PR body: current version, new version, release notes link, compatibility matrix check, migration steps applied, test results.
 - **Tag** the PR with the appropriate tier label: `dep-patch`, `dep-minor`, `dep-major-technical`, `dep-major-business`.
 - **Never merge** — not even Tier 1 patches. Always wait for human approval.
@@ -277,10 +303,11 @@ Each project must maintain a `DEPENDENCY_HISTORY.md` in `.memory/`. This is an a
 | Tier 1 (patch) | Monthly batch |
 | Tier 2 (minor) | Quarterly — aligned with release planning |
 | Tier 3 (major technical) | Per release cycle — one major upgrade per release |
-| Tier 4 (business impact) | Only when necessary or Google/Apple-mandated |
+| Tier 4 (business impact) | Only when necessary or platform-mandated |
 
 ---
 
+<!-- PLATFORM: Android -->
 ## Version Catalog (Android)
 
 All Android dependency versions **must** live in `libs.versions.toml`. No version strings hardcoded in individual `build.gradle.kts` files.
@@ -289,10 +316,7 @@ All Android dependency versions **must** live in `libs.versions.toml`. No versio
 [versions]
 kotlin = "2.0.21"
 agp = "8.5.2"
-gradle = "8.7"
 compose-bom = "2024.10.00"
-hilt = "2.52"
-room = "2.6.1"
 
 [libraries]
 # reference versions above, never hardcode here
@@ -303,3 +327,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ```
 
 A single-line diff in `libs.versions.toml` is all that's needed for a dependency upgrade — this makes PRs minimal and reviewable.
+<!-- END PLATFORM: Android -->

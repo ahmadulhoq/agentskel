@@ -53,7 +53,7 @@ The blueprint contains:
 - **Domain specs** — business logic, API contracts, edge cases
 - **Parity matrix** — tracks feature consistency across platforms
 - **Knowledge Bus** — cross-project notifications when one agent changes something that affects others
-- **Domain skills** — specialist agent knowledge (e.g. "prayer time calculation expert")
+- **Domain skills** — specialist agent knowledge (e.g. "payment processing expert", "scheduling expert")
 
 **You don't need a blueprint to start.** For single-project teams, all domain knowledge lives in the project's `.memory/`. Create a blueprint only when you have multiple projects that need shared knowledge.
 
@@ -77,7 +77,7 @@ agentskel is role-based. You choose which agent roles to install on each project
 
 | Role | What it provides | Status |
 |------|-----------------|--------|
-| **dev** | 12 workflows (cartographer, develop-feature, code-review, sync-skeleton, and more). 5 standards (architecture, git, style, dependency, API). 12 Claude Code skills. | Ready |
+| **dev** | 13 workflows (cartographer, develop-feature, sync-skeleton, and more). 5 standards (architecture, git, style, dependency, API). Claude Code skill stubs (auto-generated). | Ready |
 | **devops** | Deployment, monitoring, incident response workflows. | Planned |
 
 Core capabilities (memory, session management, git flow, security rules) are always installed regardless of role.
@@ -179,13 +179,13 @@ The blueprint is maintained naturally by agents as a byproduct of work — not m
 
 **Roles (`roles/`)** — Opt-in agent roles. Each brings its own workflows, skills, standards, and prompts.
 
-**Agent HQ (`agent-hq/`)** — Version tracking (`VERSION`, `CHANGELOG.md`).
+**Version tracking** — `VERSION` and `CHANGELOG.md` at the repo root.
 
 ---
 
 ## Current version
 
-**v1.0** — see [CHANGELOG](agent-hq/CHANGELOG.md) for what changed.
+**v1.0** — see [CHANGELOG](CHANGELOG.md) for what changed.
 
 ---
 

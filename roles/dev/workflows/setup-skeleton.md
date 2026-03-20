@@ -88,12 +88,12 @@ Read each template from `[SKELETON_PATH]/core/memory/` and create the correspond
 | `[REPO_SHORT_NAME]` | Short repo name (e.g. `my-app-android`) |
 | `[GITHUB_SLUG]` | GitHub slug (e.g. `org/my-app-android`) |
 | `[DEFAULT_BRANCH]` | default branch from Step 1 (e.g. `development`, `main`, `master`) |
-| `[SKELETON_VERSION]` | current skeleton version from `[SKELETON_PATH]/agent-hq/VERSION` |
+| `[SKELETON_VERSION]` | current skeleton version from `[SKELETON_PATH]/VERSION` |
 
 **Files to create in `.memory/`:**
 
 - `CONFIG.md` — fill all placeholders; set `Status: pilot`
-- `RULES.md` — fill all placeholders; also fill in the platform-specific architecture guide reference (Android: `ANDROID_ARCHITECTURE.md`, iOS: `IOS_ARCHITECTURE.md`)
+- `RULES.md` — fill all placeholders
 - `MAP.md` — fill placeholders; leave module content blank (cartographer will populate it)
 - `SYMBOLS.md` — fill placeholders; leave symbol content blank (cartographer will populate it)
 - `RESUME.md` — set Status: `IDLE`, all other fields blank
@@ -121,7 +121,7 @@ cd ..
 
 ## Step 5 — Set up .agents/ structure
 
-Create `.agents/rules/`, `.agents/workflows/`, and `.agents/skills/` directories.
+Create `.agents/rules/`, `.agents/workflows/`, `.agents/skills/`, and `.agents/standards/` directories.
 
 **Rules** — copy from `[SKELETON_PATH]/core/rules/` and customise for platform:
 
@@ -142,39 +142,65 @@ Create `.agents/rules/`, `.agents/workflows/`, and `.agents/skills/` directories
 | `check-skeleton.md` | yes | yes | yes |
 | `sync-versions.md` | yes — fill in actual version file paths (`libs.versions.toml`, `Dependencies.kt`, etc.) | yes — fill in `Package.swift` / `Podfile` | yes — fill in relevant files |
 | `check-dependencies.md` | yes | yes | yes |
-| `update-conventions.md` | yes | yes | yes |
+| `update-conventions.md` | yes — trim reference table to Android/Kotlin sections | yes — trim reference table to iOS/Swift sections | yes — trim to matching backend stack section |
 | `cut-release.md` | yes — fill in variant table and CI workflow names | yes — fill in CI workflow names | not applicable |
+| `janitor.md` | yes | yes | yes |
 
 For each workflow copied, fill in any `[TODO: platform-specific]` markers with the actual platform details.
 
-**Skills** — copy from `[SKELETON_PATH]/core/skills/` (procedural) and `[SKELETON_PATH]/roles/dev/` (domain) unchanged:
+**Standards** — copy from `[SKELETON_PATH]/roles/dev/standards/` into `.agents/standards/` and trim to the project's platform:
 
-- `.agents/skills/senior-developer/SKILL.md`
-- `.agents/skills/test-engineer/SKILL.md`
-- `.agents/skills/code-reviewer/SKILL.md`
-- `.agents/skills/task-planner/SKILL.md`
-- `.agents/skills/domain-expert/SKILL.md`
-- `.agents/skills/session-start/SKILL.md` — procedural: session initialization
-- `.agents/skills/task-completion/SKILL.md` — procedural: post-task checklist
-- `.agents/skills/git-flow/SKILL.md` — procedural: branching, commit, PR rules
+| Standard | Setup action |
+|----------|-------------|
+| `ARCHITECTURE.md` | Remove `<!-- PLATFORM: ... -->` sections for other platforms. Keep universal sections and the project's platform section(s). |
+| `STYLE_GUIDE.md` | Remove `<!-- PLATFORM: ... -->` sections for other platforms. Keep universal sections and the project's language section(s). |
+| `DEPENDENCY_MANAGEMENT.md` | Remove `<!-- PLATFORM: ... -->` sections for other platforms. Keep universal sections and the project's platform section(s). |
+| `GIT_WORKFLOW.md` | Copy as-is. |
+| `API_CONTRACT.md` | Copy as-is (stub — to be filled when backend is onboarded). |
+
+Platform sections in these files are marked with `<!-- PLATFORM: X -->` and `<!-- END PLATFORM: X -->` HTML comments. Remove the irrelevant platform blocks entirely (including the comment markers) so the installed copy reads cleanly for the project's stack.
+
+**Skills** — copy from `[SKELETON_PATH]/core/skills/` (procedural) and `[SKELETON_PATH]/roles/dev/skills/` (domain):
+
+Procedural (copy unchanged):
+- `.agents/skills/session-start/SKILL.md` — from `core/skills/session-start/`
+- `.agents/skills/task-completion/SKILL.md` — from `core/skills/task-completion/`
+- `.agents/skills/git-flow/SKILL.md` — from `core/skills/git-flow/`
+
+Domain (copy, then customise platform-specific sections):
+- `.agents/skills/senior-developer/SKILL.md` — from `roles/dev/skills/senior-developer/`
+- `.agents/skills/test-engineer/SKILL.md` — from `roles/dev/skills/test-engineer/`
+- `.agents/skills/code-reviewer/SKILL.md` — from `roles/dev/skills/code-reviewer/`
+- `.agents/skills/task-planner/SKILL.md` — from `roles/dev/skills/task-planner/`
+- `.agents/skills/domain-expert/SKILL.md` — from `roles/dev/skills/domain-expert/` (rename and fill in project domain)
 
 ---
 
-## Step 5b — Set up .claude/skills/ stubs (Claude Code)
+## Step 5b — Generate .claude/skills/ stubs (Claude Code)
 
-Claude Code auto-discovers skills from `.claude/skills/`. Create lightweight stub files
-that redirect to the full skill/workflow in `.agents/`.
-
-Copy all stub files from `[SKELETON_PATH]/core/claude-skills/` and `[SKELETON_PATH]/roles/dev/claude-skills/` to `.claude/skills/`:
+Claude Code auto-discovers skills from `.claude/skills/`. Generate a lightweight stub
+for each skill and workflow in `.agents/` so Claude Code can see them without loading
+the full file.
 
 ```bash
 mkdir -p .claude/skills
-cp [SKELETON_PATH]/core/claude-skills/*.md .claude/skills/
-cp [SKELETON_PATH]/roles/dev/claude-skills/*.md .claude/skills/
 ```
 
-This gives Claude Code a description of each skill (survives context compaction) with a
-pointer to the full procedure in `.agents/`.
+For each file matching `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`:
+
+1. Read the YAML frontmatter (`name` and `description` fields).
+2. Create a stub at `.claude/skills/[name].md` with this format:
+
+```markdown
+---
+description: [description from frontmatter]
+---
+
+Read and follow the full [skill|workflow] at `[relative path to the source file]`.
+```
+
+This generates stubs automatically — no separate template files to maintain.
+When skills or workflows are added/removed, re-running setup or sync regenerates the stubs.
 
 ---
 
@@ -307,9 +333,11 @@ git commit -m "[chore] setup agentic development infrastructure
 - .gitignore: exclude .memory/ worktree
 - .claudeignore: prevent agent from reading secrets and credentials
 - .agents/rules/: core-behavior, security-non-negotiables
-- .agents/workflows/: cartographer, develop-feature, fix-tech-debt,
-  hotfix, parity-check, sync-skeleton, check-skeleton,
-  sync-versions, check-dependencies[, cut-release]
+- .agents/workflows/: cartographer, check-dependencies, check-skeleton,
+  cut-release, develop-feature, fix-tech-debt, hotfix, janitor,
+  parity-check, sync-skeleton, sync-versions, update-conventions
+- .agents/standards/: architecture, style-guide, dependency-management,
+  git-workflow, api-contract (trimmed to [PLATFORM])
 - .agents/skills/: senior-developer, test-engineer, code-reviewer,
   task-planner, domain-expert, session-start, task-completion, git-flow
 - .claude/skills/: Claude Code stub files for auto-discovery
@@ -326,11 +354,12 @@ Open a PR: `chore/setup-skeleton` -> `[DEFAULT_BRANCH]`
 ```bash
 gh pr create \
   --title "Setup agentic development infrastructure" \
-  --body "Sets up rules, workflows, skills, CLAUDE.md, and CODEOWNERS for agentic development.
+  --body "Sets up rules, workflows, standards, skills, CLAUDE.md, and CODEOWNERS for agentic development.
 
 ## What's included
 - \`.agents/rules/\` — core behavior and security rules
-- \`.agents/workflows/\` — cartographer, develop-feature, fix-tech-debt, hotfix, parity-check, sync-skeleton, check-skeleton, sync-versions, check-dependencies[, cut-release]
+- \`.agents/workflows/\` — cartographer, check-dependencies, check-skeleton, cut-release, develop-feature, fix-tech-debt, hotfix, janitor, parity-check, sync-skeleton, sync-versions, update-conventions
+- \`.agents/standards/\` — architecture, style guide, dependency management, git workflow, API contracts (trimmed to [PLATFORM])
 - \`.agents/skills/\` — senior-developer, test-engineer, code-reviewer, task-planner, domain-expert, session-start, task-completion, git-flow
 - \`.claude/skills/\` — Claude Code stub files for auto-discovery
 - \`.agent\` — symlink to .agents/ for Antigravity compatibility

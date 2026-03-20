@@ -45,7 +45,7 @@ Read all of the following files. Do not skip any:
 
 ## Step 4 — Check skeleton version
 
-- [ ] Read `agent-hq/VERSION` from the skeleton repo (resolve location via
+- [ ] Read `VERSION` from the skeleton repo (resolve location via
       `Skeleton Path` in CONFIG.md → `../agentskel` → GitHub fetch fallback).
 - [ ] Compare with `Skeleton Version` in `.memory/CONFIG.md`.
 - [ ] If they differ → run `sync-skeleton` before any other task

@@ -23,10 +23,8 @@ description: Refreshes .memory/CONVENTIONS.md by cross-checking current best pra
 2. Read `.memory/VERSIONS.md` — note the tech stack and dependency versions.
 3. Read `.memory/CONVENTIONS.md` — understand every section before researching.
 4. Read `.memory/NEEDS_REVIEW.md` — note any open items to avoid filing duplicates.
-5. Read the matching architecture standard for this project's platform:
-   - Android: the project's Android architecture standard
-   - iOS: the project's iOS architecture standard
-   - If no matching standard exists: proceed; you will create one in Step 5.
+5. Read the project's architecture standard (`.agents/standards/ARCHITECTURE.md`).
+   If no architecture standard exists: proceed; you will create one in Step 5.
 
 ---
 
@@ -51,6 +49,12 @@ Do not proceed to 2b until every item has an official URL.
 
 ### Official source reference table
 
+This table is a starter set. During `setup-skeleton`, the installer should populate it
+with entries relevant to the project's stack and remove irrelevant ones. If a library
+is not listed here, ask the user for its official documentation URL before proceeding.
+
+#### Android / Kotlin
+
 | Framework / Library | Official documentation URL |
 |---------------------|---------------------------|
 | Android (Jetpack, architecture) | https://developer.android.com/topic/architecture |
@@ -61,11 +65,76 @@ Do not proceed to 2b until every item has an official URL.
 | Android (Testing) | https://developer.android.com/training/testing |
 | Kotlin (language idioms) | https://kotlinlang.org/docs/idioms.html |
 | Kotlin Multiplatform (KMM) | https://kotlinlang.org/docs/multiplatform.html |
+
+#### iOS / Swift
+
+| Framework / Library | Official documentation URL |
+|---------------------|---------------------------|
 | iOS (Swift Concurrency) | https://docs.swift.org/swift-book/documentation/the-swift-programming-language/concurrency/ |
 | iOS (SwiftUI) | https://developer.apple.com/documentation/swiftui |
+| iOS (UIKit) | https://developer.apple.com/documentation/uikit |
 | iOS (Combine) | https://developer.apple.com/documentation/combine |
 | iOS (Testing / XCTest) | https://developer.apple.com/documentation/xctest |
 | Swift (language) | https://docs.swift.org/swift-book/ |
+
+#### Cross-Platform Mobile
+
+| Framework / Library | Official documentation URL |
+|---------------------|---------------------------|
+| Flutter (architecture) | https://docs.flutter.dev/app-architecture |
+| Flutter (state management) | https://docs.flutter.dev/data-and-backend/state-mgmt |
+| Flutter (testing) | https://docs.flutter.dev/testing/overview |
+| Dart (language) | https://dart.dev/effective-dart |
+| React Native (architecture) | https://reactnative.dev/docs/getting-started |
+| React Native (testing) | https://reactnative.dev/docs/testing-overview |
+
+#### Backend — Node.js / TypeScript
+
+| Framework / Library | Official documentation URL |
+|---------------------|---------------------------|
+| Node.js (best practices) | https://nodejs.org/en/learn |
+| TypeScript (handbook) | https://www.typescriptlang.org/docs/handbook/ |
+| Express | https://expressjs.com/en/guide/routing.html |
+| NestJS | https://docs.nestjs.com/ |
+| Jest (testing) | https://jestjs.io/docs/getting-started |
+| Vitest (testing) | https://vitest.dev/guide/ |
+
+#### Backend — Python
+
+| Framework / Library | Official documentation URL |
+|---------------------|---------------------------|
+| Python (style / PEP 8) | https://peps.python.org/pep-0008/ |
+| Django | https://docs.djangoproject.com/en/stable/ |
+| FastAPI | https://fastapi.tiangolo.com/ |
+| Flask | https://flask.palletsprojects.com/ |
+| pytest (testing) | https://docs.pytest.org/en/stable/ |
+| SQLAlchemy | https://docs.sqlalchemy.org/ |
+
+#### Backend — Go
+
+| Framework / Library | Official documentation URL |
+|---------------------|---------------------------|
+| Go (effective Go) | https://go.dev/doc/effective_go |
+| Go (code review comments) | https://go.dev/wiki/CodeReviewComments |
+| Go (testing) | https://pkg.go.dev/testing |
+
+#### Backend — Java / Spring
+
+| Framework / Library | Official documentation URL |
+|---------------------|---------------------------|
+| Spring Boot | https://docs.spring.io/spring-boot/reference/ |
+| Spring Security | https://docs.spring.io/spring-security/reference/ |
+| JUnit 5 (testing) | https://junit.org/junit5/docs/current/user-guide/ |
+
+#### Frontend — Web
+
+| Framework / Library | Official documentation URL |
+|---------------------|---------------------------|
+| React | https://react.dev/learn |
+| Next.js | https://nextjs.org/docs |
+| Vue.js | https://vuejs.org/guide/introduction.html |
+| Angular | https://angular.dev/overview |
+| Tailwind CSS | https://tailwindcss.com/docs |
 
 ### 2b — Fetch and extract
 

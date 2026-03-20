@@ -47,7 +47,7 @@ Commit all changes to the blueprint repo:
 ```
 git add bus/
 git commit -m "janitor: archive bus entries for YYYY-MM"
-git push origin main
+git push origin [DEFAULT_BRANCH]
 ```
 
 ---

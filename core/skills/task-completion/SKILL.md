@@ -43,9 +43,19 @@ to the user or starting anything else.**
       create a Knowledge Bus entry in the blueprint's `bus/` directory.
 - Skip if no blueprint is configured, or if the change is purely project-specific.
 
-## Step 5 — Migration Step (skeleton/agentskel repos only)
+## Step 5 — README (skeleton/agentskel repos only)
 
-- [ ] If this task bumped `agent-hq/VERSION` with a **breaking change** (MAJOR version) →
+- [ ] If this task changed something that is **already mentioned** in `README.md`
+      (e.g. workflow count, role description, architecture overview) → update README
+      to keep it accurate.
+- Only update README for user-facing structural changes (added/removed components,
+  changed architecture). Do not add entries for internal fixes, rewording, or
+  minor adjustments that don't affect what README communicates.
+- Skip if this is not the agentskel repo, or if the change has no README impact.
+
+## Step 5b — Migration Step (skeleton/agentskel repos only)
+
+- [ ] If this task bumped `VERSION` with a **breaking change** (MAJOR version) →
       ensure a corresponding migration step exists in `sync-skeleton.md`.
 - [ ] The migration step must include exact commands and file changes needed for
       downstream projects to adopt the breaking change.

@@ -11,8 +11,8 @@
 
 Every change to a skeleton file (template, workflow, standard, prompt, skill) **must**:
 
-1. Bump `agent-hq/VERSION` (MINOR for additions, MAJOR for breaking changes)
-2. Add an entry to `agent-hq/CHANGELOG.md`
+1. Bump `VERSION` (MINOR for additions, MAJOR for breaking changes)
+2. Add an entry to `CHANGELOG.md`
 3. Update `README.md` "Current version" if the version changed
 
 No exceptions. This is how downstream repos detect they're out of sync.
@@ -32,7 +32,7 @@ No exceptions. This is how downstream repos detect they're out of sync.
 
 ## Adding a new role
 
-1. Create `roles/[role-name]/` with subdirectories: `workflows/`, `skills/`, `claude-skills/`, `standards/`, `prompts/`
+1. Create `roles/[role-name]/` with subdirectories: `workflows/`, `skills/`, `standards/`, `prompts/`
 2. Add a `README.md` describing the role
 3. Update the Roles table in the main `README.md`
 4. Follow the version bump rules above

@@ -36,7 +36,7 @@ Follow this order to determine `[SKELETON_PATH]`:
 
 Record:
 - `project_version` — from `.memory/CONFIG.md` `Skeleton Version` field
-- `current_version` — from `[SKELETON_PATH]/agent-hq/VERSION`
+- `current_version` — from `[SKELETON_PATH]/VERSION`
 
 If `project_version == current_version`:
 1. Update `Last Skeleton Check` in `.memory/CONFIG.md` to today's date (Step 4).
@@ -44,7 +44,7 @@ If `project_version == current_version`:
 3. Stop.
 
 If `project_version != current_version`:
-1. Read `[SKELETON_PATH]/agent-hq/CHANGELOG.md`.
+1. Read `[SKELETON_PATH]/CHANGELOG.md`.
 2. Extract all entries from `project_version` up to `current_version`.
 3. Count the entries and list version numbers.
 4. Surface to the user:

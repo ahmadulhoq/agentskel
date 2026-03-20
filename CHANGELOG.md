@@ -14,11 +14,11 @@ Initial release. 2-component architecture: skeleton (agentskel) + optional bluep
   Last Skeleton Check, Last Dependency Check, Last Conventions Check
 
 ### Role — dev
-- 11 workflows: cartographer, develop-feature, fix-tech-debt, hotfix, parity-check,
-  sync-skeleton, check-skeleton, sync-versions, check-dependencies,
-  update-conventions, cut-release, janitor
+- 13 workflows: cartographer, check-dependencies, check-skeleton, cut-release,
+  develop-feature, fix-tech-debt, hotfix, janitor, parity-check,
+  setup-skeleton, sync-skeleton, sync-versions, update-conventions
 - 5 standards: architecture, git workflow, style guide, dependency management, API contracts
-- 14 Claude Code skill stubs
+- Claude Code skill stubs (auto-generated from skills + workflows)
 - 8 mission prompts
 - Domain skills: senior-developer, test-engineer, code-reviewer, task-planner, domain-expert
 

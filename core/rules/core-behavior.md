@@ -75,12 +75,12 @@ Key principles (always active):
   - **Project-specific** (tool names, platform APIs, project conventions) →
     update only this project's `.agents/` files.
   - **Universal** (logic or policy that applies to all projects) → also update
-    the corresponding skeleton template (in agentskel), bump `agent-hq/VERSION`,
-    and add an entry to `agent-hq/CHANGELOG.md`.
+    the corresponding skeleton template (in agentskel), bump `VERSION`,
+    and add an entry to `CHANGELOG.md`.
 - **Every change to any skeleton file** (template, workflow, standard, rule, skill)
   — whether made by a project agent or directly — **must**:
-  1. Bump `agent-hq/VERSION` (MINOR for additions, MAJOR for breaking changes)
-  2. Add an entry to `agent-hq/CHANGELOG.md`
+  1. Bump `VERSION` (MINOR for additions, MAJOR for breaking changes)
+  2. Add an entry to `CHANGELOG.md`
   3. Update the `## Current version` line in the skeleton's `README.md` to match the new VERSION
   No exceptions. This is how repos know they are out of sync.
 - When a change affects **how the system works or how developers set up/use it**,

@@ -13,7 +13,7 @@ If you are not the tech lead or project owner, stop and notify the correct perso
 **Before you begin:**
 1. Confirm you are inside the target project repo (not the skeleton repo).
 2. Confirm the skeleton repo is accessible on disk — note its path.
-3. Read `[SKELETON_PATH]/agent-hq/VERSION` and `.memory/CONFIG.md` (Skeleton Version field).
+3. Read `[SKELETON_PATH]/VERSION` and `.memory/CONFIG.md` (Skeleton Version field).
 4. If versions match — there is nothing to sync. Confirm this to the user and stop.
 
 **Then follow the `sync-skeleton` workflow.**
