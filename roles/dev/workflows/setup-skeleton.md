@@ -1,9 +1,9 @@
 ---
-name: setup-agentic
+name: setup-skeleton
 description: One-time setup workflow. Wires up agentic development infrastructure on a new or existing project repo.
 ---
 
-# Setup Agentic Workflow
+# Setup Skeleton Workflow
 
 **Purpose:** Set up everything needed for agentic development on a project repo — memory files, rules, workflows, skills, CLAUDE.md, and CODEOWNERS.
 
@@ -70,7 +70,7 @@ git worktree add .memory ai-memory
 All project files (`.agents/`, `CLAUDE.md`, `CODEOWNERS`, `.gitignore`) go on a dedicated branch so the team can review them before they land on `[DEFAULT_BRANCH]`.
 
 ```bash
-git checkout -b chore/setup-agentic
+git checkout -b chore/setup-skeleton
 ```
 
 All subsequent file creation (Steps 4-7) happens on this branch.
@@ -103,7 +103,7 @@ Read each template from `[SKELETON_PATH]/core/memory/` and create the correspond
 - `TECH_DEBT.md` — fill placeholders; leave rows blank
 - `NEEDS_REVIEW.md` — fill placeholders; leave rows blank
 - `LESSONS.md` — fill placeholders; leave rows blank
-- `CHANGELOG.md` — fill placeholders; add one entry: `[today] — initial agentic setup via setup-agentic workflow`
+- `CHANGELOG.md` — fill placeholders; add one entry: `[today] — initial agentic setup via setup-skeleton workflow`
 - `TIME_LOG.md` — fill placeholders; leave rows blank
 - `DEPENDENCY_ALERTS.md` — create with empty Active Alerts section
 - `DEPENDENCY_HISTORY.md` — create with header comment only; first entry will be added at first release
@@ -112,7 +112,7 @@ Commit all memory files to the ai-memory branch:
 ```bash
 cd .memory
 git add -A
-git commit -m "setup-agentic: initialise memory files"
+git commit -m "setup-skeleton: initialise memory files"
 git push origin ai-memory
 cd ..
 ```
@@ -285,7 +285,7 @@ if git branch -r | grep -q origin/ai-memory; then
 else
   echo ""
   echo "Error — This project has no AI memory yet."
-  echo "  Ask your tech lead to run the setup-agentic workflow first."
+  echo "  Ask your tech lead to run the setup-skeleton workflow first."
   exit 1
 fi
 SCRIPT
@@ -318,10 +318,10 @@ git commit -m "[chore] setup agentic development infrastructure
 - GEMINI.md: Antigravity entry point
 - .github/CODEOWNERS: toolchain and dependency ownership
 - scripts/install-agent.sh: developer onboarding script"
-git push origin chore/setup-agentic
+git push origin chore/setup-skeleton
 ```
 
-Open a PR: `chore/setup-agentic` -> `[DEFAULT_BRANCH]`
+Open a PR: `chore/setup-skeleton` -> `[DEFAULT_BRANCH]`
 
 ```bash
 gh pr create \

@@ -1,4 +1,4 @@
-# Setup Agentic — Start Prompt
+# Setup Skeleton — Start Prompt
 
 Use this prompt to set up agentic development infrastructure on a new or existing repo.
 Run this from inside the target project, with the skeleton (agentskel) repo accessible on disk.
@@ -16,6 +16,6 @@ memory files, rules, workflows, skills, CLAUDE.md, and CODEOWNERS.
 1. Confirm you are inside the target project repo (not the skeleton repo).
 2. Confirm the skeleton (agentskel) repo is accessible on disk — note its path.
 
-**Then follow the `setup-agentic` workflow.**
+**Then follow the `setup-skeleton` workflow.**
 
 Ask all required questions upfront before taking any action. Do not proceed until the user has confirmed all inputs.

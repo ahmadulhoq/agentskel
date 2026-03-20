@@ -20,7 +20,7 @@ until this procedure is complete.**
      > "This project has AI memory but it's not mounted. Run `./scripts/install-agent.sh`
      > (or `git worktree add .memory ai-memory`) to load it, then restart this session."
   3. **Not found →** tell the user:
-     > "This project has no AI memory. A tech lead needs to run the `setup-agentic`
+     > "This project has no AI memory. A tech lead needs to run the `setup-skeleton`
      > workflow first. See the agentskel README for setup instructions."
   4. **End session.** Do not attempt any work without memory files.
 

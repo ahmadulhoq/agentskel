@@ -1,5 +1,5 @@
 # Repo Config — [APP_NAME] [PLATFORM]
-> Managed by: AI Agent + setup-agentic workflow
+> Managed by: AI Agent + setup-skeleton workflow
 
 ---
 
