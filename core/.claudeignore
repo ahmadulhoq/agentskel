@@ -1,0 +1,60 @@
+# .claudeignore — Claude Code
+# Prevents the agent from reading files that may contain secrets or credentials.
+# Add project-specific secret file patterns below the relevant platform section.
+
+# ── Environment & local config ───────────────────────────────────────────────
+.env
+.env.*
+*.env
+.envrc
+
+# ── Generic secret files ─────────────────────────────────────────────────────
+secrets.yml
+secrets.yaml
+secrets.json
+secrets.properties
+*.secret
+*_secrets.*
+config/secrets*
+secrets/
+
+# ── Credentials & keys ───────────────────────────────────────────────────────
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+.netrc
+id_rsa
+id_ed25519
+id_ecdsa
+
+# ── Android ──────────────────────────────────────────────────────────────────
+local.properties
+*.keystore
+*.jks
+keystore/
+signing.properties
+release-signing.properties
+
+# ── iOS ──────────────────────────────────────────────────────────────────────
+*.mobileprovision
+*.provisionprofile
+ExportOptions.plist
+fastlane/Appfile
+fastlane/Matchfile
+
+# ── Backend & cloud ───────────────────────────────────────────────────────────
+service-account*.json
+*-service-account.json
+serviceAccountKey.json
+gcloud-credentials.json
+.gcloud/
+terraform.tfvars
+*.tfvars
+kubeconfig
+.kube/
+
+# ── CI/CD ────────────────────────────────────────────────────────────────────
+.github/secrets/
