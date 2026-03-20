@@ -11,7 +11,7 @@
 | GitHub | ahmadulhoq/agentskel |
 | Platform | Framework (shell/markdown) |
 | Memory branch | ai-memory |
-| Status | pilot |
+| Status | active |
 
 **Status values:**
 - `pilot` — setup complete, cartography not yet done
