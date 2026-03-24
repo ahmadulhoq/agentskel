@@ -77,6 +77,8 @@
 | GIT_WORKFLOW.md | standard | roles/dev/standards/GIT_WORKFLOW.md |
 | DEPENDENCY_MANAGEMENT.md | standard | roles/dev/standards/DEPENDENCY_MANAGEMENT.md |
 | API_CONTRACT.md | standard | roles/dev/standards/API_CONTRACT.md |
+| ANDROID_ARCHITECTURE.md | standard | roles/dev/standards/ANDROID_ARCHITECTURE.md |
+| IOS_ARCHITECTURE.md | standard | roles/dev/standards/IOS_ARCHITECTURE.md |
 
 ## roles/dev/prompts
 | Symbol | Type | File |
