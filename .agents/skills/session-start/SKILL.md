@@ -80,7 +80,17 @@ Read all of the following files. Do not skip any:
       Show the commit list and any changed spec files (`specs/`, `parity/`).
 - [ ] Update `Last Blueprint Sync` in `.memory/CONFIG.md` to today's date.
 
-### 6b — Check Knowledge Bus
+### 6b — Check blueprint skeleton version
+
+- [ ] Read `[BLUEPRINT_PATH]/CONFIG.md` — note `Skeleton Version`.
+- [ ] Compare with the current skeleton version (already resolved in Step 4).
+- [ ] If the blueprint's skeleton version is behind:
+      > "Blueprint's skeleton is behind (v[BLUEPRINT_SKEL_VERSION] vs v[CURRENT_SKEL_VERSION]).
+      > Someone needs to run `sync-skeleton` from the blueprint repo to update it."
+      This is informational — do not block the session. The project agent cannot
+      sync the blueprint's skeleton; that must be done from the blueprint repo directly.
+
+### 6c — Check Knowledge Bus
 
 - [ ] List files in `[BLUEPRINT_PATH]/bus/` (excluding `BUS_ENTRY_TEMPLATE.md`,
       `archive/`, and `.gitkeep`).

@@ -138,35 +138,6 @@ Create `bus/BUS_ENTRY_TEMPLATE.md`:
 
 Create `bus/archive/.gitkeep` and `bus/.gitkeep`.
 
-### 4d — Blueprint skills
-
-```bash
-mkdir -p skills
-```
-
-Create `skills/domain-expert/SKILL.md` as a template:
-
-```markdown
----
-name: domain-expert
-description: Expert knowledge for [ORG_NAME] business domain.
-  Use when working on features that involve shared business logic.
----
-
-# Domain Expert — [ORG_NAME]
-
-## Domain Areas
-[List domain areas from Step 1 with brief descriptions]
-
-## Spec References
-[For each domain area, point to the spec file in specs/]
-
-## Cross-Platform Rules
-- Any change to shared business logic requires a Knowledge Bus entry.
-- Check `parity/PARITY_MATRIX.md` before modifying shared algorithms.
-- Domain specs in `specs/` are the source of truth — code must match the spec.
-```
-
 ---
 
 ## Step 5 — Create CONFIG.md
@@ -200,8 +171,14 @@ The blueprint includes `.agents/` as a safety net — if someone opens the repo 
 
 **Rules** — copy from `[SKELETON_PATH]/core/rules/`:
 
-- `.agents/rules/core-behavior.md` — copy as-is
-- `.agents/rules/security-non-negotiables.md` — copy as-is
+- `.agents/rules/core-behavior.md` — copy and trim for blueprint context:
+  - Remove "Verify before done" (no tests/logs), "Self-improvement" (no `.memory/LESSONS.md`), "Respect sacred behaviors" (no `.memory/SACRED.md`)
+  - Remove "Task Completion" section (no `task-completion` skill)
+  - Remove "Memory Protocol" section (no `.memory/`, no `ai-memory`, no `session-start`)
+  - Remove "Skeleton Contribution" section (blueprint agents don't push to agentskel)
+  - Remove "Blueprint Contribution" section (this IS the blueprint)
+  - Add a "Blueprint Identity" section explaining: stateless knowledge hub, no `.memory/`, read `CONFIG.md` at repo root
+- `.agents/rules/security-non-negotiables.md` — copy as-is (harmless even if some rules don't apply)
 - `.agents/rules/repo-rules.md` — create with blueprint-specific rules:
 
 ```markdown
@@ -237,12 +214,12 @@ description: Rules specific to this blueprint repository.
 
 | Workflow | Include? | Notes |
 |----------|----------|-------|
-| `develop-feature.md` | yes | For adding/updating domain specs |
+| `develop-feature.md` | no | 100% app development workflow — references `.memory/`, tests, SYMBOLS.md |
 | `parity-check.md` | no | Runs from project context, not blueprint |
 | `janitor.md` | no | Runs from project context, not blueprint |
 | `cartographer.md` | no | Blueprint has no application code to map |
-| `sync-skeleton.md` | yes | Keeps blueprint's .agents/ in sync with skeleton |
-| `check-skeleton.md` | yes | Detects skeleton drift |
+| `sync-skeleton.md` | yes, trimmed | Keeps blueprint's .agents/ in sync with skeleton — replace `.memory/CONFIG.md` with root `CONFIG.md`, remove ai-memory commit steps, remove task completion checklist, add blueprint trimming note to Step 0 |
+| `check-skeleton.md` | yes, trimmed | Detects skeleton drift — replace `.memory/CONFIG.md` with root `CONFIG.md`, remove ai-memory commit steps, remove task completion checklist |
 | `fix-tech-debt.md` | no | Blueprint has no app code to fix |
 | `hotfix.md` | no | Blueprint has no app releases |
 | `cut-release.md` | no | Blueprint has no app releases |
@@ -252,7 +229,7 @@ description: Rules specific to this blueprint repository.
 
 **Standards** — copy from `[SKELETON_PATH]/roles/dev/standards/`:
 
-- `GIT_WORKFLOW.md` — copy as-is
+- `GIT_WORKFLOW.md` — create a simplified blueprint version: keep branch naming (with blueprint-appropriate types like `docs/`, `chore/`), commit messages, and PR rules. Remove release flow, hotfix flow, multi-developer branches, AI agent session protocol, tech debt branches, and all `.memory/` references.
 - `STYLE_GUIDE.md` — copy; keep only Markdown/documentation sections (no platform code sections)
 - Skip `ARCHITECTURE.md`, `DEPENDENCY_MANAGEMENT.md`, `API_CONTRACT.md`, `ANDROID_ARCHITECTURE.md`, `IOS_ARCHITECTURE.md` — these are for application projects, not blueprints.
 
@@ -261,15 +238,24 @@ description: Rules specific to this blueprint repository.
 Procedural (copy unchanged):
 - `.agents/skills/git-flow/SKILL.md`
 
-Domain (copy unchanged — no platform trimming since blueprint is multi-platform):
-- `.agents/skills/senior-developer/SKILL.md` — keep ALL platform sections
-- `.agents/skills/task-planner/SKILL.md`
+Blueprint-specific (create new — do NOT copy the project version):
+- `.agents/skills/session-start/SKILL.md` — create a trimmed blueprint session-start:
+  1. Read `CONFIG.md` (repo root) and all rules in `.agents/rules/`
+  2. Check skeleton version (resolve `../agentskel` → GitHub fallback, compare with `Skeleton Version` in CONFIG.md, offer sync if mismatched)
+  3. Check git state (current branch, uncommitted changes)
+  4. Confirm ready
+  No memory mount check, no dependency alerts, no blueprint check (this IS the blueprint), no freshness dates.
+
+Domain (copy and trim):
+- `.agents/skills/task-planner/SKILL.md` — replace `.memory/LESSONS.md` reference with generic wording, replace "Blueprint Check (if configured)" with "Domain Check" section pointing to local `specs/` and `parity/` paths
 
 Skip (not applicable to blueprints):
-- `session-start` — requires `.memory/`, which blueprints don't have
+- `senior-developer` — 100% about writing application code (SOLID, platform standards, performance)
+- `session-start` (project version) — requires `.memory/`; use the blueprint-specific version above instead
 - `task-completion` — requires `.memory/` for CHANGELOG, RESUME, TIME_LOG
 - `test-engineer` — blueprint has no code to test
 - `code-reviewer` — blueprint has no code to review
+- `domain-expert` — domain knowledge lives in `specs/`, not agent skills
 
 ---
 
@@ -308,8 +294,7 @@ Create a simplified `CLAUDE.md` (no memory references since blueprint has no ai-
 ```markdown
 # [BLUEPRINT_NAME] — Claude Code Instructions
 
-Read `CONFIG.md` for blueprint identity and connected projects.
-Read all rules in `.agents/rules/` before starting any task.
+Before starting any task, execute the `session-start` skill.
 Read `specs/` for domain knowledge.
 Read `parity/PARITY_MATRIX.md` for cross-platform status.
 Read `bus/` for pending Knowledge Bus entries.
@@ -367,13 +352,12 @@ Add standard ignores only:
 
 ```bash
 git add .gitignore .claudeignore .agents/ .claude/ .agent CLAUDE.md GEMINI.md \
-       VERSION CHANGELOG.md CONFIG.md specs/ parity/ bus/ skills/
+       VERSION CHANGELOG.md CONFIG.md specs/ parity/ bus/
 git commit -m "[chore] create blueprint repository
 
 - specs/: domain spec stubs for [DOMAIN_AREAS]
 - parity/PARITY_MATRIX.md: cross-platform tracking for [PLATFORMS]
 - bus/: knowledge bus with entry template
-- skills/domain-expert/: team domain expert skill
 - CONFIG.md: blueprint identity
 - VERSION: 1.0
 - CHANGELOG.md: initial entry
@@ -396,7 +380,6 @@ gh pr create \
 - \`specs/\` — business logic spec stubs for: [DOMAIN_AREAS]
 - \`parity/PARITY_MATRIX.md\` — cross-platform feature tracking ([PLATFORMS])
 - \`bus/\` — knowledge bus for cross-project notifications
-- \`skills/domain-expert/\` — team domain expert skill
 
 ### Infrastructure
 - \`CONFIG.md\` — blueprint identity and connected projects
@@ -424,7 +407,7 @@ gh pr create \
 ## Step 10 — Report and next steps
 
 Report to the user:
-- Blueprint structure created: `specs/`, `parity/`, `bus/`, `skills/`
+- Blueprint structure created: `specs/`, `parity/`, `bus/`
 - Domain spec stubs created for each domain area
 - Parity matrix initialized for target platforms
 - Knowledge Bus ready with entry template
@@ -437,7 +420,6 @@ Report to the user:
 1. **Fill in domain specs** — replace stubs in `specs/` with actual business logic documentation
 2. **Connect projects** — add `Blueprint Path: ../[BLUEPRINT_NAME]` to each project's `.memory/CONFIG.md`
 3. **Run parity-check** — from each connected project to populate the parity matrix
-4. **Domain expert skill** — customize `skills/domain-expert/SKILL.md` with real domain knowledge
 
 ---
 
@@ -446,8 +428,8 @@ Report to the user:
 - Never modify application code in downstream projects during this workflow.
 - If any step fails, report the error clearly and stop.
 - The blueprint is a separate repo from all projects — it is NOT installed into projects. Projects _reference_ it via `Blueprint Path` in their CONFIG.md.
-- Skills in the blueprint (e.g. domain-expert) are loaded by project agents on demand when the task involves shared business logic.
 - The blueprint has no ai-memory branch. All persistent agent state lives in each project's own `.memory/`.
+- Domain knowledge lives in `specs/` — project agents read specs directly via `[BLUEPRINT_PATH]/specs/`. The blueprint does NOT contain agent skills; those are installed per-project from agentskel.
 
 ---
 
