@@ -32,7 +32,7 @@
 | Framework | Responsibility | Used By |
 |-----------|---------------|---------|
 | Memory system (ai-memory branch) | Persistent agent knowledge across sessions | All workflows and skills |
-| Platform markers (`<!-- PLATFORM: X -->`) | Multi-platform content trimming during setup | ARCHITECTURE.md, STYLE_GUIDE.md, DEPENDENCY_MANAGEMENT.md, senior-developer, code-reviewer, test-engineer |
+| Platform markers (`<!-- PLATFORM: X -->`) | Multi-platform content trimming during setup | ARCHITECTURE.md, STYLE_GUIDE.md, DEPENDENCY_MANAGEMENT.md, cut-release.md, senior-developer, code-reviewer, test-engineer |
 | Token replacement (`[APP_NAME]`, `[PLATFORM]`, etc.) | Template customization during setup | All core/memory/ templates, CLAUDE.md.template, GEMINI.md.template |
 
 ## Critical Business Logic Flows
@@ -61,6 +61,5 @@
 
 ## Technical Debt & Notes
 - `roles/devops/` — placeholder only, not implemented
-- `roles/dev/standards/API_CONTRACT.md` — stub with TODO checklist, not filled in
-- `roles/dev/workflows/cut-release.md` — DRAFT status with [TODO] markers for platform-specific CI
+- `roles/dev/workflows/cut-release.md` — now uses platform markers; during setup, trim to project's platform
 - `.agents/` contains copies (not symlinks) of source files from `core/` and `roles/dev/` — synced via sync-skeleton workflow pointing to self (Skeleton Path = `.`)

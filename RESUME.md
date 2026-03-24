@@ -6,7 +6,8 @@ IDLE
 ## Last Completed Task
 - v1.1: Added platform markers to skills (senior-developer, code-reviewer, test-engineer), platform-specific architecture standards (ANDROID_ARCHITECTURE.md, IOS_ARCHITECTURE.md), updated setup/sync workflows for skill trimming
 - v1.2: Added create-blueprint workflow, blueprint-aware skills (session-start Step 6, domain-expert, code-reviewer, task-planner), janitor fix, CONFIG.md Last Blueprint Sync field
-- Memory updated: CONFIG.md skeleton version → 1.2, MAP.md counts and flows updated
+- v1.3: Finalized cut-release workflow (removed DRAFT, added platform markers), completed API_CONTRACT standard (full 7-section standard)
+- Memory updated: CONFIG.md skeleton version → 1.3, MAP.md tech debt cleaned up
 
 ## Next Task
 - No pending tasks. Ready for new assignment.
@@ -15,8 +16,6 @@ IDLE
 - agentskel is the skeleton repo itself — Skeleton Path = `.` in CONFIG.md
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md and MAINTAIN_MASTER_PLAN.md are gitignored (private maintenance files)
-- cut-release.md is DRAFT status with [TODO] markers
-- API_CONTRACT.md is a stub (not filled in)
 - roles/devops/ is a placeholder (not implemented)
 
 ## Cartography State
