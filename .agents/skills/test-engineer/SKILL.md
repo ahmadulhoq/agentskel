@@ -15,10 +15,38 @@ description: Testing standards, simulation rules, and CI/CD requirements.
 - Log test outcomes in separate test logs, not production logs.
 
 ## Test Structure
-- Use Given/When/Then (or Arrange-Act-Assert) structure for all tests.
+
+<!-- PLATFORM: Android -->
+### Android
+- Prefer unit tests over instrumented tests when business logic is isolated.
+- Use **MockK** for mocking. Use **Espresso** for UI testing.
+- Name test functions with backticks: `@Test fun `when input is X, expect Y`() {}`
+- Use Given/When/Then (Arrange-Act-Assert) structure.
+<!-- END PLATFORM: Android -->
+
+<!-- PLATFORM: iOS -->
+### iOS
+- Use **XCTest** for unit and integration tests. Use **XCUITest** for UI testing.
+- Use protocol-based fakes over mocking frameworks where possible.
+- Name tests descriptively: `test_scenario_expectedOutcome`.
+- Use Given/When/Then (Arrange-Act-Assert) structure.
+<!-- END PLATFORM: iOS -->
+
+<!-- PLATFORM: Web -->
+### Web
+- Use **Jest** or **Vitest** for unit tests. Use **Playwright** or **Cypress** for E2E.
+- Name tests descriptively: `it('should do X when Y')`.
+- Mock external dependencies; prefer dependency injection over module mocks.
+- Use Given/When/Then (Arrange-Act-Assert) structure.
+<!-- END PLATFORM: Web -->
+
+<!-- PLATFORM: Backend -->
+### Backend
+- Use the language's standard test framework.
 - Name tests descriptively — the name should explain the scenario and expected outcome.
-- Prefer unit tests over integration tests when business logic is isolated.
 - Use the project's standard mocking library for test doubles.
+- Use Given/When/Then (Arrange-Act-Assert) structure.
+<!-- END PLATFORM: Backend -->
 
 ## Verification
 - Diff behavior between main and your changes when relevant.

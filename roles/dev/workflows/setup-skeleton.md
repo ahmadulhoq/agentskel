@@ -157,6 +157,8 @@ For each workflow copied, fill in any `[TODO: platform-specific]` markers with t
 | `DEPENDENCY_MANAGEMENT.md` | Remove `<!-- PLATFORM: ... -->` sections for other platforms. Keep universal sections and the project's platform section(s). |
 | `GIT_WORKFLOW.md` | Copy as-is. |
 | `API_CONTRACT.md` | Copy as-is (stub — to be filled when backend is onboarded). |
+| `ANDROID_ARCHITECTURE.md` | Copy only for Android projects. Adapt examples to match project domain. |
+| `IOS_ARCHITECTURE.md` | Copy only for iOS projects. Adapt examples to match project domain. |
 
 Platform sections in these files are marked with `<!-- PLATFORM: X -->` and `<!-- END PLATFORM: X -->` HTML comments. Remove the irrelevant platform blocks entirely (including the comment markers) so the installed copy reads cleanly for the project's stack.
 
@@ -167,12 +169,14 @@ Procedural (copy unchanged):
 - `.agents/skills/task-completion/SKILL.md` — from `core/skills/task-completion/`
 - `.agents/skills/git-flow/SKILL.md` — from `core/skills/git-flow/`
 
-Domain (copy, then customise platform-specific sections):
+Domain (copy, then trim platform sections):
 - `.agents/skills/senior-developer/SKILL.md` — from `roles/dev/skills/senior-developer/`
 - `.agents/skills/test-engineer/SKILL.md` — from `roles/dev/skills/test-engineer/`
 - `.agents/skills/code-reviewer/SKILL.md` — from `roles/dev/skills/code-reviewer/`
 - `.agents/skills/task-planner/SKILL.md` — from `roles/dev/skills/task-planner/`
 - `.agents/skills/domain-expert/SKILL.md` — from `roles/dev/skills/domain-expert/` (rename and fill in project domain)
+
+Domain skills (`senior-developer`, `code-reviewer`, `test-engineer`) contain `<!-- PLATFORM: X -->` markers — the same format as standards. After copying, remove platform sections for other platforms. Keep the project's platform section(s) and any unmarked universal content.
 
 ---
 
