@@ -1,8 +1,7 @@
 # Workflow: cut-release
 
-> **Status: DRAFT — Steps marked [TODO] require platform-specific implementation before first use.**
-
-**Applies to: mobile apps only (Android, iOS).** Backend projects are not covered by this workflow.
+**Applies to:** All platforms with a release cycle.
+During setup, trim platform-specific sections to match the project's stack.
 
 **Trigger:** When the team is ready to cut a release from `development`.
 
@@ -17,21 +16,66 @@
 1. Confirm current branch is `development` and working tree is clean.
 2. Confirm CI is green — do not cut a release on a red build.
 3. _(Optional)_ Run static analysis — no new violations before cutting.
-4. [TODO: platform-specific] Show the current versionName and versionCode from the repo's version file.
-5. Confirm the new versionName and versionCode with the team. Validate the encoding is correct per platform convention.
+4. Show the current version from the repo's version file:
+
+<!-- PLATFORM: Android -->
+   - Android: Read `versionName` and `versionCode` from `version.properties`, `build.gradle(.kts)`, or `libs.versions.toml` — whichever the project uses as the version source of truth.
+<!-- END PLATFORM: Android -->
+<!-- PLATFORM: iOS -->
+   - iOS: Read `CFBundleShortVersionString` (marketing version) and `CFBundleVersion` (build number) from the project's `.xcconfig`, `Info.plist`, or Xcode project settings.
+<!-- END PLATFORM: iOS -->
+<!-- PLATFORM: Web -->
+   - Web: Read the `version` field from `package.json`.
+<!-- END PLATFORM: Web -->
+<!-- PLATFORM: Backend -->
+   - Backend: Read the version from the project's version file (`package.json`, `pyproject.toml`, `build.gradle`, `version.go`, or equivalent).
+<!-- END PLATFORM: Backend -->
+
+5. Confirm the new version with the team. Validate the encoding is correct per platform convention.
 6. Read `.memory/VERSIONS.md` — all current dependency versions will be snapshotted in Step 3.
 
 ---
 
 ## Step 1 — Trigger Release CI
 
-[TODO: platform-specific — identify the CI workflow that creates the release branch, bumps the version, and opens the automated PR.]
-
-Trigger the release CI workflow with the confirmed versionName and versionCode. The CI workflow should handle:
+Trigger the release CI workflow with the confirmed version. The CI workflow should handle:
 - Creating `release/vX.Y.Z` branch from `development`
 - Bumping the version file
 - Any platform-specific release prep (translations, config files, etc.)
 - Opening the automated release PR
+
+<!-- PLATFORM: Android -->
+### Android
+Typical trigger: GitHub Actions `workflow_dispatch` or Bitrise manual build. Example:
+```bash
+gh workflow run release.yml -f version=X.Y.Z -f versionCode=NNNNN
+```
+If using Fastlane: `fastlane release version:X.Y.Z`.
+<!-- END PLATFORM: Android -->
+<!-- PLATFORM: iOS -->
+### iOS
+Typical trigger: Fastlane lane or GitHub Actions `workflow_dispatch`. Example:
+```bash
+gh workflow run release-ios.yml -f version=X.Y.Z
+# or
+fastlane release version:X.Y.Z build:NNN
+```
+<!-- END PLATFORM: iOS -->
+<!-- PLATFORM: Web -->
+### Web
+Typical trigger: GitHub Actions `workflow_dispatch`. Example:
+```bash
+gh workflow run release.yml -f version=X.Y.Z
+```
+Some projects use `npm version X.Y.Z` to bump and tag in one step.
+<!-- END PLATFORM: Web -->
+<!-- PLATFORM: Backend -->
+### Backend
+Typical trigger: GitHub Actions `workflow_dispatch` or GitLab CI manual job. Example:
+```bash
+gh workflow run release.yml -f version=X.Y.Z
+```
+<!-- END PLATFORM: Backend -->
 
 **Do NOT manually edit the version file** — let CI own it.
 
@@ -90,9 +134,40 @@ The release PR requires review and approval from the lead engineer (see CODEOWNE
 
 ## Step 5 — Trigger Build (after PR is merged)
 
-[TODO: platform-specific — identify the CI workflow that builds and deploys from the release branch.]
-
 The build workflow typically requires **manual dispatch** — it does not trigger automatically after the release PR is merged. Trigger it explicitly, targeting `release/vX.Y.Z`.
+
+<!-- PLATFORM: Android -->
+### Android
+Trigger the build workflow targeting the release branch. Example:
+```bash
+gh workflow run build-release.yml -r release/vX.Y.Z
+```
+Output: AAB/APK uploaded to Google Play Console (internal track).
+<!-- END PLATFORM: Android -->
+<!-- PLATFORM: iOS -->
+### iOS
+Trigger the build workflow targeting the release branch. Example:
+```bash
+gh workflow run build-ios.yml -r release/vX.Y.Z
+# or
+fastlane beta
+```
+Output: IPA uploaded to App Store Connect (TestFlight).
+<!-- END PLATFORM: iOS -->
+<!-- PLATFORM: Web -->
+### Web
+Trigger the deploy pipeline targeting the release branch. Example:
+```bash
+gh workflow run deploy.yml -r release/vX.Y.Z
+```
+<!-- END PLATFORM: Web -->
+<!-- PLATFORM: Backend -->
+### Backend
+Trigger the deploy pipeline targeting the release branch. Example:
+```bash
+gh workflow run deploy.yml -r release/vX.Y.Z
+```
+<!-- END PLATFORM: Backend -->
 
 ---
 

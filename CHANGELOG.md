@@ -1,5 +1,21 @@
 # agentskel Changelog
 
+## v1.3 — 2026-03-24
+
+### Workflows — cut-release finalized
+- `cut-release.md`: removed DRAFT status, broadened scope from mobile-only to all platforms
+- Replaced `[TODO]` markers with `<!-- PLATFORM: X -->` blocks for Android, iOS, Web, Backend
+- Pre-flight: platform-specific version file locations (build.gradle, xcconfig, package.json, etc.)
+- Step 1: platform-specific CI trigger examples (GitHub Actions, Fastlane)
+- Step 5: platform-specific build/deploy trigger examples
+
+### Standards — API Contract completed
+- `API_CONTRACT.md`: replaced stub with full standard covering 7 topics:
+  URL-prefix versioning, JSON request/response envelope, error format with status code table,
+  Bearer token auth, rate limiting headers, cursor-based pagination, breaking change policy
+  with 90-day deprecation process
+- Includes Agent Rules section for code review and implementation guidance
+
 ## v1.2 — 2026-03-24
 
 ### Workflows — Blueprint creation
