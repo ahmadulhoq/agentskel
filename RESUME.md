@@ -7,7 +7,8 @@ IDLE
 - v1.1: Added platform markers to skills (senior-developer, code-reviewer, test-engineer), platform-specific architecture standards (ANDROID_ARCHITECTURE.md, IOS_ARCHITECTURE.md), updated setup/sync workflows for skill trimming
 - v1.2: Added create-blueprint workflow, blueprint-aware skills (session-start Step 6, domain-expert, code-reviewer, task-planner), janitor fix, CONFIG.md Last Blueprint Sync field
 - v1.3: Finalized cut-release workflow (removed DRAFT, added platform markers), completed API_CONTRACT standard (full 7-section standard)
-- Memory updated: CONFIG.md skeleton version → 1.3, MAP.md tech debt cleaned up
+- v1.4: Removed dead blueprint skills/ from create-blueprint workflow (step 4d) — no agent loads from [BLUEPRINT_PATH]/skills/
+- v1.5: Added blueprint trimming rules + blueprint-specific session-start to create-blueprint workflow — core-behavior, GIT_WORKFLOW, sync/check-skeleton, task-planner must be trimmed; develop-feature and senior-developer excluded; new session-start for blueprints (auto skeleton version check)
 
 ## Next Task
 - No pending tasks. Ready for new assignment.
