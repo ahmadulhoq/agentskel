@@ -11,16 +11,44 @@ description: Code review procedures, documentation standards, and QA checks.
 2. **Edge cases:** Are error conditions handled?
 3. **Style:** Does it follow project conventions? Check `.memory/CONVENTIONS.md`.
 4. **Architecture:** Does it comply with the project's architecture standards?
+<!-- PLATFORM: Android -->
+   Check `.agents/standards/ANDROID_ARCHITECTURE.md`. Verify module dependency
+   rules (`:feature` → `:data` OK; no `:data`↔`:data`, no `:feature`↔`:feature`).
+   Check UDF in ViewModels. No `GlobalBus`/`FlowBus` for cross-module events.
+<!-- END PLATFORM: Android -->
+<!-- PLATFORM: iOS -->
+   Check `.agents/standards/IOS_ARCHITECTURE.md`. Verify module boundaries
+   and dependency direction. Check MVVM/UDF patterns in ViewModels.
+<!-- END PLATFORM: iOS -->
    Check module dependency rules and layer boundaries.
-5. **Lint / Static Analysis:** Check that no unresolved violations exist in
-   new or changed lines. The author must fix violations before approval.
+5. **Lint / Static Analysis:**
+<!-- PLATFORM: Android -->
+   CI runs Detekt on every PR and posts inline comments via Reviewdog.
+   Check that no unresolved Detekt violations exist in new/changed lines.
+<!-- END PLATFORM: Android -->
+<!-- PLATFORM: iOS -->
+   CI runs SwiftLint. Check that no unresolved violations exist in new/changed lines.
+<!-- END PLATFORM: iOS -->
+<!-- PLATFORM: Web -->
+   CI runs ESLint/Prettier. Check that no unresolved violations exist in new/changed lines.
+<!-- END PLATFORM: Web -->
+   The author must fix violations before approval.
 6. **Performance:** Are there obvious inefficiencies? Consider UX impact.
 7. **Security:** Does it follow `security-non-negotiables` rules?
 8. **Tests:** Are there adequate tests for the changes?
 9. **Sacred behaviors:** Does this change anything in `.memory/SACRED.md`?
-10. **Dependencies:** If the PR touches dependency files, verify the correct
-    upgrade tier approval was obtained per the project's dependency management
-    standard. Block merge if not.
+10. **Dependencies:**
+<!-- PLATFORM: Android -->
+    If the PR touches `libs.versions.toml`, `gradle-wrapper.properties`, or `buildSrc/`,
+<!-- END PLATFORM: Android -->
+<!-- PLATFORM: iOS -->
+    If the PR touches `Package.swift`, `Podfile`, or `.xcode-version`,
+<!-- END PLATFORM: iOS -->
+<!-- PLATFORM: Web -->
+    If the PR touches `package.json` or lock files,
+<!-- END PLATFORM: Web -->
+    verify the correct upgrade tier approval was obtained per
+    `.agents/standards/DEPENDENCY_MANAGEMENT.md`. Block merge if not.
 
 ## Documentation Standards
 - Documentation must be synchronised with code changes.

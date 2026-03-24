@@ -112,7 +112,7 @@ Apply all **Apply** and **Adapt** decisions:
 - Updated workflow templates: `.agents/workflows/`
 - Updated rule templates: `.agents/rules/`
 - Updated standard templates: `.agents/standards/` (trim platform sections as with setup)
-- Updated skill templates: `.agents/skills/`
+- Updated skill templates: `.agents/skills/` (trim platform sections in `senior-developer`, `code-reviewer`, `test-engineer` — same as standards)
 - Updated `CLAUDE.md` template: project root `CLAUDE.md`
 - Updated `CODEOWNERS` pattern: `.github/CODEOWNERS`
 

@@ -1,5 +1,26 @@
 # agentskel Changelog
 
+## v1.1 — 2026-03-24
+
+### Skills — Platform markers
+- `senior-developer`: Added `## Platform Standards` section with Android (Compose/UDF,
+  Coroutines, Detekt), iOS (async/await, SwiftUI, SwiftLint), Web (TypeScript, ESLint),
+  Backend (generic async/linting) platform markers
+- `code-reviewer`: Added platform markers to checklist items 4 (architecture standards),
+  5 (lint/static analysis tools), 10 (dependency file references)
+- `test-engineer`: Replaced generic Test Structure with platform-marked sections —
+  Android (MockK, Espresso, backtick naming), iOS (XCTest, XCUITest),
+  Web (Jest/Vitest, Playwright), Backend (standard framework)
+- `setup-skeleton` and `sync-skeleton` updated to trim skill platform markers
+  (same mechanism as standards)
+
+### Standards — Platform-specific architecture
+- Added `ANDROID_ARCHITECTURE.md`: Compose/UDF, Hilt DI, Compose Navigation,
+  module graph, data layer patterns (generic template — adapt to project domain)
+- Added `IOS_ARCHITECTURE.md`: SwiftUI, NavigationStack, Swift Concurrency,
+  SPM module structure, data layer patterns (generic template)
+- `setup-skeleton` updated to copy platform-specific standards (Android-only or iOS-only)
+
 ## v1.0 — 2026-03-20
 
 Initial release. 2-component architecture: skeleton (agentskel) + optional blueprint
