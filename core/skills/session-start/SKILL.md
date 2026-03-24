@@ -58,7 +58,39 @@ Read all of the following files. Do not skip any:
 - [ ] `Last Conventions Check` — if >90 days ago or absent, remind the user
       and suggest running `update-conventions`. Do not auto-run it.
 
-## Step 6 — Check git state
+## Step 6 — Check blueprint (if configured)
+
+- [ ] Read `Blueprint Path` from `.memory/CONFIG.md`.
+- **Not set →** skip this step.
+- **Set →** confirm the path exists on disk. If not, warn the user and continue.
+
+### 6a — Detect blueprint changes
+
+- [ ] Pull latest blueprint changes:
+      ```bash
+      git -C [BLUEPRINT_PATH] pull --ff-only 2>/dev/null || true
+      ```
+- [ ] Read `Last Blueprint Sync` from `.memory/CONFIG.md`.
+- [ ] If set, check for new commits since that date:
+      ```bash
+      git -C [BLUEPRINT_PATH] log --after="[LAST_BLUEPRINT_SYNC]" --oneline
+      ```
+- [ ] If new commits exist, surface a summary to the user:
+      > "Blueprint has been updated since your last session. N new commits — review the changes below before starting work."
+      Show the commit list and any changed spec files (`specs/`, `parity/`).
+- [ ] Update `Last Blueprint Sync` in `.memory/CONFIG.md` to today's date.
+
+### 6b — Check Knowledge Bus
+
+- [ ] List files in `[BLUEPRINT_PATH]/bus/` (excluding `BUS_ENTRY_TEMPLATE.md`,
+      `archive/`, and `.gitkeep`).
+- [ ] For each bus entry, check the `Target Platforms` field. If this project's
+      platform is listed, surface the entry to the user:
+      > "There are Knowledge Bus entries targeting this platform. Review before starting work."
+- [ ] If any bus entries are older than 30 days, remind the user to run the
+      `janitor` workflow to archive them.
+
+## Step 7 — Check git state
 
 - [ ] Run `git branch --show-current` and `git status`.
 - [ ] If on a non-default branch → read RESUME.md and ask the user whether to
@@ -66,10 +98,10 @@ Read all of the following files. Do not skip any:
 - [ ] If uncommitted changes exist → surface them to the user before starting
       any new task. Never stash, discard, or overwrite without explicit instruction.
 
-## Step 7 — Confirm ready
+## Step 8 — Confirm ready
 
 - [ ] Tell the user: session is ready. Summarise any alerts, version mismatches,
-      or stale checks found. Ask what they'd like to work on.
+      stale checks, or pending bus entries found. Ask what they'd like to work on.
 
 ---
 

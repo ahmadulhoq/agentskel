@@ -50,6 +50,18 @@ description: Code review procedures, documentation standards, and QA checks.
     verify the correct upgrade tier approval was obtained per
     `.agents/standards/DEPENDENCY_MANAGEMENT.md`. Block merge if not.
 
+## Cross-Platform Impact (if blueprint configured)
+
+If `Blueprint Path` is set in `.memory/CONFIG.md`:
+- [ ] Check whether the changes touch business logic documented in
+      `[BLUEPRINT_PATH]/specs/`. If so, verify the implementation matches the spec.
+- [ ] If the changes modify shared business logic (calculations, validation rules,
+      data contracts), flag it: a Knowledge Bus entry may be needed.
+- [ ] Check `[BLUEPRINT_PATH]/parity/PARITY_MATRIX.md` — does this change
+      affect parity status for this platform?
+
+Skip this section if no blueprint is configured.
+
 ## Documentation Standards
 - Documentation must be synchronised with code changes.
 - Markdown files must use consistent heading hierarchies.

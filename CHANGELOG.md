@@ -1,5 +1,37 @@
 # agentskel Changelog
 
+## v1.2 — 2026-03-24
+
+### Workflows — Blueprint creation
+- Added `create-blueprint` workflow: step-by-step setup for a new blueprint repo
+  (shared domain knowledge for multi-project teams)
+- Creates: `specs/` (domain spec stubs), `parity/PARITY_MATRIX.md`,
+  `bus/` (knowledge bus with entry template), `skills/domain-expert/`
+- Lightweight design: no ai-memory branch — blueprint is a knowledge hub managed
+  by project-specific agents via `Blueprint Path`
+- Includes `.agents/` as safety net with root-level `CONFIG.md` for identity
+- 14 workflows total (was 13)
+
+### Workflows — Janitor clarification
+- `janitor.md`: clarified that it runs from project context (not blueprint repo);
+  project agent reaches into blueprint via `Blueprint Path`
+
+### Skills — Blueprint awareness
+- `session-start`: Added Step 6 with two sub-steps:
+  - 6a: pull latest blueprint, detect new commits since `Last Blueprint Sync`,
+    surface changed specs/parity files to user
+  - 6b: check Knowledge Bus for entries targeting this platform
+- `domain-expert`: Added `## Blueprint Integration` section — points to
+  `[BLUEPRINT_PATH]/specs/` as source of truth for shared business logic
+- `code-reviewer`: Added `## Cross-Platform Impact` checklist — verify changes
+  match blueprint specs, flag shared logic changes needing bus entries
+- `task-planner`: Added `## Blueprint Check` section — read specs and parity
+  matrix before planning features that touch shared logic
+
+### Memory — Blueprint sync tracking
+- `CONFIG.md` template: Added `Last Blueprint Sync` field to Operational Config;
+  updated by session-start after reviewing blueprint changes
+
 ## v1.1 — 2026-03-24
 
 ### Skills — Platform markers

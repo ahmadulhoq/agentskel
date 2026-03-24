@@ -21,6 +21,19 @@ description: Task decomposition, planning, and tracking standards.
 - Security-related tasks must undergo mandatory review.
 - Escalate ambiguous or contradictory tasks for clarification.
 
+## Blueprint Check (if configured)
+
+If `Blueprint Path` is set in `.memory/CONFIG.md` and the task involves shared
+business logic:
+- [ ] Read the relevant spec(s) in `[BLUEPRINT_PATH]/specs/` before planning.
+- [ ] Check `[BLUEPRINT_PATH]/parity/PARITY_MATRIX.md` for current platform status.
+- [ ] Include in the plan: "Requires Knowledge Bus entry" if the change affects
+      cross-platform contracts.
+- [ ] Note any spec gaps — if the spec is missing or incomplete, plan a spec
+      update as part of the task.
+
+Skip this section if no blueprint is configured or the task is project-specific.
+
 ## Change Tracking
 - All rule or config changes must be documented in CHANGELOG.md.
 - Record source, timestamp, and rationale when modifying shared assets.

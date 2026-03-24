@@ -6,7 +6,7 @@ description: Monthly maintenance — archives old Knowledge Bus entries and trim
 # Janitor Workflow
 
 **Trigger:** First session of each month, or when the blueprint's `bus/` contains entries older than 30 days.
-**Applies to:** The blueprint repo only. Run from the blueprint repo context.
+**Applies to:** Run from a project that has a blueprint configured. The project agent reaches into the blueprint via `Blueprint Path` to archive bus entries and perform maintenance.
 Skip this workflow entirely if no blueprint is configured (`Blueprint Path` not set in `.memory/CONFIG.md`).
 
 ---
@@ -43,11 +43,13 @@ This step is informational — flag items to the user, do not delete anything.
 
 ## Step 4 — Commit
 
-Commit all changes to the blueprint repo:
+Commit all changes to the blueprint repo. Since the project agent is working on blueprint files via `[BLUEPRINT_PATH]`, commit from within that directory:
 ```
+cd [BLUEPRINT_PATH]
 git add bus/
 git commit -m "janitor: archive bus entries for YYYY-MM"
 git push origin [DEFAULT_BRANCH]
+cd -
 ```
 
 ---
@@ -56,7 +58,8 @@ git push origin [DEFAULT_BRANCH]
 
 - **Never delete LESSONS.md entries without user confirmation.**
 - **Never delete bus entries before archiving them** — the archive is the record.
-- Janitor does not touch application code or `.memory/` memory files directly. It only manages blueprint-level files and surfaces stale items to the user.
+- Janitor does not touch application code or `.memory/` memory files directly (except LESSONS.md and NEEDS_REVIEW.md reviews in Steps 2-3). It manages blueprint-level files and surfaces stale items to the user.
+- The blueprint has no ai-memory — all bus archiving and parity updates are committed directly to the blueprint's default branch.
 
 ---
 
