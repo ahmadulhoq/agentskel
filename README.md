@@ -80,7 +80,7 @@ All tools read the same rules, skills, and workflows from `.agents/`.
 
 | Component | Contents |
 |-----------|----------|
-| Workflows (13) | `cartographer` — map modules, classes, functions into memory |
+| Workflows (14) | `cartographer` — map modules, classes, functions into memory |
 | | `develop-feature` — branch, implement, test, commit, PR |
 | | `fix-tech-debt` — pick a debt item, fix it, update registry |
 | | `hotfix` — emergency fix with expedited flow |
@@ -92,6 +92,7 @@ All tools read the same rules, skills, and workflows from `.agents/`.
 | | `setup-skeleton` — one-time install of agentskel on a new project |
 | | `sync-skeleton` — update project when agentskel has new changes |
 | | `check-skeleton` — detect version gap between project and skeleton |
+| | `create-blueprint` — set up a shared domain knowledge repo for multi-project teams |
 | | `parity-check` — cross-platform feature consistency audit |
 | Domain skills (5) | `senior-developer` — architecture decisions, code quality, refactoring |
 | | `code-reviewer` — PR review against standards and sacred behaviors |
@@ -181,8 +182,9 @@ A blueprint contains:
 | `parity/` | Feature parity matrix — which platform implements what |
 | `bus/` | Knowledge Bus — cross-project notifications when one agent changes shared logic |
 | `skills/` | Domain-specific agent skills shared across projects |
+| `CONFIG.md` | Blueprint identity — name, platforms, connected projects |
 
-To connect a blueprint, set `Blueprint Path` in each project's `.memory/CONFIG.md`. Agents read domain knowledge on demand and write back when domain knowledge changes.
+A blueprint has **no ai-memory branch** — it is a pure knowledge hub. Project-specific agents manage blueprint content by reading and writing to it via `Blueprint Path` in their own `.memory/CONFIG.md`. The blueprint includes a lightweight `.agents/` as a safety net if someone opens it directly.
 
 **You don't need a blueprint to start.** For single-project teams, all domain knowledge lives in `.memory/`. Create a blueprint when you have 2+ projects that need shared knowledge.
 
@@ -206,7 +208,7 @@ agentskel/
 │   └── .claudeignore
 ├── roles/
 │   └── dev/                       # Dev role (opt-in)
-│       ├── workflows/             # 13 workflow files
+│       ├── workflows/             # 14 workflow files
 │       ├── skills/                # 5 domain skills
 │       ├── standards/             # 5 standard documents
 │       └── prompts/               # Mission start prompts
@@ -218,7 +220,7 @@ agentskel/
 
 ## Current version
 
-**v1.1** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.2** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 
