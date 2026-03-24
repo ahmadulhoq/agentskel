@@ -99,9 +99,11 @@ All tools read the same rules, skills, and workflows from `.agents/`.
 | | `test-engineer` — test strategy, coverage analysis, test writing |
 | | `task-planner` — break down features into implementable tasks |
 | | `domain-expert` — project-specific business logic expertise |
-| Standards (5) | Architecture, Style Guide, Git Workflow, Dependency Management, API Contracts |
+| Standards (7) | Architecture, Style Guide, Git Workflow, Dependency Management, API Contracts |
+| | Android Architecture — Compose/UDF, Hilt DI, Navigation, module graph, data layer |
+| | iOS Architecture — SwiftUI, NavigationStack, Swift Concurrency, SPM modules, data layer |
 
-Standards support multiple platforms via `<!-- PLATFORM: X -->` markers. During setup, irrelevant platform sections are trimmed so each project gets a clean, focused copy.
+Standards and skills support multiple platforms via `<!-- PLATFORM: X -->` markers. During setup, irrelevant platform sections are trimmed so each project gets clean, focused copies.
 
 ---
 
