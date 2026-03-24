@@ -55,6 +55,7 @@
 | hotfix | workflow | roles/dev/workflows/hotfix.md |
 | janitor | workflow | roles/dev/workflows/janitor.md |
 | parity-check | workflow | roles/dev/workflows/parity-check.md |
+| create-blueprint | workflow | roles/dev/workflows/create-blueprint.md |
 | setup-skeleton | workflow | roles/dev/workflows/setup-skeleton.md |
 | sync-skeleton | workflow | roles/dev/workflows/sync-skeleton.md |
 | sync-versions | workflow | roles/dev/workflows/sync-versions.md |
