@@ -4,24 +4,21 @@
 IDLE
 
 ## Last Completed Task
-- v1.1: Added platform markers to skills (senior-developer, code-reviewer, test-engineer), platform-specific architecture standards (ANDROID_ARCHITECTURE.md, IOS_ARCHITECTURE.md), updated setup/sync workflows for skill trimming
-- v1.2: Added create-blueprint workflow, blueprint-aware skills (session-start Step 6, domain-expert, code-reviewer, task-planner), janitor fix, CONFIG.md Last Blueprint Sync field
-- v1.3: Finalized cut-release workflow (removed DRAFT, added platform markers), completed API_CONTRACT standard (full 7-section standard)
-- v1.4: Removed dead blueprint skills/ from create-blueprint workflow (step 4d) — no agent loads from [BLUEPRINT_PATH]/skills/
-- v1.5: Added blueprint trimming rules + blueprint-specific session-start to create-blueprint workflow — core-behavior, GIT_WORKFLOW, sync/check-skeleton, task-planner must be trimmed; develop-feature and senior-developer excluded; new session-start for blueprints (auto skeleton version check)
+- v1.8: Self-sync enforcement — added items 5-6 to Skeleton Contribution checklist (core-behavior.md) and Step 5d verification gate (task-completion/SKILL.md). Prevents .agents/ copy drift in skeleton repos. PR #6 opened.
 
 ## Next Task
-- No pending tasks. Ready for new assignment.
+- Tackle ad-hoc task-completion enforcement (Gap 1 from framework assessment) — after v1.8 merges.
 
 ## Context Notes (Persistent)
 - agentskel is the skeleton repo itself — Skeleton Path = `.` in CONFIG.md
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
-- MASTER_PLAN.md and MAINTAIN_MASTER_PLAN.md are gitignored (private maintenance files)
+- MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
+- CONFIG.md Skeleton Version updated to 1.8
 
 ## Cartography State
-- Last indexed commit: 6bae0bdde40053cb8c2e64ec366b887e3da35aad
-- Coverage target: 107 source files
+- Last indexed commit: f15601aea51ff7e3a773cd9be398bba7c59f8ac4
+- Coverage target: 119 source files
 - [x] core/memory (15 files)
 - [x] core/rules (2 files)
 - [x] core/skills (3 files)
@@ -34,8 +31,8 @@ IDLE
 - [x] .agents/ (29 files — installed copies)
 - [x] .claude/skills/ (22 files — auto-generated stubs)
 - [x] scripts/ (1 file)
-- [x] Root files (6 files)
+- [x] Root files (9 files — VERSION, CHANGELOG.md, README.md, MASTER_PLAN.md, MAINTAIN_MASTER_PLAN.md, CLAUDE.md, .gitignore, .claudeignore, LICENSE)
 - Coverage gate passed — 13 modules complete, 0 remaining.
 
 ## Timestamp
-- 2026-03-24
+- 2026-03-25
