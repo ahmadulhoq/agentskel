@@ -85,6 +85,10 @@ Key principles (always active):
   4. If the change affects structure, architecture, or install/sync paths —
      update `MASTER_PLAN.md` and its `Corresponds to:` version marker
   No exceptions. This is how repos know they are out of sync.
+- **Self-sync (when `Skeleton Path` = `.` — i.e. this IS the skeleton):**
+  5. Copy every changed source file in `core/` or `roles/` to its `.agents/`
+     counterpart **in the same commit**. Do not defer this to a separate sync.
+  6. Update `.memory/CONFIG.md` `Skeleton Version` to match the new `VERSION`.
 - When a change affects **how the system works or how developers set up/use it**,
   update the skeleton's `README.md`.
 

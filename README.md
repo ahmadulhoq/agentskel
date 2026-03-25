@@ -222,7 +222,7 @@ agentskel/
 
 ## Current version
 
-**v1.9** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.10** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 

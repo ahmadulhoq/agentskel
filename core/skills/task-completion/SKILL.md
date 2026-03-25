@@ -70,6 +70,22 @@ to the user or starting anything else.**
       the new VERSION.
 - Skip if this is not the agentskel repo, or if the change has no MASTER_PLAN impact.
 
+## Step 5d — Self-sync verification (skeleton/agentskel repos only)
+
+- [ ] If `Skeleton Path` in `.memory/CONFIG.md` is `.` (i.e. this IS the skeleton),
+      verify self-sync before committing:
+  1. **File sync:** For every file changed under `core/` or `roles/`, confirm
+     the corresponding `.agents/` copy is identical. Run:
+     ```
+     diff <source_file> <.agents_counterpart>
+     ```
+     If any diff is non-empty, copy the source to `.agents/` and stage it in
+     the same commit.
+  2. **Version sync:** Confirm `.memory/CONFIG.md` `Skeleton Version` matches
+     the `VERSION` file. If not, update CONFIG.md.
+- **This is a gate.** Do not commit until both checks pass.
+- Skip if this is not the agentskel repo (Skeleton Path ≠ `.`).
+
 ## Step 6 — RESUME.md
 
 - [ ] Update `.memory/RESUME.md` with:
