@@ -2,6 +2,7 @@
 
 | ID | Task | Date | Est. Human Hours | Agent Start | Agent End | Agent Duration | Files Changed | Status |
 |----|------|------|-----------------|-------------|-----------|----------------|---------------|--------|
+| SD-001–003 | Fix spec drift (README count, CONFIG version, domain-expert stale ref) + sync .agents/ copies | 2026-03-25 | 0.5h | — | — | ~5 min | 8 (VERSION, CHANGELOG.md, README.md, roles/dev/skills/domain-expert/SKILL.md, .agents/skills/domain-expert/SKILL.md, .agents/rules/core-behavior.md, .agents/skills/task-completion/SKILL.md, .agents/workflows/create-blueprint.md) + .memory/CONFIG.md on ai-memory | completed |
 
 <!-- Notes on estimates:
      - "Est. Human Hours" is the agent's estimate of how long a senior developer
