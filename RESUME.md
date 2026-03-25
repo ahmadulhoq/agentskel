@@ -4,17 +4,18 @@
 IDLE
 
 ## Last Completed Task
-- v1.8: Self-sync enforcement — added items 5-6 to Skeleton Contribution checklist (core-behavior.md) and Step 5d verification gate (task-completion/SKILL.md). Prevents .agents/ copy drift in skeleton repos. PR #6 opened.
+- v1.9: Added implement-task workflow — generic wrapper for ad-hoc implementation requests. Ensures pre-flight, planning, and task-completion run for every task, not just named workflows. PR #7 opened.
 
 ## Next Task
-- Tackle ad-hoc task-completion enforcement (Gap 1 from framework assessment) — after v1.8 merges.
+- No pending tasks. Ready for new assignment.
+- Note: PR #6 (v1.8) and PR #7 (v1.9) are both open. Whichever merges second needs trivial VERSION conflict resolution.
 
 ## Context Notes (Persistent)
 - agentskel is the skeleton repo itself — Skeleton Path = `.` in CONFIG.md
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
-- CONFIG.md Skeleton Version updated to 1.8
+- CONFIG.md Skeleton Version updated to 1.9
 
 ## Cartography State
 - Last indexed commit: f15601aea51ff7e3a773cd9be398bba7c59f8ac4
