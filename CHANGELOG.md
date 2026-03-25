@@ -1,5 +1,14 @@
 # agentskel Changelog
 
+## v1.7 — 2026-03-25
+
+### Fixes — Spec drift cleanup
+- `domain-expert/SKILL.md`: Removed stale reference to "blueprint's
+  `skills/domain-expert/SKILL.md`" — blueprints do not include domain-expert
+  (create-blueprint workflow explicitly excludes it)
+- `README.md`: Fixed standards count in repo structure (was "5 standard
+  documents", actually 7)
+
 ## v1.6 — 2026-03-25
 
 ### Rules — MASTER_PLAN version tracking

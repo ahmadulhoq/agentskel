@@ -218,7 +218,7 @@ description: Rules specific to this blueprint repository.
 | `parity-check.md` | no | Runs from project context, not blueprint |
 | `janitor.md` | no | Runs from project context, not blueprint |
 | `cartographer.md` | no | Blueprint has no application code to map |
-| `sync-skeleton.md` | yes, trimmed | Keeps blueprint's .agents/ in sync with skeleton — replace `.memory/CONFIG.md` with root `CONFIG.md`, remove ai-memory commit steps, remove task completion checklist, add blueprint trimming note to Step 0 |
+| `sync-skeleton.md` | yes, trimmed | Keeps blueprint's .agents/ in sync with skeleton — replace `.memory/CONFIG.md` with root `CONFIG.md`, remove ai-memory commit steps, remove task completion checklist, add blueprint trimming note to Step 0, include Step 5x migration mechanism (adapted for blueprint — migrations go in the sync branch commit, not ai-memory) |
 | `check-skeleton.md` | yes, trimmed | Detects skeleton drift — replace `.memory/CONFIG.md` with root `CONFIG.md`, remove ai-memory commit steps, remove task completion checklist |
 | `fix-tech-debt.md` | no | Blueprint has no app code to fix |
 | `hotfix.md` | no | Blueprint has no app releases |

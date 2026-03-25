@@ -82,6 +82,8 @@ Key principles (always active):
   1. Bump `VERSION` (MINOR for additions, MAJOR for breaking changes)
   2. Add an entry to `CHANGELOG.md`
   3. Update the `## Current version` line in the skeleton's `README.md` to match the new VERSION
+  4. If the change affects structure, architecture, or install/sync paths —
+     update `MASTER_PLAN.md` and its `Corresponds to:` version marker
   No exceptions. This is how repos know they are out of sync.
 - When a change affects **how the system works or how developers set up/use it**,
   update the skeleton's `README.md`.

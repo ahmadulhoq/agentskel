@@ -212,7 +212,7 @@ agentskel/
 │   └── dev/                       # Dev role (opt-in)
 │       ├── workflows/             # 14 workflow files
 │       ├── skills/                # 5 domain skills
-│       ├── standards/             # 5 standard documents
+│       ├── standards/             # 7 standard documents
 │       └── prompts/               # Mission start prompts
 ├── VERSION                        # Current skeleton version
 └── CHANGELOG.md                   # What changed in each version
@@ -222,7 +222,7 @@ agentskel/
 
 ## Current version
 
-**v1.6** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.7** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 

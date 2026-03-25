@@ -33,8 +33,6 @@ If this project has a `Blueprint Path` configured in `.memory/CONFIG.md`:
   or the deviation may be a bug.
 - Check `[BLUEPRINT_PATH]/parity/PARITY_MATRIX.md` to understand what other
   platforms have implemented.
-- The blueprint's `skills/domain-expert/SKILL.md` may contain additional
-  cross-project domain knowledge.
 
 If no blueprint is configured, all domain knowledge lives in this file and
 in `.memory/` — this section can be ignored.
