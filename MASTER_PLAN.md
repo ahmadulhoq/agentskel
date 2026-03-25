@@ -574,11 +574,12 @@ repo-root/
 │   └── workflows/
 │       ├── cartographer.md
 │       ├── develop-feature.md
+│       ├── implement-task.md
 │       ├── fix-tech-debt.md
 │       ├── hotfix.md
 │       ├── sync-skeleton.md
 │       ├── check-dependencies.md
-│       └── ... (9 workflows total)
+│       └── ... (8 more workflows)
 └── .memory/                               ← Git worktree (ai-memory branch)
     ├── CONFIG.md                          ← Repo identity, skeleton version, check dates
     ├── RULES.md                           ← Operating rules (principles, not procedures)
@@ -653,7 +654,7 @@ Domain skills remain unchanged — specialist knowledge (coding standards, testi
 
 #### .agents/rules/core-behavior.md
 
-Contains principles only — no step-by-step procedures. Procedures are in skills. Sections: How You Work, Task Completion (mandatory `task-completion` skill gate), Git and File Discipline (no changes during discussion, no commits without instruction, complete git flow once started), How You Communicate, How You Handle Errors, Memory Protocol (`session-start` at session start, `task-completion` after tasks, checkpoint protocol), Skeleton Contribution (4-item checklist: VERSION bump, CHANGELOG entry, README version line, MASTER_PLAN update if structural), Blueprint Contribution (if configured).
+Contains principles only — no step-by-step procedures. Procedures are in skills. Sections: How You Work, Task Completion (mandatory `task-completion` skill gate), Git and File Discipline (no changes during discussion, no commits without instruction, complete git flow once started), How You Communicate, How You Handle Errors, Memory Protocol (`session-start` at session start, `task-completion` after tasks, checkpoint protocol), Skeleton Contribution (6-item checklist: VERSION bump, CHANGELOG entry, README version line, MASTER_PLAN update if structural, self-sync `.agents/` copies when Skeleton Path = `.`, update CONFIG.md Skeleton Version), Blueprint Contribution (if configured).
 
 **Source:** `core/rules/core-behavior.md`
 
@@ -698,7 +699,7 @@ These were extracted from rules in v4.0 because procedures embedded in rules got
 | Skill | Trigger | What It Enforces |
 |-------|---------|-----------------|
 | `session-start` | Beginning of every session | Memory mount check → read all memory files → surface alerts → check skeleton version → check freshness dates → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus entries) → check git state → confirm ready |
-| `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton, structural only) → RESUME → memory commit |
+| `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton, structural only) → Self-sync verification (skeleton only, v1.10: diff sources vs `.agents/` copies, check CONFIG.md version) → RESUME → memory commit |
 | `git-flow` | When creating branches, committing, or opening PRs | Branch from default → correct naming → commit message format → push → open PR → never merge own PR |
 
 Each procedural skill lives in `.agents/skills/<name>/SKILL.md` with the same YAML frontmatter as domain skills. In Claude Code, the `.claude/skills/` stub ensures the description survives compaction.
@@ -724,6 +725,12 @@ Discovery mission that maps the codebase into MAP.md, SYMBOLS.md, and TECH_DEBT.
 Full feature development lifecycle: Pre-Flight (read memory files, understand requirements) → Phase 1: Plan (write plan with estimates, wait for approval) → Phase 2: Implement (follow senior-developer standards, respect SACRED.md, update SYMBOLS/MAP) → Phase 3: Test (follow test-engineer standards, verify tests pass) → Phase 4: Document (CHANGELOG, TIME_LOG, Knowledge Bus if blueprint configured, memory commit).
 
 **Source:** `roles/dev/workflows/develop-feature.md`
+
+#### .agents/workflows/implement-task.md (v1.9)
+
+Generic wrapper for any ad-hoc implementation request (fix, change, add, remove, refactor) that doesn't match a named workflow. Lightweight version of develop-feature: Pre-Flight (read memory files) → Plan (for non-trivial tasks, present plan and wait for approval; for trivial tasks, state intent and proceed) → Implement (follow senior-developer standards) → Verify (run tests if available) → Complete (git-flow, task-completion). Exists to close the enforcement gap where ad-hoc tasks could skip the post-task checklist — named workflows embed task-completion as their final step, but requests that don't match any workflow had no structural wrapper.
+
+**Source:** `roles/dev/workflows/implement-task.md`
 
 #### .agents/workflows/parity-check.md
 
