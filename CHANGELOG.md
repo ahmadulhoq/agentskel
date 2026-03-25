@@ -1,5 +1,15 @@
 # agentskel Changelog
 
+## v1.9 — 2026-03-25
+
+### Workflows — Generic task wrapper
+- Added `implement-task.md`: lightweight workflow for any ad-hoc implementation
+  request (fix, change, add, remove, refactor) that doesn't match a named
+  workflow (develop-feature, fix-tech-debt, hotfix). Ensures pre-flight,
+  planning, and task-completion happen for every task — closes the enforcement
+  gap where ad-hoc tasks could skip the post-task checklist.
+- 15 workflows total (was 14).
+
 ## v1.7 — 2026-03-25
 
 ### Fixes — Spec drift cleanup

@@ -210,7 +210,7 @@ agentskel/
 │   └── .claudeignore
 ├── roles/
 │   └── dev/                       # Dev role (opt-in)
-│       ├── workflows/             # 14 workflow files
+│       ├── workflows/             # 15 workflow files
 │       ├── skills/                # 5 domain skills
 │       ├── standards/             # 7 standard documents
 │       └── prompts/               # Mission start prompts
@@ -222,7 +222,7 @@ agentskel/
 
 ## Current version
 
-**v1.7** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.9** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 
