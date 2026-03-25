@@ -62,6 +62,14 @@ to the user or starting anything else.**
 - **This is mandatory for breaking changes. Without it, downstream syncs will fail.**
 - Skip if this is not the agentskel repo, or if the VERSION bump is non-breaking.
 
+## Step 5c — MASTER_PLAN (skeleton/agentskel repos only)
+
+- [ ] If this task changed structure, architecture, install/sync paths, or
+      architecture decisions → update `MASTER_PLAN.md` per `MAINTAIN_MASTER_PLAN.md`.
+- [ ] Update the `Corresponds to:` version marker in MASTER_PLAN.md to match
+      the new VERSION.
+- Skip if this is not the agentskel repo, or if the change has no MASTER_PLAN impact.
+
 ## Step 6 — RESUME.md
 
 - [ ] Update `.memory/RESUME.md` with:
