@@ -4,18 +4,17 @@
 IDLE
 
 ## Last Completed Task
-- v1.9: Added implement-task workflow — generic wrapper for ad-hoc implementation requests. Ensures pre-flight, planning, and task-completion run for every task, not just named workflows. PR #7 opened.
+- v1.10: All PRs merged — v1.9 (implement-task workflow), v1.10 (self-sync enforcement), MASTER_PLAN updated for both.
 
 ## Next Task
 - No pending tasks. Ready for new assignment.
-- Note: PR #6 (v1.8) and PR #7 (v1.9) are both open. Whichever merges second needs trivial VERSION conflict resolution.
 
 ## Context Notes (Persistent)
 - agentskel is the skeleton repo itself — Skeleton Path = `.` in CONFIG.md
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
-- CONFIG.md Skeleton Version updated to 1.9
+- CONFIG.md Skeleton Version updated to 1.10
 
 ## Cartography State
 - Last indexed commit: f15601aea51ff7e3a773cd9be398bba7c59f8ac4
