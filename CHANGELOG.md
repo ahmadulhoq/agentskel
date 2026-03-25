@@ -1,5 +1,26 @@
 # agentskel Changelog
 
+## v1.6 — 2026-03-25
+
+### Rules — MASTER_PLAN version tracking
+- `core-behavior.md`: Added item 4 to Skeleton Contribution checklist — when a change
+  affects structure, architecture, or install/sync paths, update `MASTER_PLAN.md` and
+  its `Corresponds to:` version marker
+- `MASTER_PLAN.md`: Added `Corresponds to: agentskel vX.Y` marker after the title,
+  making drift between the ADR and the skeleton version detectable
+
+### Skills — MASTER_PLAN checklist item
+- `task-completion`: Added Step 5c (MASTER_PLAN) — update MASTER_PLAN.md per
+  MAINTAIN_MASTER_PLAN.md when structure/architecture changes, update the
+  `Corresponds to:` version marker to match the new VERSION. Skeleton/agentskel
+  repos only.
+
+### Workflows — Blueprint migration steps
+- `create-blueprint.md`: Updated sync-skeleton.md trimming notes to include Step 5x
+  migration mechanism (adapted for blueprint — migrations go in the sync branch
+  commit, not ai-memory). Ensures blueprints created from the template have a
+  documented path for breaking-change migrations.
+
 ## v1.5 — 2026-03-24
 
 ### Workflows — Blueprint trimming rules
