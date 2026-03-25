@@ -25,6 +25,6 @@
 ## Spec Drift
 | ID | Description | Found |
 |----|-------------|-------|
-| SD-001 | README.md repo structure says "5 standard documents" under `roles/dev/standards/` but there are 7 (ARCHITECTURE, STYLE_GUIDE, GIT_WORKFLOW, DEPENDENCY_MANAGEMENT, API_CONTRACT, ANDROID_ARCHITECTURE, IOS_ARCHITECTURE) | 2026-03-25 |
-| SD-002 | `.memory/CONFIG.md` Skeleton Version says `1.5` but VERSION file is `1.6` — version drift | 2026-03-25 |
-| SD-003 | `roles/dev/skills/domain-expert/SKILL.md` line 36 references "blueprint's `skills/domain-expert/SKILL.md`" but create-blueprint workflow explicitly excludes domain-expert from blueprints | 2026-03-25 |
+| ~~SD-001~~ | ~~RESOLVED v1.7~~ — README.md standards count fixed 5→7 | 2026-03-25 |
+| ~~SD-002~~ | ~~RESOLVED v1.7~~ — CONFIG.md Skeleton Version updated 1.5→1.7 | 2026-03-25 |
+| ~~SD-003~~ | ~~RESOLVED v1.7~~ — domain-expert stale blueprint reference removed | 2026-03-25 |

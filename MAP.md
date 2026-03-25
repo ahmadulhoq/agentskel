@@ -69,5 +69,3 @@
 - `roles/dev/workflows/cut-release.md` — uses platform markers; during setup, trim to project's platform
 - `.agents/` contains copies (not symlinks) of source files from `core/` and `roles/dev/` — synced via sync-skeleton workflow pointing to self (Skeleton Path = `.`)
 - `MASTER_PLAN.md` is the core ADR; tracked in git since v1.6; `MAINTAIN_MASTER_PLAN.md` is gitignored (private maintenance checklist)
-- `README.md` repo structure section says "5 standard documents" under `roles/dev/standards/` but there are 7 — stale count
-- `CONFIG.md` in `.memory/` still says Skeleton Version 1.5 but VERSION file is 1.6 — needs update
