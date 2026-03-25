@@ -1,5 +1,19 @@
 # agentskel Changelog
 
+## v1.10 — 2026-03-25
+
+### Rules — Self-sync enforcement for skeleton repos
+- `core-behavior.md`: Added items 5-6 to Skeleton Contribution checklist —
+  when `Skeleton Path` = `.` (i.e. this IS the skeleton), copy every changed
+  `core/` or `roles/` file to its `.agents/` counterpart in the same commit,
+  and update `.memory/CONFIG.md` Skeleton Version to match VERSION.
+
+### Skills — Self-sync verification gate
+- `task-completion`: Added Step 5d — verification gate that diffs all changed
+  source files against their `.agents/` copies and checks `.memory/CONFIG.md`
+  Skeleton Version matches VERSION. Blocks commit until both checks pass.
+  Skeleton/agentskel repos only.
+
 ## v1.9 — 2026-03-25
 
 ### Workflows — Generic task wrapper
