@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.10: All PRs merged — v1.9 (implement-task workflow), v1.10 (self-sync enforcement), MASTER_PLAN updated for both.
+- v1.11: Context survival + judgment enforcement — CLAUDE.md parity with GEMINI.md, core-behavior gains compaction-safe sections, task-completion gets explicit trigger checking + completion summary. PR #9 opened.
 
 ## Next Task
 - No pending tasks. Ready for new assignment.
@@ -14,7 +14,7 @@ IDLE
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
-- CONFIG.md Skeleton Version updated to 1.10
+- CONFIG.md Skeleton Version updated to 1.11
 
 ## Cartography State
 - Last indexed commit: f15601aea51ff7e3a773cd9be398bba7c59f8ac4
@@ -35,4 +35,4 @@ IDLE
 - Coverage gate passed — 13 modules complete, 0 remaining.
 
 ## Timestamp
-- 2026-03-25
+- 2026-03-26
