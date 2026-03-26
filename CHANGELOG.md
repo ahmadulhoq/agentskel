@@ -1,5 +1,28 @@
 # agentskel Changelog
 
+## v1.11 — 2026-03-26
+
+### Templates — CLAUDE.md parity with GEMINI.md
+- `CLAUDE.md.template`: Added 3 procedural skill triggers (`session-start`,
+  `task-completion`, `git-flow`) — matches GEMINI.md.template which already
+  had them. Ensures these instructions survive context compaction in Claude
+  Code, since CLAUDE.md is re-injected every turn.
+
+### Rules — Compaction-safe effort tracking and dependency boundaries
+- `core-behavior.md`: Added Effort Tracking section (estimate human hours,
+  record in RESUME.md before starting) and Dependency Boundaries section
+  (never upgrade without instruction, read release notes, major upgrades
+  need full plan). Previously these only existed in RULES.md which gets
+  compacted out of context.
+
+### Skills — Judgment enforcement in task-completion
+- `task-completion`: Step 5c now requires reading MAINTAIN_MASTER_PLAN.md
+  trigger list and stating which triggers matched — replaces vague "if this
+  task changed structure" with an explicit checklist.
+- `task-completion`: Added Step 8 (completion summary) — agent must list
+  steps executed and steps skipped with reasons before responding. Makes
+  skip decisions visible to the user.
+
 ## v1.10 — 2026-03-25
 
 ### Rules — Self-sync enforcement for skeleton repos

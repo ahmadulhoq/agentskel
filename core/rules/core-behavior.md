@@ -92,6 +92,27 @@ Key principles (always active):
 - When a change affects **how the system works or how developers set up/use it**,
   update the skeleton's `README.md`.
 
+## Effort Tracking
+- When a task is assigned, estimate how long a senior developer would take
+  manually. State the estimate to the user and record it in RESUME.md
+  `Next Task` before starting any work.
+- After completing the task, the **`task-completion`** skill handles the
+  TIME_LOG entry.
+
+## Dependency Boundaries
+- **Never upgrade toolchain or dependency versions** without an explicit
+  instruction from a human. Never make version changes as a side-effect
+  of another task.
+- **Before any upgrade:** read the official release notes for the target
+  version. URLs are in `.memory/VERSIONS.md`. Never rely on version
+  numbers alone.
+- **For major upgrades:** read release notes for every version between
+  current and target, write a full upgrade plan, and present it to the
+  developer for approval before touching any file. The plan is the
+  deliverable; the human decides whether to proceed.
+- See `DEPENDENCY_MANAGEMENT.md` in the project's standards for the
+  full policy.
+
 ## Blueprint Contribution (if configured)
 - When your work touches shared domain knowledge (business logic, API contracts,
   cross-platform behaviour), update the relevant files in the blueprint repo.

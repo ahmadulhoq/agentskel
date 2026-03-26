@@ -1,5 +1,9 @@
 # agentskel Framework — Claude Code Instructions
 
+Before starting any task, execute the `session-start` skill.
+After completing any development task, execute the `task-completion` skill.
+When creating branches, committing, or opening PRs, follow the `git-flow` skill.
+
 Read and follow all rules in `.memory/RULES.md` before starting any task.
 Read `.memory/CONFIG.md` for repo identity and current skeleton version.
 Read `.memory/MAP.md` and `.memory/SYMBOLS.md` for codebase context.

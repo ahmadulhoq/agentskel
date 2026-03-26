@@ -64,11 +64,21 @@ to the user or starting anything else.**
 
 ## Step 5c — MASTER_PLAN (skeleton/agentskel repos only)
 
-- [ ] If this task changed structure, architecture, install/sync paths, or
-      architecture decisions → update `MASTER_PLAN.md` per `MAINTAIN_MASTER_PLAN.md`.
+- [ ] Read `MAINTAIN_MASTER_PLAN.md` and check the trigger list against this
+      task's changes. The triggers are:
+      - Added, removed, or renamed a workflow, skill, prompt, or standard
+      - Changed the install/setup path (setup-skeleton, sync-skeleton)
+      - Added or removed a role
+      - Changed core/ vs roles/ boundaries
+      - Changed the .memory/ file set or schema
+      - Modified the blueprint integration
+      - Changed architecture decisions or principles
+- [ ] State which triggers matched and which did not.
+- [ ] If any trigger matched → update `MASTER_PLAN.md` per
+      `MAINTAIN_MASTER_PLAN.md` "What to Check" section.
 - [ ] Update the `Corresponds to:` version marker in MASTER_PLAN.md to match
       the new VERSION.
-- Skip if this is not the agentskel repo, or if the change has no MASTER_PLAN impact.
+- Skip only if this is not the agentskel repo, or if zero triggers matched.
 
 ## Step 5d — Self-sync verification (skeleton/agentskel repos only)
 
@@ -102,7 +112,15 @@ to the user or starting anything else.**
   ```
 - RESUME.md is excluded from commits (it is local-only via .gitignore on ai-memory).
 
+## Step 8 — Completion summary
+
+Before responding to the user, state:
+- **Steps executed:** [list each step that was run]
+- **Steps skipped:** [list each step that was skipped, with a one-line reason]
+
+This makes skip decisions visible to the user for review. Do not omit this step.
+
 ---
 
 **Gate:** Do not respond to the user or start the next task until all applicable
-steps above are checked off. If a step was skipped, note why.
+steps above are checked off and the completion summary is stated.
