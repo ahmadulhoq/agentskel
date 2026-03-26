@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.10
+> Corresponds to: agentskel v1.11
 
 ---
 
@@ -538,7 +538,7 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 
 | Tool | Entry Point | Discovery Directory | How It Works |
 |------|------------|-------------------|-------------|
-| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
+| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Since v1.11 it includes procedural skill triggers (`session-start`, `task-completion`, `git-flow`) — matching GEMINI.md — so these instructions survive compaction. `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
 | **Antigravity** | `GEMINI.md` | `.agent/` (symlink → `.agents/`) | Antigravity natively reads `.agent/rules/`, `.agent/skills/`, `.agent/workflows/`. The `.agent` symlink points to `.agents/` so both tools share the same files. |
 | **agentskills.io** | — | `.agents/` | The open standard (`agentskills.io`) specifies `.agents/skills/` format. Portable across Claude Code, Antigravity, Cursor, Codex, Kiro. This is the canonical directory. |
 
@@ -654,7 +654,7 @@ Domain skills remain unchanged — specialist knowledge (coding standards, testi
 
 #### .agents/rules/core-behavior.md
 
-Contains principles only — no step-by-step procedures. Procedures are in skills. Sections: How You Work, Task Completion (mandatory `task-completion` skill gate), Git and File Discipline (no changes during discussion, no commits without instruction, complete git flow once started), How You Communicate, How You Handle Errors, Memory Protocol (`session-start` at session start, `task-completion` after tasks, checkpoint protocol), Skeleton Contribution (6-item checklist: VERSION bump, CHANGELOG entry, README version line, MASTER_PLAN update if structural, self-sync `.agents/` copies when Skeleton Path = `.`, update CONFIG.md Skeleton Version), Blueprint Contribution (if configured).
+Contains principles only — no step-by-step procedures. Procedures are in skills. Sections: How You Work, Task Completion (mandatory `task-completion` skill gate), Git and File Discipline (no changes during discussion, no commits without instruction, complete git flow once started), How You Communicate, How You Handle Errors, Memory Protocol (`session-start` at session start, `task-completion` after tasks, checkpoint protocol), Skeleton Contribution (6-item checklist: VERSION bump, CHANGELOG entry, README version line, MASTER_PLAN update if structural, self-sync `.agents/` copies when Skeleton Path = `.`, update CONFIG.md Skeleton Version), Effort Tracking (estimate human hours, record in RESUME.md before starting — survives compaction since v1.11), Dependency Boundaries (never upgrade without instruction, read release notes, major upgrades need plan — survives compaction since v1.11), Blueprint Contribution (if configured).
 
 **Source:** `core/rules/core-behavior.md`
 
@@ -699,7 +699,7 @@ These were extracted from rules in v4.0 because procedures embedded in rules got
 | Skill | Trigger | What It Enforces |
 |-------|---------|-----------------|
 | `session-start` | Beginning of every session | Memory mount check → read all memory files → surface alerts → check skeleton version → check freshness dates → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus entries) → check git state → confirm ready |
-| `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton, structural only) → Self-sync verification (skeleton only, v1.10: diff sources vs `.agents/` copies, check CONFIG.md version) → RESUME → memory commit |
+| `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton only, v1.11: reads trigger list from MAINTAIN_MASTER_PLAN.md, states which matched) → Self-sync verification (skeleton only, v1.10: diff sources vs `.agents/` copies, check CONFIG.md version) → RESUME → memory commit → **Completion summary** (v1.11: lists steps executed and skipped with reasons) |
 | `git-flow` | When creating branches, committing, or opening PRs | Branch from default → correct naming → commit message format → push → open PR → never merge own PR |
 
 Each procedural skill lives in `.agents/skills/<name>/SKILL.md` with the same YAML frontmatter as domain skills. In Claude Code, the `.claude/skills/` stub ensures the description survives compaction.
