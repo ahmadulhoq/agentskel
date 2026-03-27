@@ -1,5 +1,17 @@
 # agentskel Changelog
 
+## v1.17 — 2026-03-27
+
+### Workflows — Blueprint entry point consistency
+- `create-blueprint.md`: Blueprint `CLAUDE.md` template now includes `git-flow` skill
+  trigger, `.agents/rules/` reference, and `CONFIG.md` reference. Previously only had
+  `session-start` trigger and domain content references — missing framework rule discovery
+  and git discipline after context compaction.
+- `create-blueprint.md`: Blueprint `GEMINI.md` template replaced vague "simplified
+  similarly" instruction with an explicit inline template. Now symmetric with `CLAUDE.md`
+  — both reference `.agent/rules/`, skill discovery, `CONFIG.md`, `specs/`, `parity/`,
+  and `bus/`.
+
 ## v1.16 — 2026-03-27
 
 ### Templates — Symmetric entry points for compaction resilience

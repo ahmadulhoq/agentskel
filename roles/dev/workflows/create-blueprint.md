@@ -295,12 +295,31 @@ Create a simplified `CLAUDE.md` (no memory references since blueprint has no ai-
 # [BLUEPRINT_NAME] — Claude Code Instructions
 
 Before starting any task, execute the `session-start` skill.
+When creating branches, committing, or opening PRs, follow the `git-flow` skill.
+
+Read and follow all rules in `.agents/rules/` — these are always active.
+Read `CONFIG.md` for blueprint identity and current skeleton version.
 Read `specs/` for domain knowledge.
 Read `parity/PARITY_MATRIX.md` for cross-platform status.
 Read `bus/` for pending Knowledge Bus entries.
 ```
 
-Create `GEMINI.md` from `[SKELETON_PATH]/core/GEMINI.md.template`, simplified similarly.
+Create `GEMINI.md` with matching references (no memory references since blueprint has no ai-memory):
+
+```markdown
+# [BLUEPRINT_NAME] — Antigravity Instructions
+
+Read and follow all rules in `.agent/rules/`.
+Read all skills in `.agent/skills/` — descriptions tell you when each applies.
+
+Before starting any task, execute the `session-start` skill.
+When creating branches, committing, or opening PRs, follow the `git-flow` skill.
+
+Read `CONFIG.md` for blueprint identity and current skeleton version.
+Read `specs/` for domain knowledge.
+Read `parity/PARITY_MATRIX.md` for cross-platform status.
+Read `bus/` for pending Knowledge Bus entries.
+```
 
 Copy `.claudeignore` from `[SKELETON_PATH]/core/.claudeignore`.
 

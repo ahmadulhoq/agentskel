@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.16
+> Corresponds to: agentskel v1.17
 
 ---
 
@@ -379,7 +379,8 @@ my-org-blueprint/
 │   └── archive/                          # Processed entries (managed by janitor)
 ├── .agents/                              # Safety net — rules, subset of workflows, skills
 ├── .claude/skills/                       # Claude Code stubs
-├── CLAUDE.md                             # Simplified entry point (no memory references)
+├── CLAUDE.md                             # Claude Code entry point (rules, config, domain refs)
+├── GEMINI.md                             # Antigravity entry point (symmetric with CLAUDE.md)
 ├── VERSION                               # Blueprint version
 └── CHANGELOG.md                          # Blueprint changelog
 ```
@@ -754,7 +755,8 @@ Key design decisions:
   blueprint-specific session-start skill, sync-skeleton/check-skeleton workflows (trimmed)
 - Skips senior-developer, session-start (project version), task-completion,
   test-engineer, code-reviewer, domain-expert (all require `.memory/` or are code-focused)
-- Simplified `CLAUDE.md` with no memory file references
+- Symmetric `CLAUDE.md` and `GEMINI.md` entry points — both reference `.agents/rules/`,
+  `CONFIG.md`, `specs/`, `parity/`, `bus/`, and skill triggers (v1.17)
 - Blueprint trimming rules for all copied files (v1.5): remove `.memory/` refs,
   code-specific sections, session lifecycle refs
 - sync-skeleton includes Step 5x migration mechanism for breaking changes (v1.6)
