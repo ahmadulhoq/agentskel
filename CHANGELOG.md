@@ -16,13 +16,12 @@
 - Entry point wording harmonized: both templates now include "these are always active"
   for rules reference.
 
-### Rules — MASTER_PLAN maintenance enforcement
-- `core-behavior.md`: Skeleton Contribution item 4 now requires reading
-  `MAINTAIN_MASTER_PLAN.md` and checking triggers mechanically, instead of
-  relying on judgment ("if the change affects structure"). Prevents recurring
-  missed MASTER_PLAN updates during skeleton changes. Scoped to skeleton repos
-  only (item lives under Skeleton Contribution section; MAINTAIN_MASTER_PLAN.md
-  is gitignored and never installed downstream).
+### Project rules — MASTER_PLAN maintenance enforcement
+- `.memory/RULES.md` (agentskel only): Added Section 10 requiring mechanical
+  `MAINTAIN_MASTER_PLAN.md` trigger check before completing any skeleton change.
+  Prevents recurring missed MASTER_PLAN updates. Lives in project-specific rules
+  (not core-behavior.md) because `MAINTAIN_MASTER_PLAN.md` only exists in the
+  skeleton repo and should not be referenced in downstream projects.
 
 ### Skills — NEEDS_REVIEW.md surfacing
 - `session-start/SKILL.md`: Step 2 now reads `.memory/NEEDS_REVIEW.md` (ambiguous findings
