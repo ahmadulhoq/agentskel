@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.13
+> Corresponds to: agentskel v1.14
 
 ---
 
@@ -92,15 +92,16 @@ The `setup-skeleton` workflow handles this automatically — creating the orphan
 ```bash
 ./scripts/install-agent.sh
 ```
-This script fetches remote branches, detects whether `origin/ai-memory` exists, and mounts the worktree automatically. If the project hasn't been set up yet, it tells the developer to ask their tech lead.
+This script fetches remote branches, detects whether `origin/ai-memory` exists, and mounts the worktree automatically. If `.memory/` already exists, it pulls the latest changes from remote instead of exiting — so re-running the script refreshes memory. If the project hasn't been set up yet, it tells the developer to ask their tech lead.
 
-Three scenarios this handles:
+Four scenarios this handles:
 1. **Developer clones a project that already has ai-memory** — script mounts the worktree.
 2. **Developer cloned before ai-memory existed** — script fetches the new branch and mounts it.
-3. **Project has never been set up** — script tells the developer to ask their tech lead to run `setup-skeleton`.
+3. **Developer already has .memory/ mounted** — script pulls latest from remote.
+4. **Project has never been set up** — script tells the developer to ask their tech lead to run `setup-skeleton`.
 
 **Agent session-start behavior:**
-If `.memory/` is missing when the agent starts, it checks `git branch -r` for `origin/ai-memory` and directs the user to run `install-agent.sh` or `setup-skeleton` as appropriate. The agent refuses to work without memory files.
+If `.memory/` exists, the agent pulls the latest `ai-memory` from remote (`git -C .memory pull --ff-only`) before reading any memory files — ensuring all developers get the latest cartography and memory updates. If the pull fails (network, diverged history), it warns but proceeds with local copy. If `.memory/` is missing, it checks `git branch -r` for `origin/ai-memory` and directs the user to run `install-agent.sh` or `setup-skeleton` as appropriate. The agent refuses to work without memory files.
 
 ### 4.2 Project Memory Files
 
@@ -698,7 +699,7 @@ These were extracted from rules in v4.0 because procedures embedded in rules got
 
 | Skill | Trigger | What It Enforces |
 |-------|---------|-----------------|
-| `session-start` | Beginning of every session | Memory mount check → read all memory files → surface alerts → check skeleton version → check freshness dates → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus entries) → check git state → confirm ready |
+| `session-start` | Beginning of every session | Memory mount check → pull latest ai-memory from remote → read all memory files → surface alerts → check skeleton version → check freshness dates → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus entries) → check git state → confirm ready |
 | `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton only, v1.11: reads trigger list from MAINTAIN_MASTER_PLAN.md, states which matched) → Self-sync verification (skeleton only, v1.10: diff sources vs `.agents/` copies, check CONFIG.md version) → RESUME → memory commit → **Completion summary** (v1.11: lists steps executed and skipped with reasons) |
 | `git-flow` | When creating branches, committing, or opening PRs | Branch from default → correct naming → commit message format → push → open PR → never merge own PR |
 
