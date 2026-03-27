@@ -16,5 +16,5 @@ IDLE
 - Last indexed commit: _not yet set_
 - Modules pending: _none — cartography not yet started_
 
-## Timestamp
+## Timestamp (UTC)
 - _Not yet initialized_

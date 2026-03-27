@@ -13,8 +13,8 @@ The **Release Notes** column must be populated for every row. The agent reads th
 
 | Dependency | Current | Latest Known | Last Updated | Release Notes | Source | Notes |
 |---|---|---|---|---|---|---|
-| [PLATFORM_TOOLCHAIN_1] | x.y.z | — | YYYY-MM-DD | [Release Notes](URL) | [SOURCE_FILE] | |
-| [PLATFORM_TOOLCHAIN_2] | x.y.z | — | YYYY-MM-DD | [Release Notes](URL) | [SOURCE_FILE] | |
+| [PLATFORM_TOOLCHAIN_1] | x.y.z | — | YYYY-MM-DDTHH:MMZ | [Release Notes](URL) | [SOURCE_FILE] | |
+| [PLATFORM_TOOLCHAIN_2] | x.y.z | — | YYYY-MM-DDTHH:MMZ | [Release Notes](URL) | [SOURCE_FILE] | |
 
 ---
 
@@ -22,8 +22,8 @@ The **Release Notes** column must be populated for every row. The agent reads th
 
 | Dependency | Current | Latest Known | Last Updated | Release Notes | Source | Notes |
 |---|---|---|---|---|---|---|
-| [DEPENDENCY_1] | x.y.z | — | YYYY-MM-DD | [Release Notes](URL) | [SOURCE_FILE] | |
-| [DEPENDENCY_2] | x.y.z | — | YYYY-MM-DD | [Release Notes](URL) | [SOURCE_FILE] | |
+| [DEPENDENCY_1] | x.y.z | — | YYYY-MM-DDTHH:MMZ | [Release Notes](URL) | [SOURCE_FILE] | |
+| [DEPENDENCY_2] | x.y.z | — | YYYY-MM-DDTHH:MMZ | [Release Notes](URL) | [SOURCE_FILE] | |
 
 ---
 

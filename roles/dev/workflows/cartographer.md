@@ -116,7 +116,7 @@ modules already marked complete. Record the current HEAD commit SHA in
    cartography. Follow the agent workflow at `.agents/workflows/sync-versions.md`
    (this is an agent-executed instruction file — NOT a GitHub Actions pipeline;
    no CI trigger exists or is needed). It reads the platform's version files and
-   creates/updates every row in VERSIONS.md with `Current`, `Last Updated = today`,
+   creates/updates every row in VERSIONS.md with `Current`, `Last Updated = now (UTC)`,
    `Latest Known = —`, and a Release Notes URL.
    Verify all rows have a Release Notes URL — add any that are missing.
    Then follow the agent workflow at `.agents/workflows/check-dependencies.md` to

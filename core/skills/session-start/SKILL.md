@@ -59,7 +59,7 @@ Read all of the following files. Do not skip any:
 - [ ] If they differ → run `sync-skeleton` before any other task
       (unless the user explicitly says to skip the sync this session).
 
-## Step 5 — Check freshness dates (from `.memory/CONFIG.md`)
+## Step 5 — Check freshness timestamps (from `.memory/CONFIG.md`)
 
 - [ ] `Last Skeleton Check` — if >30 days ago or absent, run `check-skeleton`.
 - [ ] `Last Dependency Check` — if >14 days ago or absent, run `check-dependencies`.
@@ -91,7 +91,7 @@ Read all of the following files. Do not skip any:
 - [ ] If new commits exist, surface a summary to the user:
       > "Blueprint has been updated since your last session. N new commits — review the changes below before starting work."
       Show the commit list and any changed spec files (`specs/`, `parity/`).
-- [ ] Update `Last Blueprint Sync` in `.memory/CONFIG.md` to today's date.
+- [ ] Update `Last Blueprint Sync` in `.memory/CONFIG.md` to the current UTC timestamp.
 
 ### 6b — Check blueprint skeleton version
 

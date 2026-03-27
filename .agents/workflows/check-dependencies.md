@@ -8,7 +8,7 @@
 
 ## Pre-Flight
 
-1. Read `.memory/CONFIG.md` — note `Last Dependency Check` date.
+1. Read `.memory/CONFIG.md` — note `Last Dependency Check` timestamp.
 2. Read `.memory/VERSIONS.md` — all tracked dependencies.
 3. Read the project's dependency management standard — confirm staleness rules and stable-only policy.
 4. If `Last Dependency Check` is within 14 days, **stop** — no action needed. Inform the user the check is current.
@@ -62,7 +62,7 @@ For each entry that triggers a tech debt rule, append to `TECH_DEBT.md`:
 ### DU-XXX — [Dependency Name] [current] -> [latest_stable]
 - **Tier:** [1/2/3/4]
 - **Type:** [patch/minor/major]
-- **Last Updated:** YYYY-MM-DD ([N] months ago)
+- **Last Updated:** YYYY-MM-DDTHH:MMZ ([N] months ago)
 - **Latest Stable:** [version]
 - **Release Notes:** [URL]
 - **Security:** [Yes / No]
@@ -79,7 +79,7 @@ For major version bumps and security fixes, append to `.memory/DEPENDENCY_ALERTS
 
 ```
 ### ALERT-XXX — [Dependency Name] major update available: [current] -> [latest_stable]
-- **Detected:** YYYY-MM-DD
+- **Detected:** YYYY-MM-DDTHH:MMZ
 - **Release Notes:** [URL]
 - **Action Required:** Review for upgrade planning. [Security: YES if applicable]
 - **Status:** OPEN
@@ -91,7 +91,7 @@ For major version bumps and security fixes, append to `.memory/DEPENDENCY_ALERTS
 
 Update `Last Dependency Check` in `.memory/CONFIG.md`:
 ```
-| Last Dependency Check | YYYY-MM-DD |
+| Last Dependency Check | YYYY-MM-DDTHH:MMZ |
 ```
 
 ---

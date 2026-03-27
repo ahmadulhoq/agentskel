@@ -37,8 +37,8 @@ Compare what the version files contain against what VERSIONS.md records. Identif
 
 For each change:
 
-- **Version bumped**: update `Current` column, set `Last Updated = today`
-- **New dependency**: add a new row with `Current`, `Last Updated = today`, `Latest Known = same as Current`, release notes URL (search if unknown), source file, and appropriate notes
+- **Version bumped**: update `Current` column, set `Last Updated = now (UTC)`
+- **New dependency**: add a new row with `Current`, `Last Updated = now (UTC)`, `Latest Known = same as Current`, release notes URL (search if unknown), source file, and appropriate notes
 - **Dependency removed**: remove the row entirely
 
 Do not change `Latest Known` for unchanged dependencies — that is managed by `check-dependencies`.

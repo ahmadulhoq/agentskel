@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.18
+> Corresponds to: agentskel v1.19
 
 ---
 
@@ -121,7 +121,7 @@ If `.memory/` exists, the agent pulls the latest `ai-memory` from remote (`git -
 ├── VERSIONS.md       # Current toolchain & dependency versions (updated after each upgrade)
 ├── DEPENDENCY_ALERTS.md  # Open major/security dependency alerts (surfaced at session start)
 ├── DEPENDENCY_HISTORY.md # Historical log of dependency upgrades
-└── CONFIG.md         # Repo identity and operational config (skeleton version, check dates)
+└── CONFIG.md         # Repo identity and operational config (skeleton version, check timestamps)
 ```
 
 Canonical templates for all of the above live in agentskel:
@@ -147,7 +147,7 @@ Public class and function registry, organized by module/framework. No line numbe
 
 ### 4.5 RESUME.md
 
-Session state file. Always exists, never deleted. Contains: Status (IDLE/IN_PROGRESS), last completed task, next task, persistent context notes, cartography state (last indexed commit SHA), and timestamp. Updated after each sub-task and at session end.
+Session state file. Always exists, never deleted. Contains: Status (IDLE/IN_PROGRESS), last completed task, next task, persistent context notes, cartography state (last indexed commit SHA), and UTC timestamp. Updated after each sub-task and at session end.
 
 **RESUME.md is local-only** — never committed or pushed. Each developer maintains their own session state independently.
 
@@ -487,10 +487,10 @@ Each repo records its own identity in `.memory/CONFIG.md` (created during
 | Skeleton Version | [SKELETON_VERSION] |
 | Skeleton Path | (optional) path to local agentskel clone |
 | Blueprint Path | (optional) path to local blueprint clone |
-| Last Blueprint Sync | YYYY-MM-DD |
-| Last Dependency Check | YYYY-MM-DD |
-| Last Conventions Check | YYYY-MM-DD |
-| Last Skeleton Check | YYYY-MM-DD |
+| Last Blueprint Sync | YYYY-MM-DDTHH:MMZ |
+| Last Dependency Check | YYYY-MM-DDTHH:MMZ |
+| Last Conventions Check | YYYY-MM-DDTHH:MMZ |
+| Last Skeleton Check | YYYY-MM-DDTHH:MMZ |
 ```
 
 **Status values:** `pilot` (setup done, cartography not yet complete) →
@@ -587,7 +587,7 @@ repo-root/
 │       ├── check-dependencies.md
 │       └── ... (8 more workflows)
 └── .memory/                               ← Git worktree (ai-memory branch)
-    ├── CONFIG.md                          ← Repo identity, skeleton version, check dates
+    ├── CONFIG.md                          ← Repo identity, skeleton version, check timestamps
     ├── RULES.md                           ← Project-specific context and rules
     ├── MAP.md                             ← Module and architecture map
     ├── SYMBOLS.md                         ← Public classes and functions index
@@ -706,7 +706,7 @@ These were extracted from rules in v4.0 because procedures embedded in rules got
 
 | Skill | Trigger | What It Enforces |
 |-------|---------|-----------------|
-| `session-start` | Beginning of every session | Memory mount check → pull latest ai-memory from remote → read all memory files (incl. NEEDS_REVIEW.md) → surface alerts and triage items → check skeleton version → check freshness dates (incl. blueprint staleness >7 days) → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus for unprocessed entries targeting this platform) → check git state → confirm ready |
+| `session-start` | Beginning of every session | Memory mount check → pull latest ai-memory from remote → read all memory files (incl. NEEDS_REVIEW.md) → surface alerts and triage items → check skeleton version → check freshness timestamps (incl. blueprint staleness >7 days) → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus for unprocessed entries targeting this platform) → check git state → confirm ready |
 | `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus (commit+push to blueprint repo) → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton only, v1.11: reads trigger list from MAINTAIN_MASTER_PLAN.md, states which matched) → Self-sync verification (skeleton only, v1.10: diff sources vs `.agents/` copies, check CONFIG.md version) → RESUME → memory commit → **Completion summary** (v1.11: lists steps executed and skipped with reasons) |
 | `git-flow` | When creating branches, committing, or opening PRs | Branch from default → correct naming → commit message format → push → open PR → never merge own PR |
 

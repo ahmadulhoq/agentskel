@@ -39,7 +39,7 @@ Record:
 - `current_version` — from `[SKELETON_PATH]/VERSION`
 
 If `project_version == current_version`:
-1. Update `Last Skeleton Check` in `.memory/CONFIG.md` to today's date (Step 4).
+1. Update `Last Skeleton Check` in `.memory/CONFIG.md` to the current UTC timestamp (Step 4).
 2. Report: "Skeleton is current at v[current_version]. No sync needed."
 3. Stop.
 
@@ -68,16 +68,16 @@ Ask:
 
 ## Step 4 — Update Last Skeleton Check
 
-In `.memory/CONFIG.md`, update `Last Skeleton Check` to today's date:
+In `.memory/CONFIG.md`, update `Last Skeleton Check` to the current UTC timestamp:
 ```
-| Last Skeleton Check | YYYY-MM-DD |
+| Last Skeleton Check | YYYY-MM-DDTHH:MMZ |
 ```
 
 Commit to the ai-memory branch:
 ```bash
 cd .memory
 git add CONFIG.md
-git commit -m "check-skeleton: update check date [YYYY-MM-DD]"
+git commit -m "check-skeleton: update check timestamp [YYYY-MM-DDTHH:MMZ]"
 git push origin ai-memory
 cd ..
 ```

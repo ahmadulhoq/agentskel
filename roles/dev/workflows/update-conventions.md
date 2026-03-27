@@ -199,7 +199,7 @@ VERSION bump + CHANGELOG entry.
 
 ## Step 6 — Update Last Conventions Check
 
-In `.memory/CONFIG.md`, update `Last Conventions Check` to today's date.
+In `.memory/CONFIG.md`, update `Last Conventions Check` to the current UTC timestamp (YYYY-MM-DDTHH:MMZ).
 
 Commit the CONFIG.md change (and any CONVENTIONS.md changes) to the ai-memory branch:
 ```bash
@@ -220,7 +220,7 @@ Present to the user:
 - Additions made to CONVENTIONS.md: [count and brief summary, or "none"]
 - NEEDS_REVIEW items filed: [count — list each with one-line description]
 - Architecture standard updated: [yes/no — if yes, state new version]
-- Last Conventions Check updated: [date]
+- Last Conventions Check updated: [UTC timestamp]
 
 ---
 

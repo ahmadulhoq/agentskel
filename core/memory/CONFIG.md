@@ -30,10 +30,10 @@ Update to `active` once the cartographer workflow finishes.
 | Skeleton Version | [SKELETON_VERSION] |
 | Skeleton Path | (optional) path to local agentskel clone |
 | Blueprint Path | (optional) path to local blueprint (team knowledge) repo |
-| Last Blueprint Sync | YYYY-MM-DD |
-| Last Dependency Check | YYYY-MM-DD |
-| Last Conventions Check | YYYY-MM-DD |
-| Last Skeleton Check | YYYY-MM-DD |
+| Last Blueprint Sync | YYYY-MM-DDTHH:MMZ |
+| Last Dependency Check | YYYY-MM-DDTHH:MMZ |
+| Last Conventions Check | YYYY-MM-DDTHH:MMZ |
+| Last Skeleton Check | YYYY-MM-DDTHH:MMZ |
 
 **Skeleton Path** — optional. If set, `sync-skeleton` and `check-skeleton` workflows read the skeleton from this local path instead of fetching from GitHub. Leave blank if no local clone is available.
 **Blueprint Path** — optional. If set, agents read domain knowledge (specs, parity, bus) from this local path. Only needed for multi-project teams with shared domain knowledge.

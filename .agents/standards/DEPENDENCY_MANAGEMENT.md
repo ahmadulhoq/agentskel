@@ -217,11 +217,11 @@ Staleness entries use the `DU-` prefix in `TECH_DEBT.md`, separate from `AP-`, `
 | Minor version available, > 3 months since last update | Medium | `DU-` tech debt (medium) |
 | Patch version available, > 2 months since last update | Low | `DU-` tech debt (low) |
 
-"Last updated" is the date the project last bumped that dependency, recorded in `VERSIONS.md`.
+"Last updated" is the UTC timestamp when the project last bumped that dependency, recorded in `VERSIONS.md`.
 
 ### Check Frequency
 
-Run the `check-dependencies` workflow at the first session each **fortnight** (14 days). The last run date is stored in the `Last Checked` header of `VERSIONS.md`. Check order: Key Dependencies first, Toolchain second.
+Run the `check-dependencies` workflow at the first session each **fortnight** (14 days). The last run timestamp is stored in the `Last Checked` header of `VERSIONS.md`. Check order: Key Dependencies first, Toolchain second.
 
 ### Version Discovery
 
@@ -242,17 +242,17 @@ Each dependency row includes:
 
 - **Current** — version active in the project right now
 - **Latest Known** — latest stable version found in the most recent `check-dependencies` run
-- **Last Updated** — date this project last bumped this dependency
+- **Last Updated** — UTC timestamp when this project last bumped this dependency
 
 The file header records when the last check ran:
 ```
-> Last Checked: YYYY-MM-DD
+> Last Checked: YYYY-MM-DDTHH:MMZ
 ```
 
 ### Keeping VERSIONS.md in Sync
 
 Run the `sync-versions` workflow after any PR that modifies version files:
-- New dependency added → new row, `Last Updated = today`, `Latest Known = same as Current`
+- New dependency added → new row, `Last Updated = now (UTC)`, `Latest Known = same as Current`
 - Dependency removed → remove the row
 - Version bumped → update `Current` and `Last Updated`
 

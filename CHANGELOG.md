@@ -1,5 +1,20 @@
 # agentskel Changelog
 
+## v1.19 — 2026-03-27
+
+### UTC timestamps
+- All operational timestamps now use ISO 8601 UTC format (`YYYY-MM-DDTHH:MMZ`)
+  instead of date-only (`YYYY-MM-DD`). Affects: CONFIG.md check dates,
+  VERSIONS.md `Last Updated` column, MAP.md/SYMBOLS.md headers, RESUME.md
+  timestamp, DEPENDENCY_ALERTS detected dates. Calendar dates (CHANGELOG
+  entries, Upgrade Log, standard revision headers) remain date-only.
+- Updated templates: `core/memory/CONFIG.md`, `core/memory/MAP.md`,
+  `core/memory/SYMBOLS.md`, `core/memory/RESUME.md`, `core/memory/VERSIONS.md`.
+- Updated workflows: `check-dependencies.md`, `check-skeleton.md`,
+  `sync-versions.md`, `cartographer.md`, `update-conventions.md`.
+- Updated standards: `DEPENDENCY_MANAGEMENT.md`.
+- Updated skills: `session-start/SKILL.md`.
+
 ## v1.18 — 2026-03-27
 
 ### Templates — RULES.md restructure and entry point cleanup
