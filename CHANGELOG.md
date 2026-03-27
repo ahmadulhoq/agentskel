@@ -2,6 +2,11 @@
 
 ## v1.13 — 2026-03-27
 
+### Rules — Use cartographed memory
+- `core-behavior.md`: Added "Use your memory" rule — when MAP.md and
+  SYMBOLS.md exist, use them to locate files and modules instead of
+  re-scanning the codebase. The cartographer indexed it; use the index.
+
 ### Skills — Code cleanup rules
 - `senior-developer/SKILL.md`: Added explicit code cleanup rules to Code
   Quality section — remove unused imports, organize imports per STYLE_GUIDE,
