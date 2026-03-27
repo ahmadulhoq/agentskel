@@ -55,8 +55,8 @@ Each AI tool discovers the setup through its own mechanism:
 
 | Tool | Entry point | Discovery |
 |------|------------|-----------|
-| Claude Code | `CLAUDE.md` | Reads memory files, then `.claude/skills/` for skill/workflow stubs |
-| Antigravity | `GEMINI.md` | Reads `.agent/` (symlink to `.agents/`) |
+| Claude Code | `CLAUDE.md` | Framework rules (`.agents/rules/`), memory files (`.memory/`), skill stubs (`.claude/skills/`) |
+| Antigravity | `GEMINI.md` | Framework rules (`.agent/rules/`), memory files (`.memory/`), skill discovery (`.agent/skills/`) |
 
 All tools read the same rules, skills, and workflows from `.agents/`.
 
@@ -222,7 +222,7 @@ agentskel/
 
 ## Current version
 
-**v1.15** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.16** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 

@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.15
+> Corresponds to: agentskel v1.16
 
 ---
 
@@ -518,9 +518,11 @@ changes. Used to detect new blueprint commits since last session via
 Agents enter the codebase via different tools — Claude Code (terminal), Antigravity (IDE), or any future tool that follows the `agentskills.io` open standard. Each tool has its own discovery mechanism for rules, skills, and entry points. Without a unified architecture, we'd need to maintain separate copies of every rule and skill per tool.
 
 A second problem is **context compaction**. When an agent's context window fills up, older messages get compressed. Files read via tool calls (like `.memory/RULES.md`) get compacted away, causing agents to "forget" procedures mid-session. Only certain files survive compaction:
-- **`CLAUDE.md`** — re-injected every turn in Claude Code
+- **`CLAUDE.md`** / **`GEMINI.md`** — re-injected every turn in their respective tools
 - **`.claude/skills/` descriptions** — YAML frontmatter loaded at startup, persists across compaction
 - **`.agents/rules/`** — loaded as always-on context in Antigravity
+
+Both entry points now reference all shared resources (`.agents/rules/`, `.memory/` files, procedural skill triggers) so agents can rediscover the full system after compaction regardless of which tool is used.
 
 This means **principles** (short, always-on) belong in rules, but **procedures** (step-by-step checklists) need a different approach: they should load just-in-time via skills, not sit in rules waiting to be forgotten.
 
@@ -539,8 +541,8 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 
 | Tool | Entry Point | Discovery Directory | How It Works |
 |------|------------|-------------------|-------------|
-| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Since v1.11 it includes procedural skill triggers (`session-start`, `task-completion`, `git-flow`) — matching GEMINI.md — so these instructions survive compaction. `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
-| **Antigravity** | `GEMINI.md` | `.agent/` (symlink → `.agents/`) | Antigravity natively reads `.agent/rules/`, `.agent/skills/`, `.agent/workflows/`. The `.agent` symlink points to `.agents/` so both tools share the same files. |
+| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Contains procedural skill triggers, `.agents/rules/` reference (framework rules), and all `.memory/` file references (project knowledge fallback). `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
+| **Antigravity** | `GEMINI.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Contains `.agent/rules/` and `.agent/skills/` references (framework rules + skill discovery), procedural skill triggers, and all `.memory/` file references (project knowledge fallback). The `.agent` symlink points to `.agents/` so both tools share the same files. |
 | **agentskills.io** | — | `.agents/` | The open standard (`agentskills.io`) specifies `.agents/skills/` format. Portable across Claude Code, Antigravity, Cursor, Codex, Kiro. This is the canonical directory. |
 
 ### 6.4 Repo File Structure
