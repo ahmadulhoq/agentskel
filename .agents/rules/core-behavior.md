@@ -98,8 +98,10 @@ Key principles (always active):
   1. Bump `VERSION` (MINOR for additions, MAJOR for breaking changes)
   2. Add an entry to `CHANGELOG.md`
   3. Update the `## Current version` line in the skeleton's `README.md` to match the new VERSION
-  4. If the change affects structure, architecture, or install/sync paths —
-     update `MASTER_PLAN.md` and its `Corresponds to:` version marker
+  4. Read `MAINTAIN_MASTER_PLAN.md` — check each trigger against this change.
+     If any trigger matches, update `MASTER_PLAN.md` content AND its
+     `Corresponds to:` version marker. Do not bump the marker without
+     verifying the content is current.
   No exceptions. This is how repos know they are out of sync.
 - **Self-sync (when `Skeleton Path` = `.` — i.e. this IS the skeleton):**
   5. Copy every changed source file in `core/` or `roles/` to its `.agents/`

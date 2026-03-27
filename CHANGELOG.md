@@ -16,6 +16,14 @@
 - Entry point wording harmonized: both templates now include "these are always active"
   for rules reference.
 
+### Rules — MASTER_PLAN maintenance enforcement
+- `core-behavior.md`: Skeleton Contribution item 4 now requires reading
+  `MAINTAIN_MASTER_PLAN.md` and checking triggers mechanically, instead of
+  relying on judgment ("if the change affects structure"). Prevents recurring
+  missed MASTER_PLAN updates during skeleton changes. Scoped to skeleton repos
+  only (item lives under Skeleton Contribution section; MAINTAIN_MASTER_PLAN.md
+  is gitignored and never installed downstream).
+
 ### Skills — NEEDS_REVIEW.md surfacing
 - `session-start/SKILL.md`: Step 2 now reads `.memory/NEEDS_REVIEW.md` (ambiguous findings
   awaiting human classification). Step 3 surfaces non-empty NEEDS_REVIEW entries alongside
