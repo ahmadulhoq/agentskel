@@ -10,6 +10,7 @@
 | Name | agentskel |
 | GitHub | ahmadulhoq/agentskel |
 | Platform | Framework (shell/markdown) |
+| Description | AI agent framework — workflows, skills, rules, standards, and memory management for consistent agent behavior across projects |
 | Memory branch | ai-memory |
 | Status | active |
 
