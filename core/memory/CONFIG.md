@@ -10,6 +10,7 @@
 | Name | [REPO_SHORT_NAME] |
 | GitHub | [GITHUB_SLUG] |
 | Platform | [PLATFORM] |
+| Description | [SHORT_DESCRIPTION] |
 | Memory branch | ai-memory |
 | Status | pilot |
 

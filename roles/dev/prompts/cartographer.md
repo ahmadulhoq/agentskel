@@ -11,7 +11,7 @@ and `.memory/TECH_DEBT.md` so that future agents can navigate without a full
 codebase scan.
 
 **Before you begin:**
-1. Read `.memory/RULES.md` — follow all rules throughout this mission.
+1. Read `.memory/RULES.md` — follow project-specific rules throughout this mission.
 2. Read `.memory/RESUME.md` — you may be resuming a previous session.
 3. Read `.memory/SACRED.md` and `.memory/LESSONS.md`.
 4. Read `.memory/VERSIONS.md` — note the current version snapshot.
