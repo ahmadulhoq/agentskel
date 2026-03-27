@@ -109,6 +109,10 @@ modules already marked complete. Record the current HEAD commit SHA in
      (use `ClassName.functionName()` format)
    - Internal frameworks and which modules depend on them
    - Critical business logic flows with function-level entry points
+6b. If the project has a `MASTER_PLAN.md` or similar ADR document, add a
+   **section index** to MAP.md. For each top-level section, record the section
+   name, line range, and a 1-line summary. This lets agents read only the
+   relevant section via offset/limit instead of loading the entire document.
 7. Map critical flows in detail (e.g. auth, key features). For each
    flow, trace the call chain from entry point to output using the function names
    recorded in SYMBOLS.md.
