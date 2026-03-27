@@ -64,6 +64,26 @@
 - Entry: `roles/dev/workflows/check-dependencies.md`
 - Flow: Read VERSIONS.md → WebFetch release notes for each dependency → compare versions → apply staleness rules → write TECH_DEBT entries → write DEPENDENCY_ALERTS → update Last Dependency Check
 
+## MASTER_PLAN.md Section Index
+<!-- Allows targeted reads via offset/limit instead of reading all 1,019 lines.
+     Line ranges updated during cartography. -->
+
+| Section | Lines | Summary |
+|---------|-------|---------|
+| 1. Vision | 7–19 | Framework purpose — addon for existing projects, scales solo to org |
+| 2. Problems We're Solving | 21–32 | 6 problems: session amnesia, scale, staleness, no institutional knowledge, cross-platform drift, standards |
+| 3. Architecture Overview | 34–80 | Two components (skeleton + blueprint), three-tool model (Claude Code, Antigravity, future) |
+| 4. Project Memory | 82–341 | ai-memory branch, 15 memory files, checkpoint/triage protocols, time logging, freshness/drift detection |
+| 5. The Blueprint | 343–515 | Optional team knowledge repo — specs, parity matrix, Knowledge Bus, repo identity |
+| 6. Multi-Tool Instruction System | 517–642 | Entry points per tool, context compaction survival, stub pattern, rules/skills/memory interaction |
+| 7. Agent Behavior System | 644–806 | Rules (always-on), domain skills (contextual), procedural skills (triggered), workflows (explicit), token budget |
+| 8. Git Workflow | 808–829 | Branch naming, commit format, PR conventions |
+| 9. Dependency Management | 831–873 | VERSIONS.md, staleness policy, platform-specific architecture standards, CODEOWNERS |
+| 10. Orchestration | 875–936 | GitHub Actions (memory maintenance, Knowledge Bus), Slack channels, reviewer agent |
+| 11. Adoption Path | 938–993 | 5 phases: Foundation → Cartographer → Working Agent → Multi-Project → Scale |
+| 12. Extension Points | 995–1006 | Custom skills, blueprint, devops role, GitHub Actions, MCP servers |
+| 13. Risk Register | 1008–1019 | 7 risks with likelihood, impact, and mitigation strategies |
+
 ## Technical Debt & Notes
 - `roles/devops/` — placeholder only, not implemented
 - `roles/dev/workflows/cut-release.md` — uses platform markers; during setup, trim to project's platform
