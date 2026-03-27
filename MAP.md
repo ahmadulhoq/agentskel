@@ -1,5 +1,5 @@
 # Project Map: agentskel
-> Last updated: 2026-03-25 by Cartographer Agent
+> Last updated: 2026-03-27 by Cartographer Agent
 
 ## Architecture Pattern
 - Pattern: Framework — skeleton templates + role-based workflows/skills/standards
@@ -15,18 +15,18 @@
 
 | Module | Responsibility | Key Entry Points |
 |--------|---------------|-----------------|
-| `core/memory/` | 15 memory file templates — project identity, codebase map, session state, conventions, tech debt, dependency tracking | CONFIG.md (identity), RULES.md (operating rules), MAP.md (architecture), SYMBOLS.md (symbol index), RESUME.md (session state) |
+| `core/memory/` | 15 memory file templates — project identity, codebase map, session state, conventions, tech debt, dependency tracking | CONFIG.md (identity + description), RULES.md (project context + rules), MAP.md (architecture), SYMBOLS.md (symbol index), RESUME.md (session state) |
 | `core/rules/` | Always-on agent behavior rules | core-behavior.md (planning, communication, memory protocol, skeleton contribution), security-non-negotiables.md (credentials, validation, least privilege) |
 | `core/skills/` | 3 procedural skills — mandatory lifecycle procedures | session-start/SKILL.md (8-step init), task-completion/SKILL.md (7-step post-task with Steps 5b/5c for skeleton repos), git-flow/SKILL.md (branch/commit/PR) |
 | `core/` (root) | Entry point templates and secret exclusions | CLAUDE.md.template, GEMINI.md.template, .claudeignore |
-| `roles/dev/workflows/` | 15 dev workflows — multi-step missions triggered by user | setup-skeleton.md (install), cartographer.md (map codebase), develop-feature.md (build), implement-task.md (ad-hoc tasks), sync-skeleton.md (update), create-blueprint.md (blueprint setup) |
+| `roles/dev/workflows/` | 15 dev workflows — multi-step missions triggered by user | setup-skeleton.md (install), cartographer.md (map codebase), develop-feature.md (build), implement-task.md (ad-hoc tasks), sync-skeleton.md (update), create-blueprint.md (blueprint setup), check-dependencies.md (staleness), update-conventions.md (best practices) |
 | `roles/dev/skills/` | 5 domain skills — specialist agent knowledge | senior-developer, code-reviewer, test-engineer, task-planner, domain-expert |
 | `roles/dev/standards/` | 7 standards — architecture, style, git, dependency, API, platform-specific architecture | ARCHITECTURE.md (multi-platform with markers), STYLE_GUIDE.md, GIT_WORKFLOW.md, DEPENDENCY_MANAGEMENT.md, API_CONTRACT.md, ANDROID_ARCHITECTURE.md, IOS_ARCHITECTURE.md |
 | `roles/dev/prompts/` | 8 mission start prompts — context-setting for workflows | cartographer.md, develop-feature.md, setup-skeleton.md, sync-skeleton.md, code-review.md, check-skeleton.md, update-conventions.md, parity-check.md |
 | `roles/devops/` | Placeholder for future DevOps role | README.md (planned: deployment, monitoring, incident response) |
 | `.agents/` | Installed copy of rules, workflows, skills, standards (self-install for dogfooding) | Mirrors core/ and roles/dev/ — kept in sync via sync-skeleton |
-| `.claude/skills/` | 22 auto-generated Claude Code stubs for skill/workflow discovery | One stub per skill (8) and workflow (14) |
-| `root` | Project identity, versioning, ADR, maintenance docs | VERSION (skeleton version), CHANGELOG.md, README.md, MASTER_PLAN.md (ADR), MAINTAIN_MASTER_PLAN.md (gitignored checklist), CLAUDE.md, LICENSE |
+| `.claude/skills/` | 23 auto-generated Claude Code stubs for skill/workflow discovery | One stub per skill (8) and workflow (15) |
+| `root` | Project identity, versioning, ADR, maintenance docs | VERSION (skeleton version), CHANGELOG.md, README.md, MASTER_PLAN.md (ADR), MAINTAIN_MASTER_PLAN.md (gitignored checklist), CLAUDE.md, GEMINI.md, CONTRIBUTING.md, LICENSE |
 | `scripts/` | Developer onboarding | install-agent.sh (mount ai-memory worktree) |
 
 ## Internal Frameworks / Shared Libraries
@@ -48,7 +48,7 @@
 
 ### Session Lifecycle
 - Entry: `core/skills/session-start/SKILL.md`
-- Flow: Check .memory/ mount → read 9 memory files → surface alerts → check skeleton version → check freshness dates → check blueprint (pull latest, detect changes, check Knowledge Bus) → check git state → confirm ready
+- Flow: Check .memory/ mount → pull latest ai-memory → read 10 memory files (incl. NEEDS_REVIEW.md) → surface alerts + triage items → check skeleton version → check freshness dates → check blueprint (pull latest, detect changes, check Knowledge Bus) → check git state → confirm ready
 - Exit: `core/skills/task-completion/SKILL.md`
 - Flow: CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus (if blueprint) → README (if agentskel) → Migration Step (if breaking, agentskel) → MASTER_PLAN (if structural, agentskel) → RESUME → memory commit
 
