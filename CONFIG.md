@@ -27,13 +27,13 @@ Update to `active` once the cartographer workflow finishes.
 | Field | Value |
 |-------|-------|
 | Default Branch | main |
-| Skeleton Version | 1.18 |
+| Skeleton Version | 1.19 |
 | Skeleton Path | . |
 | Blueprint Path | |
 | Last Blueprint Sync | |
-| Last Dependency Check | YYYY-MM-DD |
-| Last Conventions Check | YYYY-MM-DD |
-| Last Skeleton Check | YYYY-MM-DD |
+| Last Dependency Check | YYYY-MM-DDTHH:MMZ |
+| Last Conventions Check | YYYY-MM-DDTHH:MMZ |
+| Last Skeleton Check | YYYY-MM-DDTHH:MMZ |
 
 **Skeleton Path** — points to `.` (repo root) because this repo IS the skeleton. `sync-skeleton` reads templates from `core/` and `roles/` within the same repo.
 **Blueprint Path** — optional. If set, agents read domain knowledge (specs, parity, bus) from this local path. Only needed for multi-project teams with shared domain knowledge.
