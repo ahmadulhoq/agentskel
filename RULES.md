@@ -85,7 +85,14 @@ Key principles (always active):
 - Always create a branch before writing any code
 - Never merge your own PR — a human reviewer must approve
 
-## 10. Key References
+## 10. MASTER_PLAN Maintenance
+- Before completing any skeleton change, read `MAINTAIN_MASTER_PLAN.md` and check
+  each trigger against the change. If any trigger matches, update `MASTER_PLAN.md`
+  content AND its `Corresponds to:` version marker.
+- Do not bump the version marker without verifying the plan content is current.
+- This is a mechanical check, not a judgment call — always read the trigger list.
+
+## 11. Key References
 - **Git workflow:** see standards in `.agents/` (installed from the skeleton)
 - **Architecture:** see standards in `.agents/` (universal + platform-specific)
 - **Dependency management:** see standards in `.agents/`.
