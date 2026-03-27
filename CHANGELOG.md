@@ -2,26 +2,33 @@
 
 ## v1.18 — 2026-03-27
 
-### Templates — RULES.md deduplication and entry point cleanup
-- `core/memory/RULES.md`: Removed 7 sections that duplicated `.agents/rules/core-behavior.md`
-  (Memory Protocol, Development Standards, Documentation, Self-Improvement, Effort Tracking,
-  Boundaries, Git Workflow). RULES.md now holds only project-specific content: Identity,
-  Cross-Platform Communication, and Key References. Eliminates contradictory wording
-  (e.g., "plan for non-trivial tasks" vs "plan for ALL tasks") and context window waste.
+### Templates — RULES.md restructure and entry point cleanup
+- `core/memory/RULES.md`: Restructured from duplicated behavioral rules to a clean
+  two-section template: **Project Context** (vision, goals, domain knowledge) and
+  **Project Rules** (ad-hoc project-specific overrides). Identity moved to `CONFIG.md`
+  template (new `Description` field). Removed 7 sections that duplicated
+  `.agents/rules/core-behavior.md`, plus Key References (redundant pointers to `.agents/`)
+  and Cross-Platform Communication (handled by blueprint workflows).
+- `core/memory/CONFIG.md`: Added `Description` field to Identity table for project
+  identity that was previously in RULES.md.
 - `CLAUDE.md.template` and `GEMINI.md.template`: Removed per-file `.memory/` references
   (CONFIG, MAP, SYMBOLS, LESSONS, SACRED, VERSIONS, DEPENDENCY_ALERTS). These are all
   read by the `session-start` skill already. Entry points now reference only:
-  `.agents/rules/`, `.memory/RULES.md` (project context), `.memory/RESUME.md` (session state),
-  and the three procedural skills. Eliminates dual-inventory maintenance.
-- Entry point wording harmonized: both templates now include "these are always active"
-  for rules reference.
+  `.agents/rules/`, `.memory/RULES.md` (project context and rules), `.memory/RESUME.md`
+  (session state), and the three procedural skills. Eliminates dual-inventory maintenance.
 
-### Project rules — MASTER_PLAN maintenance enforcement
-- `.memory/RULES.md` (agentskel only): Added Section 10 requiring mechanical
-  `MAINTAIN_MASTER_PLAN.md` trigger check before completing any skeleton change.
-  Prevents recurring missed MASTER_PLAN updates. Lives in project-specific rules
-  (not core-behavior.md) because `MAINTAIN_MASTER_PLAN.md` only exists in the
-  skeleton repo and should not be referenced in downstream projects.
+### Workflows — RULES.md reference updates
+- `setup-skeleton.md`: RULES.md install step updated to reflect new template structure.
+- `cartographer.md`: Updated RULES.md description from "operating guidelines" to
+  "project-specific context and rules".
+- `update-conventions.md`: Fixed stale reference — `Last Conventions Check` is in
+  CONFIG.md, not RULES.md.
+
+### Project rules — MASTER_PLAN maintenance enforcement (agentskel only)
+- `.memory/RULES.md`: Added MASTER_PLAN Maintenance as a project rule requiring
+  mechanical `MAINTAIN_MASTER_PLAN.md` trigger check before completing any skeleton
+  change. Lives in project-specific rules (not core-behavior.md) because
+  `MAINTAIN_MASTER_PLAN.md` only exists in the skeleton repo.
 
 ### Skills — NEEDS_REVIEW.md surfacing
 - `session-start/SKILL.md`: Step 2 now reads `.memory/NEEDS_REVIEW.md` (ambiguous findings

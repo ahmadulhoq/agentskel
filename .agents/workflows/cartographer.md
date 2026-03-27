@@ -16,7 +16,7 @@ modules already marked complete. Record the current HEAD commit SHA in
 `Cartography State` at the start of each session.
 
 ## Steps
-1. Read `.memory/RULES.md` for operating guidelines.
+1. Read `.memory/RULES.md` for project-specific context and rules.
    Read `.memory/VERSIONS.md` — note the current version snapshot.
 2. Read `.memory/RESUME.md` — you may be resuming a previous session.
    If resuming, check `Cartography State` to find the last indexed

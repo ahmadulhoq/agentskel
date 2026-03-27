@@ -34,7 +34,7 @@ until this procedure is complete.**
 Read all of the following files. Do not skip any:
 
 - [ ] `.memory/CONFIG.md` — repo identity, operational config, check dates
-- [ ] `.memory/RULES.md` — operating rules
+- [ ] `.memory/RULES.md` — project-specific context and rules
 - [ ] `.memory/MAP.md` — module and architecture map
 - [ ] `.memory/SYMBOLS.md` — public classes and functions index
 - [ ] `.memory/RESUME.md` — session state and persistent context

@@ -93,7 +93,7 @@ Read each template from `[SKELETON_PATH]/core/memory/` and create the correspond
 **Files to create in `.memory/`:**
 
 - `CONFIG.md` — fill all placeholders; set `Status: pilot`
-- `RULES.md` — fill all placeholders
+- `RULES.md` — fill `[APP_NAME]` placeholder; leave Project Context and Project Rules sections for the team to populate
 - `MAP.md` — fill placeholders; leave module content blank (cartographer will populate it)
 - `SYMBOLS.md` — fill placeholders; leave symbol content blank (cartographer will populate it)
 - `RESUME.md` — set Status: `IDLE`, all other fields blank

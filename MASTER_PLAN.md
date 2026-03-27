@@ -107,7 +107,7 @@ If `.memory/` exists, the agent pulls the latest `ai-memory` from remote (`git -
 
 ```
 .memory/
-├── RULES.md          # Project-specific context (identity, references, cross-platform)
+├── RULES.md          # Project-specific context and rules (ad-hoc overrides)
 ├── MAP.md            # High-level architecture & module map
 ├── SYMBOLS.md        # Symbol registry (functions, classes → file paths)
 ├── RESUME.md         # Session state (always exists, never deleted)
@@ -525,7 +525,7 @@ A second problem is **context compaction**. When an agent's context window fills
 - **`.claude/skills/` descriptions** — YAML frontmatter loaded at startup, persists across compaction
 - **`.agents/rules/`** — loaded as always-on context in Antigravity
 
-Both entry points reference `.agents/rules/` (framework behavioral rules), `.memory/RULES.md` (project-specific context), `.memory/RESUME.md` (session state), and the three procedural skill triggers. The `session-start` skill handles reading all other `.memory/` files — entry points don't list them individually to avoid dual-inventory maintenance.
+Both entry points reference `.agents/rules/` (framework behavioral rules), `.memory/RULES.md` (project-specific context and rules), `.memory/RESUME.md` (session state), and the three procedural skill triggers. The `session-start` skill handles reading all other `.memory/` files — entry points don't list them individually to avoid dual-inventory maintenance.
 
 This means **principles** (short, always-on) belong in rules, but **procedures** (step-by-step checklists) need a different approach: they should load just-in-time via skills, not sit in rules waiting to be forgotten.
 
@@ -544,8 +544,8 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 
 | Tool | Entry Point | Discovery Directory | How It Works |
 |------|------------|-------------------|-------------|
-| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Contains procedural skill triggers, `.agents/rules/` reference (framework rules), `.memory/RULES.md` (project context), and `.memory/RESUME.md` (session state). All other `.memory/` files are read by `session-start`. `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
-| **Antigravity** | `GEMINI.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Contains `.agent/rules/` and `.agent/skills/` references (framework rules + skill discovery), procedural skill triggers, `.memory/RULES.md` (project context), and `.memory/RESUME.md` (session state). All other `.memory/` files are read by `session-start`. The `.agent` symlink points to `.agents/` so both tools share the same files. |
+| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Contains procedural skill triggers, `.agents/rules/` reference (framework rules), `.memory/RULES.md` (project context and rules), and `.memory/RESUME.md` (session state). All other `.memory/` files are read by `session-start`. `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
+| **Antigravity** | `GEMINI.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Contains `.agent/rules/` and `.agent/skills/` references (framework rules + skill discovery), procedural skill triggers, `.memory/RULES.md` (project context and rules), and `.memory/RESUME.md` (session state). All other `.memory/` files are read by `session-start`. The `.agent` symlink points to `.agents/` so both tools share the same files. |
 | **agentskills.io** | — | `.agents/` | The open standard (`agentskills.io`) specifies `.agents/skills/` format. Portable across Claude Code, Antigravity, Cursor, Codex, Kiro. This is the canonical directory. |
 
 ### 6.4 Repo File Structure
@@ -588,7 +588,7 @@ repo-root/
 │       └── ... (8 more workflows)
 └── .memory/                               ← Git worktree (ai-memory branch)
     ├── CONFIG.md                          ← Repo identity, skeleton version, check dates
-    ├── RULES.md                           ← Project-specific context (identity, references)
+    ├── RULES.md                           ← Project-specific context and rules
     ├── MAP.md                             ← Module and architecture map
     ├── SYMBOLS.md                         ← Public classes and functions index
     ├── RESUME.md                          ← Session state (local-only, not committed)
@@ -866,7 +866,7 @@ Toolchain version files in each repo are owned by the lead engineer in `.github/
 Each repo maintains two operational files:
 
 - **`.memory/VERSIONS.md`** — snapshot of current toolchain and dependency versions, flags for items needing attention, and an upgrade log. Template: `core/memory/VERSIONS.md` in agentskel.
-- **`.memory/CONFIG.md`** — repo identity (name, GitHub slug, platform, status) and operational config (default branch, skeleton version, optional skeleton path, optional blueprint path, last blueprint sync date, last dependency check date, last conventions check date, last skeleton check date). Template: `core/memory/CONFIG.md` in agentskel.
+- **`.memory/CONFIG.md`** — repo identity (name, GitHub slug, platform, description, status) and operational config (default branch, skeleton version, optional skeleton path, optional blueprint path, last blueprint sync date, last dependency check date, last conventions check date, last skeleton check date). Template: `core/memory/CONFIG.md` in agentskel.
 
 Agents read both files at session start. `CONFIG.md` is the source of truth for skeleton version drift detection and workflow trigger dates.
 

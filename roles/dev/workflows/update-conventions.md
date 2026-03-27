@@ -12,7 +12,7 @@ description: Refreshes .memory/CONVENTIONS.md by cross-checking current best pra
 **When to run:**
 - After a major library upgrade that changes recommended patterns
 - When adopting a new architecture pattern or adding a significant new feature area
-- When RULES.md reminds you that `Last Conventions Check` is more than 90 days old
+- When `Last Conventions Check` in `.memory/CONFIG.md` is more than 90 days old
 - When explicitly requested by a lead engineer or tech lead
 
 ---
