@@ -1,5 +1,5 @@
 # Project Map: agentskel
-> Last updated: 2026-03-27T13:45Z by Cartographer Agent
+> Last updated: 2026-03-27T15:20Z by Cartographer Agent
 
 ## Architecture Pattern
 - Pattern: Framework — skeleton templates + role-based workflows/skills/standards
@@ -48,13 +48,13 @@
 
 ### Session Lifecycle
 - Entry: `core/skills/session-start/SKILL.md`
-- Flow: Check .memory/ mount → pull latest ai-memory → read 10 memory files (incl. NEEDS_REVIEW.md) → surface alerts + triage items → check skeleton version → check freshness dates → check blueprint (pull latest, detect changes, check Knowledge Bus) → check git state → confirm ready
+- Flow: Check .memory/ mount → pull latest ai-memory → read 10 memory files (incl. NEEDS_REVIEW.md) → surface alerts + triage items → check skeleton version → check freshness timestamps → check blueprint (pull latest, detect changes, check Knowledge Bus) → check git state → confirm ready
 - Exit: `core/skills/task-completion/SKILL.md`
 - Flow: CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus (if blueprint) → README (if agentskel) → Migration Step (if breaking, agentskel) → MASTER_PLAN (if structural, agentskel) → RESUME → memory commit
 
 ### Cartography Flow
 - Entry: `roles/dev/workflows/cartographer.md`
-- Flow: Read memory → record HEAD SHA → enumerate all source files → build module list → tech-stack research → process each module (read files → extract symbols → triage findings → pause for NEEDS_REVIEW) → completion gate → write MAP.md → map critical flows → populate VERSIONS.md → final commit
+- Flow: Read memory → record HEAD SHA → enumerate all source files → build module list → tech-stack research → process each module (read files → extract symbols → triage findings → pause for NEEDS_REVIEW) → completion gate → write MAP.md → index ADR sections (step 6b) → map critical flows → populate VERSIONS.md → final commit
 
 ### Blueprint Creation Flow
 - Entry: `roles/dev/workflows/create-blueprint.md`
