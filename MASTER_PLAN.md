@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.12
+> Corresponds to: agentskel v1.13
 
 ---
 
@@ -672,7 +672,7 @@ Skills are loaded only when the agent determines they're relevant to the current
 
 #### .agents/skills/senior-developer/SKILL.md
 
-Generic sections (User Experience, Design Philosophy, SOLID, Code Quality, Process, System Extension) plus a `## Platform Standards` section with `<!-- PLATFORM: X -->` markers for Android (Compose/UDF, Coroutines, Detekt), iOS (SwiftUI, async/await, SwiftLint), Web (TypeScript, ESLint), and Backend (generic async/linting). Platform sections are trimmed during `setup-skeleton` — a project installed for Android only sees the Android block.
+Generic sections (User Experience, Design Philosophy, SOLID, Code Quality, Process, System Extension) plus a `## Platform Standards` section with `<!-- PLATFORM: X -->` markers for Android (Compose/UDF, Coroutines, Detekt), iOS (SwiftUI, async/await, SwiftLint), Web (TypeScript, ESLint), and Backend (generic async/linting). Platform sections are trimmed during `setup-skeleton` — a project installed for Android only sees the Android block. Since v1.13, Code Quality includes explicit cleanup rules (unused imports, unused variables, dead code removal, import organization per STYLE_GUIDE) and per-platform static analysis is conditional ("if the project uses X") rather than mandatory.
 
 #### .agents/skills/test-engineer/SKILL.md
 

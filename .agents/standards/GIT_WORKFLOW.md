@@ -82,7 +82,7 @@ For agent tech debt commits:
 
 - **All merges to `development` require a PR**
 - Minimum **1 approving review** before merge
-- **CI must pass** (lint, tests, build) before merge
+- **CI must pass** (tests, build, and lint if configured) before merge
 - Use **squash merge** for all feature/bug/chore branches — one clean commit per ticket in `development` history
 - PR title should match the commit message format: `[PE-XXXX] short description`
 

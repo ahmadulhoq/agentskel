@@ -40,6 +40,12 @@ Every code decision must consider its impact on the end user.
 - Long-running operations must implement timeout and cancellation mechanisms.
 - File and path operations must verify existence and permissions.
 - Don't leave commented-out code. Provide detailed commit messages explaining *why*.
+- Remove unused imports before committing. Organize imports per STYLE_GUIDE.md
+  (Standard library → Third-party → Project, separated by blank lines).
+- Remove unused variables, parameters, and local functions. Dead code belongs
+  in git history, not in the working tree.
+- After implementation, review your own changes for leftover debug code,
+  temporary comments, and unnecessary whitespace changes.
 
 ## Platform Standards
 
@@ -55,8 +61,8 @@ Every code decision must consider its impact on the end user.
   One-off events via `SharedFlow<UiEvent>` or `Channel` — never in `UiState`.
 - Coroutine dispatchers: `Dispatchers.IO` for blocking I/O, `Dispatchers.Default`
   for CPU work, `Dispatchers.Main` for UI only.
-- New code must pass Detekt. Run `./gradlew detekt --continue` locally before
-  opening a PR.
+- If the project uses Detekt, run `./gradlew detekt --continue` locally before
+  opening a PR and fix any violations.
 - If the task touches version/dependency files (`libs.versions.toml`,
   `gradle-wrapper.properties`, `buildSrc/`), follow
   `.agents/standards/DEPENDENCY_MANAGEMENT.md`.
@@ -70,7 +76,7 @@ Every code decision must consider its impact on the end user.
 - Prefer `guard let` for early returns. Avoid force unwrapping (`!`).
 - SwiftUI views are pure functions of state. Use `@StateObject` for owned
   ViewModels, `@ObservedObject` for injected ones.
-- New code must pass SwiftLint. Fix all violations before opening a PR.
+- If the project uses SwiftLint, run it before opening a PR and fix any violations.
 - If the task touches `Package.swift` or `Podfile`, follow
   `.agents/standards/DEPENDENCY_MANAGEMENT.md`.
 - Comply with `.agents/standards/IOS_ARCHITECTURE.md` and
@@ -82,7 +88,7 @@ Every code decision must consider its impact on the end user.
 - Prefer `const` over `let`. Never use `var`. Use strict TypeScript where available.
 - Component rendering must be pure. Side effects in hooks/lifecycle methods only.
 - Bundle size awareness: lazy-load routes, monitor bundle budgets.
-- New code must pass ESLint/Prettier. Fix all violations before opening a PR.
+- If the project uses ESLint/Prettier, run it before opening a PR and fix any violations.
 - If the task touches `package.json`, follow
   `.agents/standards/DEPENDENCY_MANAGEMENT.md`.
 <!-- END PLATFORM: Web -->
@@ -92,7 +98,7 @@ Every code decision must consider its impact on the end user.
 - Use the language's async primitives for I/O-bound work.
 - Follow the framework's recommended patterns for request handling, middleware,
   and error propagation.
-- New code must pass the project's linter. Fix all violations before opening a PR.
+- If the project has a linter configured, run it before opening a PR and fix any violations.
 - If the task touches dependency files, follow
   `.agents/standards/DEPENDENCY_MANAGEMENT.md`.
 <!-- END PLATFORM: Backend -->

@@ -1,5 +1,32 @@
 # agentskel Changelog
 
+## v1.13 — 2026-03-27
+
+### Skills — Code cleanup rules
+- `senior-developer/SKILL.md`: Added explicit code cleanup rules to Code
+  Quality section — remove unused imports, organize imports per STYLE_GUIDE,
+  remove unused variables/parameters/local functions, review own changes for
+  leftover debug code and temporary comments.
+
+### Skills & Workflows — Static analysis made optional
+- `senior-developer/SKILL.md`: Per-platform static analysis changed from
+  mandatory ("New code must pass X") to conditional ("If the project uses X,
+  run it and fix violations"). Applies to Detekt (Android), SwiftLint (iOS),
+  ESLint/Prettier (Web), and project linter (Backend).
+- `develop-feature.md`: Step 18 changed from "Run static analysis and fix all
+  violations" to "If the repo has a static analysis tool configured, run it
+  and fix violations."
+- `fix-tech-debt.md`: Step 16 — same change.
+- `hotfix.md`: Step 14 — same change.
+- `implement-task.md`: Already conditional ("if available") — no change needed.
+
+### Standards — CI lint gate made conditional
+- `GIT_WORKFLOW.md`: PR merge requirement changed from "CI must pass (lint,
+  tests, build)" to "CI must pass (tests, build, and lint if configured)."
+- `code-reviewer/SKILL.md`: Lint check item 5 changed from "The author must
+  fix violations" to "If CI runs static analysis, the author must fix
+  violations."
+
 ## v1.12 — 2026-03-26
 
 ### Rules — Workflow enforcement, assumptions, and content preservation

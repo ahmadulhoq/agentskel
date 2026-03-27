@@ -32,7 +32,7 @@ description: Code review procedures, documentation standards, and QA checks.
 <!-- PLATFORM: Web -->
    CI runs ESLint/Prettier. Check that no unresolved violations exist in new/changed lines.
 <!-- END PLATFORM: Web -->
-   The author must fix violations before approval.
+   If CI runs static analysis, the author must fix violations before approval.
 6. **Performance:** Are there obvious inefficiencies? Consider UX impact.
 7. **Security:** Does it follow `security-non-negotiables` rules?
 8. **Tests:** Are there adequate tests for the changes?
