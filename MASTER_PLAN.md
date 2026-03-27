@@ -775,19 +775,21 @@ Key design decisions:
 
 ### 7.4 Token Budget
 
+Base cost: always-on rules (~2,400 tokens) are loaded in every scenario.
+
 | Scenario | What's Loaded | Est. Tokens |
 |----------|--------------|-------------|
-| Cartographer mission | Always-on rules + workflow | ~1,200 |
-| Simple bug fix | Always-on rules + senior-developer skill | ~1,800 |
-| Feature development | Always-on rules + senior-dev + test-engineer + task-planner | ~2,800 |
-| Code review | Always-on rules + code-reviewer skill | ~1,500 |
-| Session start | Always-on rules + session-start skill | ~1,800 |
-| Task completion | Always-on rules + task-completion skill | ~1,200 |
-| All skills active (worst case) | Everything | ~5,000 |
+| Cartographer mission | Always-on rules + workflow | ~4,700 |
+| Simple bug fix | Always-on rules + senior-developer skill | ~3,900 |
+| Feature development | Always-on rules + senior-dev + test-engineer + task-planner | ~4,900 |
+| Code review | Always-on rules + code-reviewer skill | ~3,400 |
+| Session start | Always-on rules + session-start skill | ~4,200 |
+| Task completion | Always-on rules + task-completion skill | ~3,900 |
+| All skills active (worst case) | Everything | ~8,000 |
 
-The full memory system (MAP.md + SYMBOLS.md + RESUME.md + RULES.md + LESSONS.md + SACRED.md) for a large repo should stay under **20KB (~5,000 tokens)** — still a small fraction of the context window.
+The full memory system (15 files including MAP.md, SYMBOLS.md, RESUME.md, RULES.md, LESSONS.md, SACRED.md, CONVENTIONS.md, CONFIG.md, VERSIONS.md, TECH_DEBT.md, NEEDS_REVIEW.md, CHANGELOG.md, TIME_LOG.md, DEPENDENCY_ALERTS.md, DEPENDENCY_HISTORY.md) for a large repo should stay under **30KB (~7,500 tokens)** — still a small fraction of the context window.
 
-Note: In Claude Code, `.claude/skills/` stubs add ~16 × 50 = **~800 tokens** to the persistent context (descriptions only). This is the cost of surviving compaction — well worth it for reliable procedure execution.
+Note: In Claude Code, `.claude/skills/` stubs add ~23 × 60 = **~1,400 tokens** to the persistent context (descriptions only). This is the cost of surviving compaction — well worth it for reliable procedure execution.
 
 ### 7.5 Antigravity Knowledge Items
 

@@ -28,13 +28,16 @@ A separate Git branch (`ai-memory`) mounted as a worktree. Contains the agent's 
 | `MAP.md` | Module registry — every module, its responsibility, key entry points |
 | `SYMBOLS.md` | Symbol index — every public class and function with file locations |
 | `RESUME.md` | Session state — what the agent was doing, what's next |
-| `RULES.md` | Operating rules — how the agent behaves in this project |
+| `RULES.md` | Project context and rules — vision, goals, domain knowledge, ad-hoc overrides |
 | `CONFIG.md` | Project identity — platform, GitHub slug, skeleton version |
 | `CONVENTIONS.md` | Observed patterns — naming, architecture, library usage |
 | `SACRED.md` | Protected behaviors — code that looks wrong but exists for a reason |
 | `LESSONS.md` | Past corrections — mistakes the agent must not repeat |
 | `TECH_DEBT.md` | Findings — anti-patterns, bugs, missing tests, dead code |
+| `NEEDS_REVIEW.md` | Triage queue — ambiguous patterns awaiting human classification |
 | `VERSIONS.md` | Dependency tracker — current versions, latest known, release notes |
+| `DEPENDENCY_ALERTS.md` | Open alerts — major/security dependency issues surfaced at session start |
+| `DEPENDENCY_HISTORY.md` | Upgrade log — historical record of dependency upgrades |
 | `CHANGELOG.md` | Agent changelog — every change with description and reasoning |
 | `TIME_LOG.md` | ROI tracking — estimated human hours vs agent duration |
 
@@ -80,8 +83,9 @@ All tools read the same rules, skills, and workflows from `.agents/`.
 
 | Component | Contents |
 |-----------|----------|
-| Workflows (14) | `cartographer` — map modules, classes, functions into memory |
+| Workflows (15) | `cartographer` — map modules, classes, functions into memory |
 | | `develop-feature` — branch, implement, test, commit, PR |
+| | `implement-task` — generic wrapper for any ad-hoc task (default when no named workflow matches) |
 | | `fix-tech-debt` — pick a debt item, fix it, update registry |
 | | `hotfix` — emergency fix with expedited flow |
 | | `cut-release` — version bump, changelog, dependency snapshot |
@@ -183,7 +187,7 @@ A blueprint contains:
 | `specs/` | Business logic specs, API contracts, edge case documentation |
 | `parity/` | Feature parity matrix — which platform implements what |
 | `bus/` | Knowledge Bus — cross-project notifications when one agent changes shared logic |
-| `skills/` | Domain-specific agent skills shared across projects |
+| `.agents/` | Safety net — rules and subset of workflows for direct access |
 | `CONFIG.md` | Blueprint identity — name, platforms, connected projects |
 
 A blueprint has **no ai-memory branch** — it is a pure knowledge hub. Project-specific agents manage blueprint content by reading and writing to it via `Blueprint Path` in their own `.memory/CONFIG.md`. The blueprint includes a lightweight `.agents/` as a safety net if someone opens it directly.
