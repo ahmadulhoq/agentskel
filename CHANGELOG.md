@@ -1,5 +1,17 @@
 # agentskel Changelog
 
+## v1.16 — 2026-03-27
+
+### Templates — Symmetric entry points for compaction resilience
+- `GEMINI.md.template`: Added 8 `.memory/` file references matching CLAUDE.md.
+  Previously, if session-start context was lost to compaction, the Gemini agent
+  had no fallback to rediscover the memory system. Now both entry points
+  reference all shared resources.
+- `CLAUDE.md.template`: Added `.agents/rules/` reference. Previously, Claude Code
+  never explicitly read `core-behavior.md` or `security-non-negotiables.md` —
+  framework rules were only loaded via `.memory/RULES.md` (which covers similar
+  but not identical ground). Now both entry points reference both rule sources.
+
 ## v1.15 — 2026-03-27
 
 ### Skills — Blueprint sync enforcement
