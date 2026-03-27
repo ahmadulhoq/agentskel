@@ -5,7 +5,11 @@ set -e
 # Run this once after cloning. Re-running is safe (idempotent).
 
 if [ -d ".memory" ]; then
-  echo "Done — .memory/ already exists. Nothing to do."
+  echo "Pulling latest AI memory..."
+  git -C .memory pull --ff-only origin ai-memory || {
+    echo "Warning — could not pull latest memory. Continuing with local copy."
+  }
+  echo "Done — .memory/ is up to date."
   exit 0
 fi
 

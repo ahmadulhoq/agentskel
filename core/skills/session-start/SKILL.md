@@ -13,7 +13,12 @@ until this procedure is complete.**
 ## Step 1 — Check memory mount
 
 - [ ] Check whether `.memory/` exists in the repo root.
-- **Exists →** proceed to Step 2.
+- **Exists →** pull the latest memory from remote before reading anything:
+  ```bash
+  git -C .memory pull --ff-only origin ai-memory 2>/dev/null || true
+  ```
+  If the pull fails (e.g. network unavailable, diverged history), warn the user
+  but proceed — stale memory is better than no memory. Then continue to Step 2.
 - **Does NOT exist →** STOP. Do not start any task. Instead:
   1. Run `git branch -r | grep origin/ai-memory`
   2. **Found →** tell the user:
