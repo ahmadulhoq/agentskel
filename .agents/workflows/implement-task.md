@@ -24,13 +24,20 @@ description: Generic wrapper for any ad-hoc implementation request that doesn't
 4. Understand the request fully. Ask clarifying questions if needed.
 
 ## Phase 1: Plan
-5. For non-trivial tasks (3+ files or architectural decisions), write a short plan:
+5. Write a plan (scale it to the task — one paragraph for small changes,
+   full breakdown for complex ones). Include:
    - Files to modify
    - Approach and risks
    - **Estimated human effort** (how long a senior dev would take)
-6. Present the plan to the user. Wait for approval before writing code.
-7. For trivial tasks (1-2 files, clear scope), state what you're about to do
-   and proceed — no formal plan needed.
+6. Present the plan to the user. **Wait for explicit approval before
+   writing any code.** No exceptions — every task requires approval.
+
+## Phase 1b: Branch
+7. Create the branch following the **`git-flow`** skill before writing
+   any code:
+   ```
+   git checkout [DEFAULT_BRANCH] && git pull && git checkout -b <branch-name>
+   ```
 
 ## Phase 2: Implement
 8. Follow `senior-developer` skill standards for all code.
@@ -39,15 +46,15 @@ description: Generic wrapper for any ad-hoc implementation request that doesn't
 11. Checkpoint to RESUME.md after each sub-task (for multi-step work).
 
 ## Phase 3: Verify
-12. Run tests for affected modules (if tests exist).
-13. Run the repo's static analysis tool if available.
-14. For changes without automated tests, verify correctness manually and
+12. Follow `test-engineer` skill standards.
+13. Run tests for affected modules (if tests exist).
+14. Run the repo's static analysis tool if available.
+15. For changes without automated tests, verify correctness manually and
     describe what you checked.
 
 ## Phase 4: Complete
 
-15. Create the branch (if not already on one), commit, and open a PR
-    following the **`git-flow`** skill.
+16. Commit and open a PR following the **`git-flow`** skill.
 
 ---
 
