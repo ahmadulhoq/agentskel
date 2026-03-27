@@ -17,6 +17,7 @@
 |----|--------|-------------|----------|-------|
 | ~~SI-001~~ | roles/dev/skills | ~~RESOLVED v1.1~~ — Platform markers added to senior-developer, code-reviewer, test-engineer. setup-skeleton and sync-skeleton updated to trim. | ~~medium~~ | 2026-03-24 |
 | ~~SI-002~~ | roles/dev/standards | ~~RESOLVED v1.1~~ — ANDROID_ARCHITECTURE.md and IOS_ARCHITECTURE.md templates added. setup-skeleton updated to copy per platform. | ~~low~~ | 2026-03-24 |
+| SI-003 | scripts | No `post-checkout` or `post-merge` git hook to auto-mount `.memory/` worktree. Devs who clone fresh must manually run `install-agent.sh`. A hook would make memory setup automatic. | low | 2026-03-27 |
 
 ## Dead Code
 | ID | Module | Description | Found |
