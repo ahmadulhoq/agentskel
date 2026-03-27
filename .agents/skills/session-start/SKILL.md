@@ -62,6 +62,11 @@ Read all of the following files. Do not skip any:
 - [ ] `Last Dependency Check` — if >14 days ago or absent, run `check-dependencies`.
 - [ ] `Last Conventions Check` — if >90 days ago or absent, remind the user
       and suggest running `update-conventions`. Do not auto-run it.
+- [ ] `Last Blueprint Sync` — if `Blueprint Path` is set and `Last Blueprint Sync`
+      is >7 days ago or absent, warn the user:
+      > "Blueprint hasn't been synced in over 7 days. Other project agents may have
+      > posted Knowledge Bus entries or updated domain specs since then."
+      This is a warning only — do not block. Step 6 will pull the latest.
 
 ## Step 6 — Check blueprint (if configured)
 
@@ -99,11 +104,19 @@ Read all of the following files. Do not skip any:
 
 - [ ] List files in `[BLUEPRINT_PATH]/bus/` (excluding `BUS_ENTRY_TEMPLATE.md`,
       `archive/`, and `.gitkeep`).
-- [ ] For each bus entry, check the `Target Platforms` field. If this project's
-      platform is listed, surface the entry to the user:
-      > "There are Knowledge Bus entries targeting this platform. Review before starting work."
-- [ ] If any bus entries are older than 30 days, remind the user to run the
-      `janitor` workflow to archive them.
+- [ ] For each bus entry, read the file and check:
+  1. **Target Platforms** — does it list this project's platform?
+  2. **Action Required** — are there unchecked action items for this platform?
+- [ ] If any bus entries have unchecked actions for this platform, surface them
+      individually with their Change Summary and Action Required sections:
+      > "N unprocessed Knowledge Bus entries targeting [PLATFORM]. These require
+      > action before or during this session."
+      List each entry's filename, origin agent, impact level, and the specific
+      unchecked action item for this platform.
+- [ ] If there are also bus entries targeting this platform where all actions are
+      already checked, note them as informational only (no action needed).
+- [ ] If any bus entries (for any platform) are older than 30 days, remind the
+      user to run the `janitor` workflow to archive them.
 
 ## Step 7 — Check git state
 

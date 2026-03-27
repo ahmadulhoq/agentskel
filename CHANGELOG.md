@@ -1,5 +1,17 @@
 # agentskel Changelog
 
+## v1.15 — 2026-03-27
+
+### Skills — Blueprint sync enforcement
+- `task-completion/SKILL.md`: Step 4 now commits and pushes Knowledge Bus
+  entries to the blueprint repo after creating them. Previously, bus entries
+  were created locally but never pushed — other project agents couldn't see them.
+- `session-start/SKILL.md`: Step 5 gains a blueprint staleness rule — warns if
+  `Last Blueprint Sync` is >7 days ago or absent (when blueprint is configured).
+- `session-start/SKILL.md`: Step 6c now reads each bus entry to check for
+  unchecked action items targeting this platform, rather than just listing files.
+  Surfaces unprocessed entries individually with their action items.
+
 ## v1.14 — 2026-03-27
 
 ### Skills — Auto-pull ai-memory on session start

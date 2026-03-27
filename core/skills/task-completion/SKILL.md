@@ -41,6 +41,14 @@ to the user or starting anything else.**
 - [ ] If this change affects cross-platform contracts or shared business logic,
       **and** the project has a `Blueprint Path` in `.memory/CONFIG.md` →
       create a Knowledge Bus entry in the blueprint's `bus/` directory.
+- [ ] After creating the bus entry, commit and push it to the blueprint repo:
+      ```bash
+      git -C [BLUEPRINT_PATH] add bus/ && \
+      git -C [BLUEPRINT_PATH] commit -m "bus: [short description] from [PLATFORM] agent" && \
+      git -C [BLUEPRINT_PATH] push origin [BLUEPRINT_DEFAULT_BRANCH]
+      ```
+      If the push fails (e.g. merge conflict), warn the user — do not force-push.
+      The bus entry exists locally and will be picked up on the next manual push.
 - Skip if no blueprint is configured, or if the change is purely project-specific.
 
 ## Step 5 — README (skeleton/agentskel repos only)
