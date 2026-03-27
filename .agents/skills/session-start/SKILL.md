@@ -42,11 +42,14 @@ Read all of the following files. Do not skip any:
 - [ ] `.memory/SACRED.md` — behaviors that must never be changed
 - [ ] `.memory/VERSIONS.md` — toolchain and dependency versions
 - [ ] `.memory/DEPENDENCY_ALERTS.md` — open major/security alerts
+- [ ] `.memory/NEEDS_REVIEW.md` — ambiguous findings awaiting human classification
 
 ## Step 3 — Surface alerts
 
 - [ ] If `DEPENDENCY_ALERTS.md` has any OPEN entries, surface them to the user
       before starting any work.
+- [ ] If `NEEDS_REVIEW.md` has any entries, surface them to the user.
+      These are ambiguous findings awaiting human classification (SACRED or TECH_DEBT).
 
 ## Step 4 — Check skeleton version
 

@@ -1,17 +1,11 @@
 # [APP_NAME] [PLATFORM] — Antigravity Instructions
 
-Read and follow all rules in `.agent/rules/`.
+Read and follow all rules in `.agent/rules/` — these are always active.
 Read all skills in `.agent/skills/` — descriptions tell you when each applies.
 
 Before starting any task, execute the `session-start` skill.
 After completing any development task, execute the `task-completion` skill.
 When creating branches, committing, or opening PRs, follow the `git-flow` skill.
 
-Read `.memory/RULES.md` for project-specific operating rules.
-Read `.memory/CONFIG.md` for repo identity and current skeleton version.
-Read `.memory/MAP.md` and `.memory/SYMBOLS.md` for codebase context.
+Read `.memory/RULES.md` for project-specific context (identity, references).
 Read `.memory/RESUME.md` to restore session state and context.
-Read `.memory/LESSONS.md` to avoid repeating past mistakes.
-Read `.memory/SACRED.md` to know what must never be modified.
-Read `.memory/VERSIONS.md` to know the current toolchain and dependency versions.
-Read `.memory/DEPENDENCY_ALERTS.md` and surface any OPEN alerts before starting work.

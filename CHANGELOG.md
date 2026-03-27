@@ -1,5 +1,26 @@
 # agentskel Changelog
 
+## v1.18 — 2026-03-27
+
+### Templates — RULES.md deduplication and entry point cleanup
+- `core/memory/RULES.md`: Removed 7 sections that duplicated `.agents/rules/core-behavior.md`
+  (Memory Protocol, Development Standards, Documentation, Self-Improvement, Effort Tracking,
+  Boundaries, Git Workflow). RULES.md now holds only project-specific content: Identity,
+  Cross-Platform Communication, and Key References. Eliminates contradictory wording
+  (e.g., "plan for non-trivial tasks" vs "plan for ALL tasks") and context window waste.
+- `CLAUDE.md.template` and `GEMINI.md.template`: Removed per-file `.memory/` references
+  (CONFIG, MAP, SYMBOLS, LESSONS, SACRED, VERSIONS, DEPENDENCY_ALERTS). These are all
+  read by the `session-start` skill already. Entry points now reference only:
+  `.agents/rules/`, `.memory/RULES.md` (project context), `.memory/RESUME.md` (session state),
+  and the three procedural skills. Eliminates dual-inventory maintenance.
+- Entry point wording harmonized: both templates now include "these are always active"
+  for rules reference.
+
+### Skills — NEEDS_REVIEW.md surfacing
+- `session-start/SKILL.md`: Step 2 now reads `.memory/NEEDS_REVIEW.md` (ambiguous findings
+  awaiting human classification). Step 3 surfaces non-empty NEEDS_REVIEW entries alongside
+  DEPENDENCY_ALERTS. Previously, triage items could sit unnoticed between sessions.
+
 ## v1.17 — 2026-03-27
 
 ### Workflows — Blueprint entry point consistency
