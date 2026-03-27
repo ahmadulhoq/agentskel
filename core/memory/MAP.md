@@ -1,5 +1,5 @@
 # Project Map: [REPO_NAME]
-> Last updated: [DATE] by Cartographer Agent
+> Last updated: [UTC_TIMESTAMP] by Cartographer Agent
 
 ## Architecture Pattern
 - Pattern: _TODO (e.g., MVVM + Clean Architecture)_

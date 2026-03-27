@@ -1,5 +1,5 @@
 # Symbol Registry: [REPO_NAME]
-> Auto-generated. Do not edit manually. Last updated: [timestamp]
+> Auto-generated. Do not edit manually. Last updated: [UTC_TIMESTAMP]
 
 <!-- Organized by module/framework. Every internal module, framework, and
      feature package gets its own section. No line numbers — they go stale
