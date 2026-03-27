@@ -1,5 +1,16 @@
 # agentskel Changelog
 
+## v1.20 — 2026-03-27
+
+### MASTER_PLAN section index in MAP.md
+- Cartographer workflow now indexes ADR documents (e.g. `MASTER_PLAN.md`) into
+  MAP.md with section name, line range, and 1-line summary. Allows agents to
+  read specific sections via offset/limit instead of loading the entire document.
+- New step 6b in `cartographer.md`: conditional — only runs when a
+  `MASTER_PLAN.md` or similar ADR exists in the project.
+- Self-dogfooded: agentskel's `.memory/MAP.md` now has a 13-section index of
+  `MASTER_PLAN.md` (1,019 lines → ~50-line index).
+
 ## v1.19 — 2026-03-27
 
 ### UTC timestamps

@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.19
+> Corresponds to: agentskel v1.20
 
 ---
 
@@ -724,7 +724,7 @@ Invoked explicitly via `/workflow-name` in Antigravity's chat (or by description
 
 #### .agents/workflows/cartographer.md
 
-Discovery mission that maps the codebase into MAP.md, SYMBOLS.md, and TECH_DEBT.md. Multi-session capable (tracks progress in RESUME.md). Processes each module one at a time: reads source files, extracts symbols, classifies findings via the Triage Protocol (Section 4.10), pauses for human review of ambiguous items at each module boundary. Read-only — never modifies application code.
+Discovery mission that maps the codebase into MAP.md, SYMBOLS.md, and TECH_DEBT.md. Multi-session capable (tracks progress in RESUME.md). Processes each module one at a time: reads source files, extracts symbols, classifies findings via the Triage Protocol (Section 4.10), pauses for human review of ambiguous items at each module boundary. If the project has a MASTER_PLAN.md or similar ADR, indexes its sections into MAP.md (section name, line range, 1-line summary) so agents can read specific sections via offset/limit. Read-only — never modifies application code.
 
 **Source:** `roles/dev/workflows/cartographer.md`
 
