@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.14
+> Corresponds to: agentskel v1.15
 
 ---
 
@@ -699,8 +699,8 @@ These were extracted from rules in v4.0 because procedures embedded in rules got
 
 | Skill | Trigger | What It Enforces |
 |-------|---------|-----------------|
-| `session-start` | Beginning of every session | Memory mount check → pull latest ai-memory from remote → read all memory files → surface alerts → check skeleton version → check freshness dates → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus entries) → check git state → confirm ready |
-| `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton only, v1.11: reads trigger list from MAINTAIN_MASTER_PLAN.md, states which matched) → Self-sync verification (skeleton only, v1.10: diff sources vs `.agents/` copies, check CONFIG.md version) → RESUME → memory commit → **Completion summary** (v1.11: lists steps executed and skipped with reasons) |
+| `session-start` | Beginning of every session | Memory mount check → pull latest ai-memory from remote → read all memory files → surface alerts → check skeleton version → check freshness dates (incl. blueprint staleness >7 days) → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus for unprocessed entries targeting this platform) → check git state → confirm ready |
+| `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus (commit+push to blueprint repo) → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton only, v1.11: reads trigger list from MAINTAIN_MASTER_PLAN.md, states which matched) → Self-sync verification (skeleton only, v1.10: diff sources vs `.agents/` copies, check CONFIG.md version) → RESUME → memory commit → **Completion summary** (v1.11: lists steps executed and skipped with reasons) |
 | `git-flow` | When creating branches, committing, or opening PRs | Branch from default → correct naming → commit message format → push → open PR → never merge own PR |
 
 Each procedural skill lives in `.agents/skills/<name>/SKILL.md` with the same YAML frontmatter as domain skills. In Claude Code, the `.claude/skills/` stub ensures the description survives compaction.
