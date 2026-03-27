@@ -107,7 +107,7 @@ If `.memory/` exists, the agent pulls the latest `ai-memory` from remote (`git -
 
 ```
 .memory/
-├── RULES.md          # Model-agnostic operating rules (the source of truth)
+├── RULES.md          # Project-specific context (identity, references, cross-platform)
 ├── MAP.md            # High-level architecture & module map
 ├── SYMBOLS.md        # Symbol registry (functions, classes → file paths)
 ├── RESUME.md         # Session state (always exists, never deleted)
@@ -523,7 +523,7 @@ A second problem is **context compaction**. When an agent's context window fills
 - **`.claude/skills/` descriptions** — YAML frontmatter loaded at startup, persists across compaction
 - **`.agents/rules/`** — loaded as always-on context in Antigravity
 
-Both entry points now reference all shared resources (`.agents/rules/`, `.memory/` files, procedural skill triggers) so agents can rediscover the full system after compaction regardless of which tool is used.
+Both entry points reference `.agents/rules/` (framework behavioral rules), `.memory/RULES.md` (project-specific context), `.memory/RESUME.md` (session state), and the three procedural skill triggers. The `session-start` skill handles reading all other `.memory/` files — entry points don't list them individually to avoid dual-inventory maintenance.
 
 This means **principles** (short, always-on) belong in rules, but **procedures** (step-by-step checklists) need a different approach: they should load just-in-time via skills, not sit in rules waiting to be forgotten.
 
@@ -542,8 +542,8 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 
 | Tool | Entry Point | Discovery Directory | How It Works |
 |------|------------|-------------------|-------------|
-| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Contains procedural skill triggers, `.agents/rules/` reference (framework rules), and all `.memory/` file references (project knowledge fallback). `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
-| **Antigravity** | `GEMINI.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Contains `.agent/rules/` and `.agent/skills/` references (framework rules + skill discovery), procedural skill triggers, and all `.memory/` file references (project knowledge fallback). The `.agent` symlink points to `.agents/` so both tools share the same files. |
+| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Contains procedural skill triggers, `.agents/rules/` reference (framework rules), `.memory/RULES.md` (project context), and `.memory/RESUME.md` (session state). All other `.memory/` files are read by `session-start`. `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
+| **Antigravity** | `GEMINI.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Contains `.agent/rules/` and `.agent/skills/` references (framework rules + skill discovery), procedural skill triggers, `.memory/RULES.md` (project context), and `.memory/RESUME.md` (session state). All other `.memory/` files are read by `session-start`. The `.agent` symlink points to `.agents/` so both tools share the same files. |
 | **agentskills.io** | — | `.agents/` | The open standard (`agentskills.io`) specifies `.agents/skills/` format. Portable across Claude Code, Antigravity, Cursor, Codex, Kiro. This is the canonical directory. |
 
 ### 6.4 Repo File Structure
@@ -586,7 +586,7 @@ repo-root/
 │       └── ... (8 more workflows)
 └── .memory/                               ← Git worktree (ai-memory branch)
     ├── CONFIG.md                          ← Repo identity, skeleton version, check dates
-    ├── RULES.md                           ← Operating rules (principles, not procedures)
+    ├── RULES.md                           ← Project-specific context (identity, references)
     ├── MAP.md                             ← Module and architecture map
     ├── SYMBOLS.md                         ← Public classes and functions index
     ├── RESUME.md                          ← Session state (local-only, not committed)
@@ -702,7 +702,7 @@ These were extracted from rules in v4.0 because procedures embedded in rules got
 
 | Skill | Trigger | What It Enforces |
 |-------|---------|-----------------|
-| `session-start` | Beginning of every session | Memory mount check → pull latest ai-memory from remote → read all memory files → surface alerts → check skeleton version → check freshness dates (incl. blueprint staleness >7 days) → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus for unprocessed entries targeting this platform) → check git state → confirm ready |
+| `session-start` | Beginning of every session | Memory mount check → pull latest ai-memory from remote → read all memory files (incl. NEEDS_REVIEW.md) → surface alerts and triage items → check skeleton version → check freshness dates (incl. blueprint staleness >7 days) → check blueprint (pull latest, detect changes since Last Blueprint Sync, check Knowledge Bus for unprocessed entries targeting this platform) → check git state → confirm ready |
 | `task-completion` | After completing any development task | CHANGELOG → SYMBOLS/MAP → TIME_LOG → Knowledge Bus (commit+push to blueprint repo) → README (skeleton only) → Migration Step (skeleton, breaking only) → MASTER_PLAN (skeleton only, v1.11: reads trigger list from MAINTAIN_MASTER_PLAN.md, states which matched) → Self-sync verification (skeleton only, v1.10: diff sources vs `.agents/` copies, check CONFIG.md version) → RESUME → memory commit → **Completion summary** (v1.11: lists steps executed and skipped with reasons) |
 | `git-flow` | When creating branches, committing, or opening PRs | Branch from default → correct naming → commit message format → push → open PR → never merge own PR |
 
