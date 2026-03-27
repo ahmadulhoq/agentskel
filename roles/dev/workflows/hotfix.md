@@ -37,7 +37,7 @@ description: Fast-path workflow for production bugs that cannot wait for the
 ## Phase 3: Test & Verify
 12. Write a regression test that proves the bug is fixed and won't regress.
 13. Run tests for affected modules.
-14. Run the repo's static analysis tool and fix all violations.
+14. If the repo has a static analysis tool configured, run it and fix violations.
 
 ## Phase 4: Ship & Backport
 15. Log the change in `.memory/CHANGELOG.md`.

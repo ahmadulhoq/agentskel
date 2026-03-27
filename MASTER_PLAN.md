@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.12
+> Corresponds to: agentskel v1.13
 
 ---
 
@@ -654,7 +654,7 @@ Domain skills remain unchanged — specialist knowledge (coding standards, testi
 
 #### .agents/rules/core-behavior.md
 
-Contains principles only — no step-by-step procedures. Procedures are in skills. Sections: How You Work (includes "Never assume" — verify before concluding something is missing; "Every task follows a workflow" — route to matching workflow or default to `implement-task`; "Plan first" — all tasks require plan + explicit approval, no exceptions since v1.12), Task Completion (mandatory `task-completion` skill gate), Git and File Discipline (no changes during discussion, no commits without instruction, complete git flow once started), How You Communicate, How You Handle Errors, Memory Protocol (`session-start` at session start, `task-completion` after tasks, checkpoint protocol), Skeleton Contribution (6-item checklist: VERSION bump, CHANGELOG entry, README version line, MASTER_PLAN update if structural, self-sync `.agents/` copies when Skeleton Path = `.`, update CONFIG.md Skeleton Version), Effort Tracking (estimate human hours, record in RESUME.md before starting — survives compaction since v1.11), Dependency Boundaries (never upgrade without instruction, read release notes, major upgrades need plan — survives compaction since v1.11), Content Preservation (never replace detailed instructions with generic summaries — state reasoning and get approval before simplifying; applies to all files in core/, roles/, .agents/, .memory/, and blueprints — since v1.12), Blueprint Contribution (if configured).
+Contains principles only — no step-by-step procedures. Procedures are in skills. Sections: How You Work (includes "Never assume" — verify before concluding something is missing; "Use your memory" — when MAP.md and SYMBOLS.md exist, use them to locate files instead of re-scanning the codebase (since v1.13); "Every task follows a workflow" — route to matching workflow or default to `implement-task`; "Plan first" — all tasks require plan + explicit approval, no exceptions since v1.12), Task Completion (mandatory `task-completion` skill gate), Git and File Discipline (no changes during discussion, no commits without instruction, complete git flow once started), How You Communicate, How You Handle Errors, Memory Protocol (`session-start` at session start, `task-completion` after tasks, checkpoint protocol), Skeleton Contribution (6-item checklist: VERSION bump, CHANGELOG entry, README version line, MASTER_PLAN update if structural, self-sync `.agents/` copies when Skeleton Path = `.`, update CONFIG.md Skeleton Version), Effort Tracking (estimate human hours, record in RESUME.md before starting — survives compaction since v1.11), Dependency Boundaries (never upgrade without instruction, read release notes, major upgrades need plan — survives compaction since v1.11), Content Preservation (never replace detailed instructions with generic summaries — state reasoning and get approval before simplifying; applies to all files in core/, roles/, .agents/, .memory/, and blueprints — since v1.12), Blueprint Contribution (if configured).
 
 **Source:** `core/rules/core-behavior.md`
 
@@ -672,7 +672,7 @@ Skills are loaded only when the agent determines they're relevant to the current
 
 #### .agents/skills/senior-developer/SKILL.md
 
-Generic sections (User Experience, Design Philosophy, SOLID, Code Quality, Process, System Extension) plus a `## Platform Standards` section with `<!-- PLATFORM: X -->` markers for Android (Compose/UDF, Coroutines, Detekt), iOS (SwiftUI, async/await, SwiftLint), Web (TypeScript, ESLint), and Backend (generic async/linting). Platform sections are trimmed during `setup-skeleton` — a project installed for Android only sees the Android block.
+Generic sections (User Experience, Design Philosophy, SOLID, Code Quality, Process, System Extension) plus a `## Platform Standards` section with `<!-- PLATFORM: X -->` markers for Android (Compose/UDF, Coroutines, Detekt), iOS (SwiftUI, async/await, SwiftLint), Web (TypeScript, ESLint), and Backend (generic async/linting). Platform sections are trimmed during `setup-skeleton` — a project installed for Android only sees the Android block. Since v1.13, Code Quality includes explicit cleanup rules (unused imports, unused variables, dead code removal, import organization per STYLE_GUIDE) and per-platform static analysis is conditional ("if the project uses X") rather than mandatory.
 
 #### .agents/skills/test-engineer/SKILL.md
 

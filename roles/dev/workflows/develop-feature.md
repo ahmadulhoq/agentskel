@@ -44,8 +44,8 @@ description: Full feature development with planning, implementation, testing,
 15. Follow `test-engineer` skill standards.
 16. Write unit tests for all new logic.
 17. Run tests and verify they pass.
-18. Run the repo's static analysis tool and fix all violations before opening a PR.
-    (See the repo's `.agents/` workflows for the specific command.)
+18. If the repo has a static analysis tool configured, run it and fix violations
+    before opening a PR.
 
 ## Phase 4: Document & Ship
 19. Update relevant documentation.

@@ -44,7 +44,7 @@ description: Systematic resolution of catalogued tech debt items from TECH_DEBT.
 13. Follow `test-engineer` skill standards.
 14. Write a regression test that would have caught this debt item originally.
 15. Run tests for affected modules.
-16. Run the repo's static analysis tool and fix all violations.
+16. If the repo has a static analysis tool configured, run it and fix violations.
 
 ## Phase 4: Document & Ship
 17. Update TECH_DEBT.md: mark the item `Status: RESOLVED`, add resolution date and notes.
