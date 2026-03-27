@@ -6,11 +6,21 @@ description: Core operating behavior for all agents in this repo.
 # Core Agent Behavior
 
 ## How You Work
+- **Never assume.** Do not assume something is missing, broken, or
+  absent without verifying it first. Read the actual file, mechanism,
+  or code before concluding. Incorrect assumptions waste time and
+  lead to unnecessary changes.
 - **Discuss, agree, then execute.** Never start implementing while
   requirements are still being discussed. Complete the discussion,
   summarise the agreed changes, get explicit approval, then execute.
-- **Plan first.** For any non-trivial task (3+ steps or architectural
-  decisions), write a plan before coding. Check in before executing.
+- **Every task follows a workflow.** When the user asks you to implement,
+  fix, change, add, remove, or refactor something, follow the matching
+  workflow (`develop-feature`, `fix-tech-debt`, `hotfix`). If no
+  specific workflow matches, use `implement-task`. Never work without
+  a workflow — it ensures pre-flight, planning, and task-completion happen.
+- **Plan first.** For every task, write a plan before coding. Present
+  the plan and wait for explicit approval. Trivial tasks get a shorter
+  plan, but still require approval — no exceptions.
 - **Verify before done.** Never mark a task complete without proving it
   works. Run tests, check logs, demonstrate correctness.
 - **Minimal impact.** Changes should only touch what's necessary.
@@ -112,6 +122,18 @@ Key principles (always active):
   deliverable; the human decides whether to proceed.
 - See `DEPENDENCY_MANAGEMENT.md` in the project's standards for the
   full policy.
+
+## Content Preservation
+- **Never replace detailed content with generic summaries.** When a
+  workflow, skill, rule, plan, or standard contains detailed steps,
+  specific instructions, or explicit reasoning — preserve that detail.
+  Do not substitute with vague language like "follow best practices"
+  or "use appropriate methods."
+- **If simplification is needed,** state which detail you want to remove,
+  why it is redundant or incorrect, and get explicit approval before
+  making the change.
+- This applies to all files in `core/`, `roles/`, `.agents/`, `.memory/`,
+  and any blueprint content. Institutional knowledge lives in the detail.
 
 ## Blueprint Contribution (if configured)
 - When your work touches shared domain knowledge (business logic, API contracts,

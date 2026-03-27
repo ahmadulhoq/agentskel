@@ -1,5 +1,36 @@
 # agentskel Changelog
 
+## v1.12 — 2026-03-26
+
+### Rules — Workflow enforcement, assumptions, and content preservation
+- `core-behavior.md`: Added "Never assume" rule — verify before concluding
+  that something is missing or broken. Read the actual mechanism first.
+- `core-behavior.md`: Added "Every task follows a workflow" rule — all
+  implementation requests must route through a matching workflow
+  (`develop-feature`, `fix-tech-debt`, `hotfix`) or default to
+  `implement-task`. No working without a workflow.
+- `core-behavior.md`: Changed "Plan first" from non-trivial-only to all
+  tasks. Trivial tasks get shorter plans, but still require explicit
+  approval before coding.
+- `core-behavior.md`: Added Content Preservation section — never replace
+  detailed instructions with generic summaries without explicit reasoning
+  and approval. Institutional knowledge lives in the detail.
+
+### Workflows — implement-task hardening
+- `implement-task.md`: Removed trivial task escape hatch (step 7 that
+  allowed skipping plan approval for "1-2 files, clear scope"). All tasks
+  now require plan → summarise → explicit approval.
+- `implement-task.md`: Moved branch creation from Phase 4 (after
+  implementation) to Phase 1b (after plan approval, before coding).
+  Aligns with git-flow gate: "Do not write any application code until
+  a branch has been created."
+- `implement-task.md`: Added `test-engineer` skill reference in Phase 3
+  (Verify) for consistency with `develop-feature`.
+
+### Workflows — fix-tech-debt consistency
+- `fix-tech-debt.md`: Added `test-engineer` skill reference in Phase 3
+  (Test & Verify) for consistency with `develop-feature`.
+
 ## v1.11 — 2026-03-26
 
 ### Templates — CLAUDE.md parity with GEMINI.md

@@ -41,23 +41,24 @@ description: Systematic resolution of catalogued tech debt items from TECH_DEBT.
 12. Checkpoint to RESUME.md after each sub-task.
 
 ## Phase 3: Test & Verify
-13. Write a regression test that would have caught this debt item originally.
-14. Run tests for affected modules.
-15. Run the repo's static analysis tool and fix all violations.
+13. Follow `test-engineer` skill standards.
+14. Write a regression test that would have caught this debt item originally.
+15. Run tests for affected modules.
+16. Run the repo's static analysis tool and fix all violations.
 
 ## Phase 4: Document & Ship
-16. Update TECH_DEBT.md: mark the item `Status: RESOLVED`, add resolution date and notes.
-17. If SYMBOLS.md or MAP.md changed (renamed/moved/deleted classes), update them.
-18. Log the change in `.memory/CHANGELOG.md`.
-19. **Record the task in `.memory/TIME_LOG.md`** with estimated human hours,
+17. Update TECH_DEBT.md: mark the item `Status: RESOLVED`, add resolution date and notes.
+18. If SYMBOLS.md or MAP.md changed (renamed/moved/deleted classes), update them.
+19. Log the change in `.memory/CHANGELOG.md`.
+20. **Record the task in `.memory/TIME_LOG.md`** with estimated human hours,
     agent start/end times, duration, and files changed.
-20. Commit and push all `.memory/` changes:
+21. Commit and push all `.memory/` changes:
     `cd .memory && git add -A && git commit -m "agent: resolved [DEBT-ID]" && git push origin ai-memory`
-21. Push the branch and open a PR to `development`:
+22. Push the branch and open a PR to `development`:
     - PR title: `[DEBT-ID] short description`
     - PR body: root cause, fix approach, risk level, test evidence
     - **Do NOT merge** — a human reviewer must approve
-22. Set RESUME.md Status to IDLE.
+23. Set RESUME.md Status to IDLE.
 
 ---
 
