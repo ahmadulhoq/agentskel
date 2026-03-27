@@ -119,6 +119,8 @@ If `.memory/` exists, the agent pulls the latest `ai-memory` from remote (`git -
 ├── TECH_DEBT.md      # Categorized log of issues, anti-patterns, and debt
 ├── NEEDS_REVIEW.md   # Temporary triage queue for ambiguous patterns (emptied after review)
 ├── VERSIONS.md       # Current toolchain & dependency versions (updated after each upgrade)
+├── DEPENDENCY_ALERTS.md  # Open major/security dependency alerts (surfaced at session start)
+├── DEPENDENCY_HISTORY.md # Historical log of dependency upgrades
 └── CONFIG.md         # Repo identity and operational config (skeleton version, check dates)
 ```
 
@@ -592,9 +594,11 @@ repo-root/
     ├── RESUME.md                          ← Session state (local-only, not committed)
     ├── CHANGELOG.md, TIME_LOG.md          ← Change history and effort tracking
     ├── LESSONS.md, SACRED.md              ← Learning and protected behaviors
+    ├── NEEDS_REVIEW.md                    ← Triage queue for ambiguous patterns
     ├── CONVENTIONS.md, TECH_DEBT.md       ← Code style and debt tracking
     ├── VERSIONS.md                        ← Toolchain and dependency versions
-    └── DEPENDENCY_ALERTS.md               ← Open major/security dependency alerts
+    ├── DEPENDENCY_ALERTS.md               ← Open major/security dependency alerts
+    └── DEPENDENCY_HISTORY.md              ← Historical log of dependency upgrades
 ```
 
 ### 6.5 The Stub Pattern (Claude Code)
@@ -969,7 +973,7 @@ Parses new bus entries, extracts Impact Level and Target Platforms, and posts to
 
 - [ ] Install agentskel on the second project
 - [ ] Run the `create-blueprint` workflow to set up the blueprint repo
-  (creates specs/, parity/, bus/, skills/, .agents/ safety net, CONFIG.md)
+  (creates specs/, parity/, bus/, .agents/ safety net, CONFIG.md)
 - [ ] Move shared specs/skills from project `.memory/` to blueprint's `specs/`
 - [ ] Configure `Blueprint Path` in both projects' `.memory/CONFIG.md`
 - [ ] Verify session-start detects blueprint (Step 6a: change detection, Step 6b: bus check)
