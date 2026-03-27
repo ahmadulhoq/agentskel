@@ -1,5 +1,18 @@
 # agentskel Changelog
 
+## v1.14 — 2026-03-27
+
+### Skills — Auto-pull ai-memory on session start
+- `session-start/SKILL.md`: Step 1 now pulls latest `ai-memory` from remote
+  before reading memory files. Ensures dev B always gets dev A's latest
+  cartography and memory updates. Gracefully falls back to local copy if
+  network is unavailable or history has diverged.
+
+### Scripts — install-agent.sh pulls latest on re-run
+- `install-agent.sh`: When `.memory/` already exists, pulls latest from
+  `origin/ai-memory` instead of exiting with "nothing to do." Re-running
+  the script now refreshes memory.
+
 ## v1.13 — 2026-03-27
 
 ### Rules — Use cartographed memory
