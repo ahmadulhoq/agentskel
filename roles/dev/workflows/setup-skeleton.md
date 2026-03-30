@@ -5,7 +5,7 @@ description: One-time setup workflow. Wires up agentic development infrastructur
 
 # Setup Skeleton Workflow
 
-**Purpose:** Set up everything needed for agentic development on a project repo — memory files, rules, workflows, skills, CLAUDE.md, and CODEOWNERS.
+**Purpose:** Set up everything needed for agentic development on a project repo — memory files, rules, workflows, skills, AGENTS.md, CLAUDE.md, and CODEOWNERS.
 
 **Scope:** This is a setup mission only. Do NOT modify any application code.
 
@@ -219,7 +219,26 @@ ln -s .agents .agent
 
 ---
 
-## Step 5d — Add GEMINI.md (Antigravity entry point)
+## Step 5d — Add AGENTS.md (universal entry point)
+
+Generate `AGENTS.md` in the repo root. This is the self-contained entry point for all tools
+(Codex CLI, Cursor, Copilot, Windsurf, and any future tool that reads `AGENTS.md`).
+
+1. Read `[SKELETON_PATH]/core/AGENTS.md.template`.
+2. Replace `[APP_NAME]` and `[PLATFORM]` tokens.
+3. Generate `[SKILLS_CATALOG]` by iterating `.agents/skills/*/SKILL.md`:
+   - Read the YAML frontmatter (`name` and `description` fields) from each file.
+   - Build a markdown table row: `| skill-name | description | .agents/skills/skill-name/SKILL.md |`
+4. Generate `[WORKFLOWS_CATALOG]` by iterating `.agents/workflows/*.md`:
+   - Read the YAML frontmatter (`name` and `description` fields) from each file.
+   - Build a markdown table row: `| workflow-name | description | .agents/workflows/workflow-name.md |`
+5. Write the completed `AGENTS.md` to the repo root.
+
+This uses the same frontmatter-reading logic as Step 5b (`.claude/skills/` stub generation).
+
+---
+
+## Step 5e — Add GEMINI.md (Antigravity entry point)
 
 Create `GEMINI.md` in the repo root from `[SKELETON_PATH]/core/GEMINI.md.template`, replacing `[APP_NAME]` and `[PLATFORM]`.
 
@@ -331,7 +350,7 @@ Add `scripts/install-agent.sh` to the git staging in Step 9.
 Commit all project files to the setup branch and open a PR for review:
 
 ```bash
-git add .gitignore .claudeignore .agents/ .claude/ .agent CLAUDE.md GEMINI.md .github/CODEOWNERS scripts/install-agent.sh
+git add .gitignore .claudeignore .agents/ .claude/ .agent AGENTS.md CLAUDE.md GEMINI.md .github/CODEOWNERS scripts/install-agent.sh
 git commit -m "[chore] setup agentic development infrastructure
 
 - .gitignore: exclude .memory/ worktree
@@ -346,8 +365,9 @@ git commit -m "[chore] setup agentic development infrastructure
   task-planner, domain-expert, session-start, task-completion, git-flow
 - .claude/skills/: Claude Code stub files for auto-discovery
 - .agent: symlink to .agents/ for Antigravity compatibility
-- CLAUDE.md: Claude Code entry point
-- GEMINI.md: Antigravity entry point
+- AGENTS.md: universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
+- CLAUDE.md: Claude Code entry point (thin wrapper → AGENTS.md)
+- GEMINI.md: Antigravity entry point (thin wrapper → AGENTS.md)
 - .github/CODEOWNERS: toolchain and dependency ownership
 - scripts/install-agent.sh: developer onboarding script"
 git push origin chore/setup-skeleton
@@ -367,8 +387,9 @@ gh pr create \
 - \`.agents/skills/\` — senior-developer, test-engineer, code-reviewer, task-planner, domain-expert, session-start, task-completion, git-flow
 - \`.claude/skills/\` — Claude Code stub files for auto-discovery
 - \`.agent\` — symlink to .agents/ for Antigravity compatibility
-- \`CLAUDE.md\` — Claude Code entry point
-- \`GEMINI.md\` — Antigravity entry point
+- \`AGENTS.md\` — universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
+- \`CLAUDE.md\` — Claude Code entry point (thin wrapper → AGENTS.md)
+- \`GEMINI.md\` — Antigravity entry point (thin wrapper → AGENTS.md)
 - \`.claudeignore\` — prevents agent from reading secrets, credentials, and key files
 - \`.github/CODEOWNERS\` — toolchain and dependency ownership rules
 - \`scripts/install-agent.sh\` — developer onboarding: run once after cloning to mount AI memory
@@ -395,8 +416,9 @@ Report to the user:
 - `.agents/` structure set up with rules, workflows, and skills (including procedural skills)
 - `.claude/skills/` stubs created for Claude Code auto-discovery
 - `.agent` symlink created for Antigravity compatibility
-- CLAUDE.md added (Claude Code entry point)
-- GEMINI.md added (Antigravity entry point)
+- AGENTS.md added (universal entry point — Codex CLI, Cursor, Copilot, Windsurf)
+- CLAUDE.md added (Claude Code entry point → AGENTS.md)
+- GEMINI.md added (Antigravity entry point → AGENTS.md)
 - `.claudeignore` added (agent will not read secrets or credentials)
 - CODEOWNERS configured
 - `scripts/install-agent.sh` generated (developers run this after cloning)

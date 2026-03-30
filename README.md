@@ -58,10 +58,11 @@ Each AI tool discovers the setup through its own mechanism:
 
 | Tool | Entry point | Discovery |
 |------|------------|-----------|
-| Claude Code | `CLAUDE.md` | Framework rules (`.agents/rules/`), memory files (`.memory/`), skill stubs (`.claude/skills/`) |
-| Antigravity | `GEMINI.md` | Framework rules (`.agent/rules/`), memory files (`.memory/`), skill discovery (`.agent/skills/`) |
+| Codex CLI, Cursor, Copilot, Windsurf | `AGENTS.md` | Universal entry point — rules, skill/workflow catalogs, memory references |
+| Claude Code | `CLAUDE.md` → `AGENTS.md` | Thin wrapper + `.claude/skills/` stubs for compaction survival |
+| Antigravity | `GEMINI.md` → `AGENTS.md` | Thin wrapper + `.agent/` symlink for native discovery |
 
-All tools read the same rules, skills, and workflows from `.agents/`.
+All tools read the same rules, skills, and workflows from `.agents/`. `AGENTS.md` is the self-contained entry point; `CLAUDE.md` and `GEMINI.md` are thin wrappers that add tool-specific discovery mechanisms.
 
 ---
 
@@ -77,7 +78,7 @@ All tools read the same rules, skills, and workflows from `.agents/`.
 | Procedural skills | `session-start` — memory detection, file reading, version checks, alerts |
 | | `task-completion` — changelog, time log, symbols/map, resume, memory commit |
 | | `git-flow` — branch naming, commit format, PR rules |
-| Entry points | `CLAUDE.md.template`, `GEMINI.md.template`, `.claudeignore` |
+| Entry points | `AGENTS.md.template` (universal), `CLAUDE.md.template`, `GEMINI.md.template`, `.claudeignore` |
 
 ### Dev role (opt-in)
 
@@ -209,6 +210,7 @@ agentskel/
 │   │   ├── session-start/
 │   │   ├── task-completion/
 │   │   └── git-flow/
+│   ├── AGENTS.md.template
 │   ├── CLAUDE.md.template
 │   ├── GEMINI.md.template
 │   └── .claudeignore
@@ -226,7 +228,7 @@ agentskel/
 
 ## Current version
 
-**v1.20** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.21** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 

@@ -289,36 +289,66 @@ Read and follow the full [skill|workflow] at `[relative path to the source file]
 ln -s .agents .agent
 ```
 
-Create a simplified `CLAUDE.md` (no memory references since blueprint has no ai-memory):
+Create `AGENTS.md` — the universal entry point for all tools. Blueprint version has no
+`.memory/` references (blueprints have no ai-memory branch). Instead it references
+`CONFIG.md` at root and the domain knowledge directories.
+
+```markdown
+# [BLUEPRINT_NAME] — Agent Instructions
+
+## Non-Negotiable Rules
+
+### Session Start — MANDATORY
+Do NOT respond to any user request until you have run the session-start procedure.
+Read and follow every step in `.agents/skills/session-start/SKILL.md`.
+
+### Git Flow
+When creating branches, committing, or opening PRs, follow `.agents/skills/git-flow/SKILL.md`.
+
+## Rules (always active)
+Read and follow all rules in `.agents/rules/`.
+Read `CONFIG.md` for blueprint identity and current skeleton version.
+
+## Domain Knowledge
+- `specs/` — business logic specifications
+- `parity/PARITY_MATRIX.md` — cross-platform feature status
+- `bus/` — Knowledge Bus entries for cross-project notifications
+
+## Skills
+| Skill | Description | Path |
+|-------|-------------|------|
+[SKILLS_CATALOG]
+
+## Workflows
+| Workflow | Description | Path |
+|----------|-------------|------|
+[WORKFLOWS_CATALOG]
+```
+
+Generate `[SKILLS_CATALOG]` and `[WORKFLOWS_CATALOG]` from `.agents/skills/*/SKILL.md`
+and `.agents/workflows/*.md` YAML frontmatter — same logic as setup-skeleton Step 5d.
+
+Create `CLAUDE.md` (thin wrapper referencing AGENTS.md):
 
 ```markdown
 # [BLUEPRINT_NAME] — Claude Code Instructions
 
-Before starting any task, execute the `session-start` skill.
-When creating branches, committing, or opening PRs, follow the `git-flow` skill.
+Read and follow `AGENTS.md` for all rules, skills, workflows, and domain knowledge references.
 
-Read and follow all rules in `.agents/rules/` — these are always active.
-Read `CONFIG.md` for blueprint identity and current skeleton version.
-Read `specs/` for domain knowledge.
-Read `parity/PARITY_MATRIX.md` for cross-platform status.
-Read `bus/` for pending Knowledge Bus entries.
+Claude Code specifics:
+- Skills are also discoverable via `.claude/skills/` stubs.
+- When a skill or workflow name is mentioned, you can execute it as a Claude Code skill.
 ```
 
-Create `GEMINI.md` with matching references (no memory references since blueprint has no ai-memory):
+Create `GEMINI.md` (thin wrapper referencing AGENTS.md):
 
 ```markdown
 # [BLUEPRINT_NAME] — Antigravity Instructions
 
-Read and follow all rules in `.agent/rules/`.
-Read all skills in `.agent/skills/` — descriptions tell you when each applies.
+Read and follow `AGENTS.md` for all rules, skills, workflows, and domain knowledge references.
 
-Before starting any task, execute the `session-start` skill.
-When creating branches, committing, or opening PRs, follow the `git-flow` skill.
-
-Read `CONFIG.md` for blueprint identity and current skeleton version.
-Read `specs/` for domain knowledge.
-Read `parity/PARITY_MATRIX.md` for cross-platform status.
-Read `bus/` for pending Knowledge Bus entries.
+Antigravity specifics:
+- Rules and skills are also available at `.agent/rules/` and `.agent/skills/` (symlink to `.agents/`).
 ```
 
 Copy `.claudeignore` from `[SKELETON_PATH]/core/.claudeignore`.
@@ -370,7 +400,7 @@ Add standard ignores only:
 ## Step 9 — Commit and open PR
 
 ```bash
-git add .gitignore .claudeignore .agents/ .claude/ .agent CLAUDE.md GEMINI.md \
+git add .gitignore .claudeignore .agents/ .claude/ .agent AGENTS.md CLAUDE.md GEMINI.md \
        VERSION CHANGELOG.md CONFIG.md specs/ parity/ bus/
 git commit -m "[chore] create blueprint repository
 
@@ -382,7 +412,8 @@ git commit -m "[chore] create blueprint repository
 - CHANGELOG.md: initial entry
 - .agents/: rules, workflows, skills, standards from agentskel v[SKELETON_VERSION]
 - .claude/skills/: Claude Code stubs
-- CLAUDE.md, GEMINI.md: entry points"
+- AGENTS.md: universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
+- CLAUDE.md, GEMINI.md: tool-specific entry points (thin wrappers → AGENTS.md)"
 git push origin chore/create-blueprint
 ```
 
@@ -404,7 +435,8 @@ gh pr create \
 - \`CONFIG.md\` — blueprint identity and connected projects
 - \`.agents/\` — rules, workflows, skills, standards from agentskel v[SKELETON_VERSION]
 - \`.claude/skills/\` — Claude Code auto-discovery stubs
-- \`CLAUDE.md\`, \`GEMINI.md\` — entry points
+- \`AGENTS.md\` — universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
+- \`CLAUDE.md\`, \`GEMINI.md\` — tool-specific entry points (thin wrappers → AGENTS.md)
 
 ### Design
 - **No ai-memory branch.** The blueprint is a knowledge hub, not an agent workspace.

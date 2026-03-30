@@ -1,11 +1,6 @@
 # agentskel Framework — Antigravity Instructions
 
-Read and follow all rules in `.agent/rules/` — these are always active.
-Read all skills in `.agent/skills/` — descriptions tell you when each applies.
+Read and follow `AGENTS.md` for all rules, skills, workflows, and memory references.
 
-Before starting any task, execute the `session-start` skill.
-After completing any development task, execute the `task-completion` skill.
-When creating branches, committing, or opening PRs, follow the `git-flow` skill.
-
-Read `.memory/RULES.md` for project-specific context and rules.
-Read `.memory/RESUME.md` to restore session state and context.
+Antigravity specifics:
+- Rules and skills are also available at `.agent/rules/` and `.agent/skills/` (symlink to `.agents/`).
