@@ -65,7 +65,7 @@
 - Flow: Read VERSIONS.md → WebFetch release notes for each dependency → compare versions → apply staleness rules → write TECH_DEBT entries → write DEPENDENCY_ALERTS → update Last Dependency Check
 
 ## MASTER_PLAN.md Section Index
-<!-- Allows targeted reads via offset/limit instead of reading all 1,021 lines.
+<!-- Allows targeted reads via offset/limit instead of reading all 1,028 lines.
      Line ranges updated during cartography. -->
 
 | Section | Lines | Summary |
@@ -75,14 +75,14 @@
 | 3. Architecture Overview | 34–80 | Two components (skeleton + blueprint), three-tool model (Claude Code, Antigravity, future) |
 | 4. Project Memory | 82–341 | ai-memory branch, 15 memory files, checkpoint/triage protocols, time logging, freshness/drift detection |
 | 5. The Blueprint | 343–515 | Optional team knowledge repo — specs, parity matrix, Knowledge Bus, repo identity |
-| 6. Multi-Tool Instruction System | 517–642 | Entry points per tool, context compaction survival, stub pattern, rules/skills/memory interaction |
-| 7. Agent Behavior System | 644–808 | Rules (always-on), domain skills (contextual), procedural skills (triggered), workflows (explicit), token budget |
-| 8. Git Workflow | 810–831 | Branch naming, commit format, PR conventions |
-| 9. Dependency Management | 833–875 | VERSIONS.md, staleness policy, platform-specific architecture standards, CODEOWNERS |
-| 10. Orchestration | 877–938 | GitHub Actions (memory maintenance, Knowledge Bus), Slack channels, reviewer agent |
-| 11. Adoption Path | 940–995 | 5 phases: Foundation → Cartographer → Working Agent → Multi-Project → Scale |
-| 12. Extension Points | 997–1008 | Custom skills, blueprint, devops role, GitHub Actions, MCP servers |
-| 13. Risk Register | 1010–1021 | 7 risks with likelihood, impact, and mitigation strategies |
+| 6. Multi-Tool Instruction System | 517–649 | AGENTS.md universal entry point, context compaction survival, stub pattern, rules/skills/memory interaction, entry points for 7 tools |
+| 7. Agent Behavior System | 651–815 | Rules (always-on), domain skills (contextual), procedural skills (triggered), workflows (explicit), token budget |
+| 8. Git Workflow | 817–838 | Branch naming, commit format, PR conventions |
+| 9. Dependency Management | 840–882 | VERSIONS.md, staleness policy, platform-specific architecture standards, CODEOWNERS |
+| 10. Orchestration | 884–945 | GitHub Actions (memory maintenance, Knowledge Bus), Slack channels, reviewer agent |
+| 11. Adoption Path | 947–1002 | 5 phases: Foundation → Cartographer → Working Agent → Multi-Project → Scale |
+| 12. Extension Points | 1004–1015 | Custom skills, blueprint, devops role, GitHub Actions, MCP servers |
+| 13. Risk Register | 1017–1028 | 7 risks with likelihood, impact, and mitigation strategies |
 
 ## Technical Debt & Notes
 - `roles/devops/` — placeholder only, not implemented
