@@ -36,7 +36,6 @@ IDLE
 - [x] .agents/ (30 files — installed copies)
 - [x] .claude/skills/ (23 files — auto-generated stubs)
 - [x] scripts/ (1 file)
-- [x] Root files (11 files — VERSION, CHANGELOG.md, README.md, MASTER_PLAN.md, MAINTAIN_MASTER_PLAN.md, CLAUDE.md, GEMINI.md, CONTRIBUTING.md, .gitignore, .claudeignore, LICENSE)
 - [x] Root files (12 files — VERSION, CHANGELOG.md, README.md, MASTER_PLAN.md, MAINTAIN_MASTER_PLAN.md, CLAUDE.md, GEMINI.md, AGENTS.md, CONTRIBUTING.md, .gitignore, .claudeignore, LICENSE)
 - Coverage gate passed — 13 modules complete, 0 remaining.
 
