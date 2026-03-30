@@ -5,7 +5,7 @@ description: One-time setup workflow. Wires up agentic development infrastructur
 
 # Setup Skeleton Workflow
 
-**Purpose:** Set up everything needed for agentic development on a project repo — memory files, rules, workflows, skills, AGENTS.md, CLAUDE.md, and CODEOWNERS.
+**Purpose:** Set up everything needed for agentic development on a project repo — memory files, rules, workflows, skills, entry points (AGENTS.md, CLAUDE.md, GEMINI.md, native tool configs), and CODEOWNERS.
 
 **Scope:** This is a setup mission only. Do NOT modify any application code.
 
@@ -26,6 +26,7 @@ Ask the user for the following. Do not proceed until all are confirmed.
 | GitHub org | `my-org` |
 | Skeleton path on disk | e.g. `../agentskel` |
 | Blueprint path on disk (optional) | e.g. `../my-blueprint` (only for multi-project teams) |
+| Supported tools | Comma-separated: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. Ask which tools the team uses. `AGENTS.md` is always installed. |
 
 Present the collected values to the user and ask for explicit confirmation before continuing.
 
@@ -89,10 +90,11 @@ Read each template from `[SKELETON_PATH]/core/memory/` and create the correspond
 | `[GITHUB_SLUG]` | GitHub slug (e.g. `org/my-app-android`) |
 | `[DEFAULT_BRANCH]` | default branch from Step 1 (e.g. `development`, `main`, `master`) |
 | `[SKELETON_VERSION]` | current skeleton version from `[SKELETON_PATH]/VERSION` |
+| `[SUPPORTED_TOOLS]` | comma-separated tool list from Step 1 (e.g. `claude, cursor`) |
 
 **Files to create in `.memory/`:**
 
-- `CONFIG.md` — fill all placeholders; set `Status: pilot`
+- `CONFIG.md` — fill all placeholders including `[SUPPORTED_TOOLS]`; set `Status: pilot`
 - `RULES.md` — fill `[APP_NAME]` placeholder; leave Project Context and Project Rules sections for the team to populate
 - `MAP.md` — fill placeholders; leave module content blank (cartographer will populate it)
 - `SYMBOLS.md` — fill placeholders; leave symbol content blank (cartographer will populate it)
@@ -182,6 +184,8 @@ Domain skills (`senior-developer`, `code-reviewer`, `test-engineer`) contain `<!
 
 ## Step 5b — Generate .claude/skills/ stubs (Claude Code)
 
+**Skip this step if `claude` is not in Supported Tools.**
+
 Claude Code auto-discovers skills from `.claude/skills/`. Generate a lightweight stub
 for each skill and workflow in `.agents/` so Claude Code can see them without loading
 the full file.
@@ -209,6 +213,8 @@ When skills or workflows are added/removed, re-running setup or sync regenerates
 ---
 
 ## Step 5c — Set up .agent/ symlink (Antigravity)
+
+**Skip this step if `antigravity` is not in Supported Tools.**
 
 Antigravity expects `.agent/skills/`, `.agent/rules/`, `.agent/workflows/`. Create a
 symlink so both tools share the same source of truth:
@@ -240,17 +246,37 @@ This uses the same frontmatter-reading logic as Step 5b (`.claude/skills/` stub 
 
 ## Step 5e — Add GEMINI.md (Antigravity entry point)
 
+**Skip this step if `antigravity` is not in Supported Tools.**
+
 Create `GEMINI.md` in the repo root from `[SKELETON_PATH]/core/GEMINI.md.template`, replacing `[APP_NAME]` and `[PLATFORM]`.
 
 ---
 
+## Step 5f — Add native tool configs (Cursor, Copilot, Windsurf)
+
+**Only create configs for tools listed in Supported Tools.** Skip this step entirely if none of `cursor`, `copilot`, `windsurf` are in the list.
+
+For each selected tool, create the thin wrapper config:
+
+1. **Cursor** (if `cursor` in Supported Tools) — create `.cursor/rules/agentskel.mdc` from `[SKELETON_PATH]/core/cursor-rule.mdc.template`, replacing `[APP_NAME]`.
+2. **Copilot** (if `copilot` in Supported Tools) — create `.github/copilot-instructions.md` from `[SKELETON_PATH]/core/copilot-instructions.md.template`, replacing `[APP_NAME]` and `[PLATFORM]`.
+3. **Windsurf** (if `windsurf` in Supported Tools) — create `.windsurf/rules/agentskel.md` from `[SKELETON_PATH]/core/windsurf-rule.md.template`, replacing `[APP_NAME]`.
+
+Each file is a thin wrapper that tells the tool to read `AGENTS.md`. This ensures agents get bootstrapped via the tool's own config mechanism, not just AGENTS.md fallback.
+
+---
+
 ## Step 6 — Add CLAUDE.md
+
+**Skip this step if `claude` is not in Supported Tools.**
 
 Create `CLAUDE.md` in the repo root from `[SKELETON_PATH]/core/CLAUDE.md.template`, replacing `[APP_NAME]` and `[PLATFORM]`.
 
 ---
 
 ## Step 6b — Add .claudeignore
+
+**Skip this step if `claude` is not in Supported Tools.**
 
 Create `.claudeignore` in the repo root from `[SKELETON_PATH]/core/.claudeignore`. Copy as-is — no placeholders to replace.
 
@@ -347,10 +373,18 @@ Add `scripts/install-agent.sh` to the git staging in Step 9.
 
 ## Step 9 — Commit and open PR
 
-Commit all project files to the setup branch and open a PR for review:
+Commit all project files to the setup branch and open a PR for review.
+
+Only include tool-specific files that were created (based on Supported Tools):
 
 ```bash
-git add .gitignore .claudeignore .agents/ .claude/ .agent AGENTS.md CLAUDE.md GEMINI.md .github/CODEOWNERS scripts/install-agent.sh
+git add .gitignore .agents/ AGENTS.md .github/CODEOWNERS scripts/install-agent.sh
+# Add only tool-specific files that were created:
+# claude: .claudeignore .claude/ CLAUDE.md
+# antigravity: .agent GEMINI.md
+# cursor: .cursor/
+# copilot: .github/copilot-instructions.md
+# windsurf: .windsurf/
 git commit -m "[chore] setup agentic development infrastructure
 
 - .gitignore: exclude .memory/ worktree
@@ -368,6 +402,9 @@ git commit -m "[chore] setup agentic development infrastructure
 - AGENTS.md: universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
 - CLAUDE.md: Claude Code entry point (thin wrapper → AGENTS.md)
 - GEMINI.md: Antigravity entry point (thin wrapper → AGENTS.md)
+- .cursor/rules/agentskel.mdc: Cursor native config (thin wrapper → AGENTS.md)
+- .github/copilot-instructions.md: Copilot native config (thin wrapper → AGENTS.md)
+- .windsurf/rules/agentskel.md: Windsurf native config (thin wrapper → AGENTS.md)
 - .github/CODEOWNERS: toolchain and dependency ownership
 - scripts/install-agent.sh: developer onboarding script"
 git push origin chore/setup-skeleton
@@ -390,6 +427,9 @@ gh pr create \
 - \`AGENTS.md\` — universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
 - \`CLAUDE.md\` — Claude Code entry point (thin wrapper → AGENTS.md)
 - \`GEMINI.md\` — Antigravity entry point (thin wrapper → AGENTS.md)
+- \`.cursor/rules/agentskel.mdc\` — Cursor native config (thin wrapper → AGENTS.md)
+- \`.github/copilot-instructions.md\` — Copilot native config (thin wrapper → AGENTS.md)
+- \`.windsurf/rules/agentskel.md\` — Windsurf native config (thin wrapper → AGENTS.md)
 - \`.claudeignore\` — prevents agent from reading secrets, credentials, and key files
 - \`.github/CODEOWNERS\` — toolchain and dependency ownership rules
 - \`scripts/install-agent.sh\` — developer onboarding: run once after cloning to mount AI memory
@@ -414,12 +454,9 @@ Report to the user:
 - ai-memory branch created and mounted at `.memory/`
 - Memory files initialised (MAP.md, SYMBOLS.md, RULES.md, etc.)
 - `.agents/` structure set up with rules, workflows, and skills (including procedural skills)
-- `.claude/skills/` stubs created for Claude Code auto-discovery
-- `.agent` symlink created for Antigravity compatibility
-- AGENTS.md added (universal entry point — Codex CLI, Cursor, Copilot, Windsurf)
-- CLAUDE.md added (Claude Code entry point → AGENTS.md)
-- GEMINI.md added (Antigravity entry point → AGENTS.md)
-- `.claudeignore` added (agent will not read secrets or credentials)
+- AGENTS.md added (universal entry point — always installed)
+- Supported Tools: [list the tools selected in Step 1]
+- For each supported tool, report which files were created (e.g. CLAUDE.md, .claude/skills/, .claudeignore, GEMINI.md, .agent, .cursor/, .github/copilot-instructions.md, .windsurf/)
 - CODEOWNERS configured
 - `scripts/install-agent.sh` generated (developers run this after cloning)
 

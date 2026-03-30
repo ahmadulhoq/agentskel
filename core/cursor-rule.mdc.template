@@ -1,0 +1,6 @@
+---
+description: "agentskel framework — rules, skills, workflows, and memory for [APP_NAME]"
+alwaysApply: true
+---
+
+Read and follow `AGENTS.md` for all rules, skills, workflows, and memory references.

@@ -1,5 +1,26 @@
 # agentskel Changelog
 
+## v1.22 — 2026-03-30
+
+### Native tool configs (opt-in) for Cursor, Copilot, and Windsurf
+- New `Supported Tools` field in `.memory/CONFIG.md` — tracks which AI tools have
+  native configs installed. Only `AGENTS.md` is always installed; all other configs
+  (CLAUDE.md, GEMINI.md, Cursor, Copilot, Windsurf) are conditional on this field.
+- New thin wrapper config templates: `core/cursor-rule.mdc.template` (Cursor),
+  `core/copilot-instructions.md.template` (Copilot), `core/windsurf-rule.md.template`
+  (Windsurf). Each tells the tool to read `AGENTS.md` via its native config format.
+- Updated `setup-skeleton.md`: Step 1 now asks which tools the team uses. Steps 5b,
+  5c, 5e, 5f, 6, 6b are conditional on Supported Tools — only creates configs for
+  selected tools. Any developer can later add support for additional tools.
+- Updated `sync-skeleton.md`: migration Step 5d (v1.21→v1.22) auto-detects existing
+  tools and asks before adding new ones. Step 4 and Step 6 are conditional on
+  Supported Tools.
+- Updated `create-blueprint.md`: Step 1 asks which tools to support. Steps 6c and 9
+  are conditional on Supported Tools.
+- Updated MASTER_PLAN.md Section 6.3: Cursor, Copilot, Windsurf rows now show
+  native config paths (thin wrapper → AGENTS.md). Section 6.4 file structure
+  includes `.cursor/`, `.github/copilot-instructions.md`, `.windsurf/`.
+
 ## v1.21 — 2026-03-30
 
 ### AGENTS.md universal entry point + enforcement hardening

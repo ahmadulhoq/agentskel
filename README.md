@@ -58,11 +58,14 @@ Each AI tool discovers the setup through its own mechanism:
 
 | Tool | Entry point | Discovery |
 |------|------------|-----------|
-| Codex CLI, Cursor, Copilot, Windsurf | `AGENTS.md` | Universal entry point — rules, skill/workflow catalogs, memory references |
+| Codex CLI | `AGENTS.md` | Native format — reads AGENTS.md directly |
+| Cursor | `.cursor/rules/agentskel.mdc` → `AGENTS.md` | Native rule (`alwaysApply: true`) + reads AGENTS.md directly |
+| Copilot | `.github/copilot-instructions.md` → `AGENTS.md` | Native instructions file + reads AGENTS.md directly |
+| Windsurf | `.windsurf/rules/agentskel.md` → `AGENTS.md` | Native rule (`trigger: always_on`) + reads AGENTS.md directly |
 | Claude Code | `CLAUDE.md` → `AGENTS.md` | Thin wrapper + `.claude/skills/` stubs for compaction survival |
 | Antigravity | `GEMINI.md` → `AGENTS.md` | Thin wrapper + `.agent/` symlink for native discovery |
 
-All tools read the same rules, skills, and workflows from `.agents/`. `AGENTS.md` is the self-contained entry point; `CLAUDE.md` and `GEMINI.md` are thin wrappers that add tool-specific discovery mechanisms.
+All tools read the same rules, skills, and workflows from `.agents/`. `AGENTS.md` is the self-contained universal entry point. Each tool also gets a native config file that bootstraps into AGENTS.md via the tool's own discovery mechanism.
 
 ---
 
@@ -78,7 +81,7 @@ All tools read the same rules, skills, and workflows from `.agents/`. `AGENTS.md
 | Procedural skills | `session-start` — memory detection, file reading, version checks, alerts |
 | | `task-completion` — changelog, time log, symbols/map, resume, memory commit |
 | | `git-flow` — branch naming, commit format, PR rules |
-| Entry points | `AGENTS.md.template` (universal), `CLAUDE.md.template`, `GEMINI.md.template`, `.claudeignore` |
+| Entry points | `AGENTS.md.template` (universal), `CLAUDE.md.template`, `GEMINI.md.template`, `cursor-rule.mdc.template`, `copilot-instructions.md.template`, `windsurf-rule.md.template`, `.claudeignore` |
 
 ### Dev role (opt-in)
 
@@ -213,6 +216,9 @@ agentskel/
 │   ├── AGENTS.md.template
 │   ├── CLAUDE.md.template
 │   ├── GEMINI.md.template
+│   ├── cursor-rule.mdc.template
+│   ├── copilot-instructions.md.template
+│   ├── windsurf-rule.md.template
 │   └── .claudeignore
 ├── roles/
 │   └── dev/                       # Dev role (opt-in)
@@ -228,7 +234,7 @@ agentskel/
 
 ## Current version
 
-**v1.21** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.22** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 
