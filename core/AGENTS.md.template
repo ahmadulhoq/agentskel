@@ -1,0 +1,45 @@
+# [APP_NAME] [PLATFORM] — Agent Instructions
+
+## Non-Negotiable Rules
+
+### Session Start — MANDATORY
+Do NOT respond to any user request until you have run the session-start procedure.
+Read and follow every step in `.agents/skills/session-start/SKILL.md`.
+This loads your memory of the codebase. Without it you will re-scan files unnecessarily,
+miss known bugs, repeat past mistakes, and skip required post-task steps.
+
+### Task Completion — MANDATORY
+After completing any development task (code change, bug fix, refactor), run the
+task-completion procedure BEFORE responding to the user or starting the next task.
+Read and follow every step in `.agents/skills/task-completion/SKILL.md`.
+Skipping this loses the record of what you did — TIME_LOG, CHANGELOG, RESUME all go stale.
+
+### Git Flow
+When creating branches, committing, or opening PRs, follow `.agents/skills/git-flow/SKILL.md`.
+
+### Every Task Follows a Workflow
+Route every implementation request to a matching workflow. If no named workflow matches,
+use `implement-task` (the default). Do not start coding without a workflow.
+
+### Use Your Memory
+When `.memory/MAP.md` and `.memory/SYMBOLS.md` exist, use them to locate modules, classes,
+and functions. Do not grep or scan the codebase for things that are already indexed.
+
+## Rules (always active)
+Read and follow all rules in `.agents/rules/`.
+Read `.memory/RULES.md` for project-specific context and rules.
+Read `.memory/RESUME.md` to restore session state and context.
+
+## Skills
+| Skill | Description | Path |
+|-------|-------------|------|
+[SKILLS_CATALOG]
+
+## Workflows
+| Workflow | Description | Path |
+|----------|-------------|------|
+[WORKFLOWS_CATALOG]
+
+## Memory
+Persistent project memory lives in `.memory/`. The `session-start` procedure reads all
+memory files — do not read them individually, run the procedure.

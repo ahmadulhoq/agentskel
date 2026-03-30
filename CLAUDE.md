@@ -1,9 +1,7 @@
 # agentskel Framework — Claude Code Instructions
 
-Before starting any task, execute the `session-start` skill.
-After completing any development task, execute the `task-completion` skill.
-When creating branches, committing, or opening PRs, follow the `git-flow` skill.
+Read and follow `AGENTS.md` for all rules, skills, workflows, and memory references.
 
-Read and follow all rules in `.agents/rules/` — these are always active.
-Read `.memory/RULES.md` for project-specific context and rules.
-Read `.memory/RESUME.md` to restore session state and context.
+Claude Code specifics:
+- Skills are also discoverable via `.claude/skills/` stubs.
+- When a skill or workflow name is mentioned, you can execute it as a Claude Code skill.

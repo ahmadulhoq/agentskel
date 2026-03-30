@@ -539,21 +539,28 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 6. **Workflows are missions**: Multi-step, user-triggered operations (cartographer, sync-skeleton, etc.).
 7. **Symlinks for skeleton/blueprint repos, copies for projects**: Repos that contain source templates (`core/`, `roles/`) use symlinks in `.agents/` pointing to those templates — zero internal drift. Downstream projects (which don't have `core/` or `roles/`) use copies created during setup.
 8. **`repo-rules.md` for project-specific rules**: Each project can have a `.agents/rules/repo-rules.md` for rules unique to that repo (e.g. architecture documentation requirements, domain constraints). This file has no upstream template and is never overwritten by setup or sync.
+9. **Universal entry point**: `AGENTS.md` is the self-contained entry point for any tool that adopts the AGENTS.md open standard (Linux Foundation). It includes hardened enforcement rules (session-start, task-completion, workflow routing, memory usage), skill/workflow catalogs with paths, and memory references. `CLAUDE.md` and `GEMINI.md` are thin wrappers that say "read AGENTS.md" plus tool-specific quirks (stub discovery, symlink paths). One canonical source, many entry points.
 
 ### 6.3 Entry Points by Tool
 
 | Tool | Entry Point | Discovery Directory | How It Works |
 |------|------------|-------------------|-------------|
-| **Claude Code** | `CLAUDE.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Contains procedural skill triggers, `.agents/rules/` reference (framework rules), `.memory/RULES.md` (project context and rules), and `.memory/RESUME.md` (session state). All other `.memory/` files are read by `session-start`. `.claude/skills/` stubs have YAML descriptions (~1 line each) that Claude loads at startup — descriptions survive compaction, full skill content loads on-demand via a redirect to `.agents/`. |
-| **Antigravity** | `GEMINI.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Contains `.agent/rules/` and `.agent/skills/` references (framework rules + skill discovery), procedural skill triggers, `.memory/RULES.md` (project context and rules), and `.memory/RESUME.md` (session state). All other `.memory/` files are read by `session-start`. The `.agent` symlink points to `.agents/` so both tools share the same files. |
-| **agentskills.io** | — | `.agents/` | The open standard (`agentskills.io`) specifies `.agents/skills/` format. Portable across Claude Code, Antigravity, Cursor, Codex, Kiro. This is the canonical directory. |
+| **All tools** | `AGENTS.md` | `.agents/` | Universal entry point with hardened enforcement rules, skill/workflow catalogs, and memory references. Self-contained — any tool that reads AGENTS.md gets full instructions. |
+| **Claude Code** | `CLAUDE.md` → `AGENTS.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Thin wrapper that says "read AGENTS.md" plus Claude Code specifics: `.claude/skills/` stubs with YAML descriptions that survive compaction, enabling on-demand skill loading via redirects to `.agents/`. |
+| **Antigravity** | `GEMINI.md` → `AGENTS.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Thin wrapper that says "read AGENTS.md" plus Antigravity specifics: `.agent/` symlink pointing to `.agents/` for native rule and skill discovery. |
+| **Codex CLI** | `AGENTS.md` | `.agents/` | Reads AGENTS.md natively as primary entry point. Also reads `.agents/skills/` directly. |
+| **Cursor** | `AGENTS.md` | `.agents/`, `.cursor/rules/` | Reads AGENTS.md natively alongside any Cursor-specific rules. |
+| **Copilot** | `AGENTS.md` | `.agents/`, `.github/` | Reads AGENTS.md (enabled via setting). Also reads `.claude/skills/` natively. |
+| **Windsurf** | `AGENTS.md` | `.agents/`, `.windsurf/rules/` | Reads AGENTS.md natively alongside any Windsurf-specific rules. |
+| **agentskills.io** | — | `.agents/` | The open standard (`agentskills.io`) specifies `.agents/skills/` format. Portable across all tools. This is the canonical directory. |
 
 ### 6.4 Repo File Structure
 
 ```
 repo-root/
-├── CLAUDE.md                              ← Claude Code entry point (survives compaction)
-├── GEMINI.md                              ← Antigravity entry point
+├── AGENTS.md                              ← Universal entry point (all tools)
+├── CLAUDE.md                              ← Claude Code entry point (thin wrapper → AGENTS.md)
+├── GEMINI.md                              ← Antigravity entry point (thin wrapper → AGENTS.md)
 ├── .claude/
 │   └── skills/                            ← Claude Code auto-discovery (stub files)
 │       ├── session-start.md               ← "Read .agents/skills/session-start/SKILL.md"
@@ -620,8 +627,8 @@ Read and follow the full skill at `.agents/skills/task-completion/SKILL.md`.
 
 ```
 Session start:
-  CLAUDE.md (or GEMINI.md)
-    → triggers session-start skill
+  AGENTS.md (via CLAUDE.md, GEMINI.md, or read directly by Codex/Cursor/Copilot/Windsurf)
+    → triggers session-start skill (MANDATORY — do not respond until complete)
       → reads .memory/CONFIG.md, RULES.md, MAP.md, SYMBOLS.md, etc.
       → checks skeleton version, dependency freshness, git state
       → reports ready

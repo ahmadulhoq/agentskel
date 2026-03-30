@@ -113,7 +113,9 @@ Apply all **Apply** and **Adapt** decisions:
 - Updated rule templates: `.agents/rules/`
 - Updated standard templates: `.agents/standards/` (trim platform sections as with setup)
 - Updated skill templates: `.agents/skills/` (trim platform sections in `senior-developer`, `code-reviewer`, `test-engineer` — same as standards)
+- Updated `AGENTS.md` template: project root `AGENTS.md` (regenerate skill/workflow catalogs from frontmatter — same logic as setup-skeleton Step 5d)
 - Updated `CLAUDE.md` template: project root `CLAUDE.md`
+- Updated `GEMINI.md` template: project root `GEMINI.md`
 - Updated `CODEOWNERS` pattern: `.github/CODEOWNERS`
 
 Read individual template files from the appropriate `[SKELETON_PATH]` directory:
@@ -123,7 +125,7 @@ Read individual template files from the appropriate `[SKELETON_PATH]` directory:
 - Domain skills: `[SKELETON_PATH]/roles/dev/skills/[SKILL_NAME]/SKILL.md`
 - Workflows: `[SKELETON_PATH]/roles/dev/workflows/[FILENAME]`
 - Standards: `[SKELETON_PATH]/roles/dev/standards/[FILENAME]`
-- Entry point templates: `[SKELETON_PATH]/core/CLAUDE.md.template`, `[SKELETON_PATH]/core/GEMINI.md.template`
+- Entry point templates: `[SKELETON_PATH]/core/AGENTS.md.template`, `[SKELETON_PATH]/core/CLAUDE.md.template`, `[SKELETON_PATH]/core/GEMINI.md.template`
 
 For each **Adapt** change, note the platform-specific modification made alongside the
 standard template change.
@@ -159,6 +161,27 @@ cd ..
 
 ---
 
+## Step 5c — Migration: v1.20 to v1.21 (AGENTS.md universal entry point)
+
+Skip this step if the project is already on skeleton v1.21+.
+
+If the project's recorded skeleton version is < 1.21, the following one-time
+migration is required:
+
+1. Generate `AGENTS.md` in the repo root using the setup-skeleton Step 5d logic:
+   - Read `[SKELETON_PATH]/core/AGENTS.md.template`
+   - Replace `[APP_NAME]` and `[PLATFORM]` tokens (read from `.memory/CONFIG.md`)
+   - Generate `[SKILLS_CATALOG]` from `.agents/skills/*/SKILL.md` YAML frontmatter
+   - Generate `[WORKFLOWS_CATALOG]` from `.agents/workflows/*.md` YAML frontmatter
+2. Update `CLAUDE.md` from `[SKELETON_PATH]/core/CLAUDE.md.template` (now a thin
+   wrapper referencing AGENTS.md). Replace `[APP_NAME]` and `[PLATFORM]`.
+3. Update `GEMINI.md` from `[SKELETON_PATH]/core/GEMINI.md.template` (now a thin
+   wrapper referencing AGENTS.md). Replace `[APP_NAME]` and `[PLATFORM]`.
+
+Include `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` in the Step 6 commit.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new
@@ -186,7 +209,7 @@ for details on what changed and why migration is needed.
 ## Step 6 — Commit Project Files
 
 ```bash
-git add .agents/ .claude/ .agent CLAUDE.md GEMINI.md .github/CODEOWNERS .gitignore scripts/install-agent.sh
+git add .agents/ .claude/ .agent AGENTS.md CLAUDE.md GEMINI.md .github/CODEOWNERS .gitignore scripts/install-agent.sh
 git commit -m "[chore] sync agent setup to skeleton v[CURRENT_VERSION]
 
 Changes applied from skeleton CHANGELOG:
@@ -250,6 +273,7 @@ Use these commands only when no local skeleton clone is available and the user c
 |------|---------|
 | `VERSION` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/VERSION --jq '.content' \| base64 -d` |
 | `CHANGELOG.md` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/CHANGELOG.md --jq '.content' \| base64 -d` |
+| `AGENTS.md.template` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/AGENTS.md.template --jq '.content' \| base64 -d` |
 | Memory template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/memory/[FILENAME] --jq '.content' \| base64 -d` |
 | Rule template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/rules/[FILENAME] --jq '.content' \| base64 -d` |
 | Workflow template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/roles/dev/workflows/[FILENAME] --jq '.content' \| base64 -d` |

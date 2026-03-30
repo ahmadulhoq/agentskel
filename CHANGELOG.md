@@ -1,5 +1,26 @@
 # agentskel Changelog
 
+## v1.21 — 2026-03-30
+
+### AGENTS.md universal entry point + enforcement hardening
+- New `AGENTS.md` entry point — the AGENTS.md open standard (Linux Foundation).
+  Natively supported by Codex CLI, Cursor, Copilot, and Windsurf. Self-contained
+  with hardened enforcement rules and skill/workflow catalogs.
+- `CLAUDE.md` and `GEMINI.md` are now thin wrappers that reference `AGENTS.md`
+  plus tool-specific discovery mechanisms (stubs, symlinks).
+- New `core/AGENTS.md.template` with `[SKILLS_CATALOG]` and `[WORKFLOWS_CATALOG]`
+  tokens — generated programmatically during setup from YAML frontmatter.
+- Enforcement hardening in AGENTS.md: session-start marked MANDATORY with "Do NOT
+  respond until complete", task-completion marked MANDATORY with "BEFORE responding",
+  workflow routing ("every task follows a workflow"), memory usage ("use MAP/SYMBOLS,
+  do not scan").
+- Updated workflows: `setup-skeleton.md` (new Step 5d for AGENTS.md generation),
+  `sync-skeleton.md` (v1.20→v1.21 migration step, AGENTS.md in sync path),
+  `create-blueprint.md` (blueprint-specific AGENTS.md).
+- Updated MASTER_PLAN.md Section 6: new design principle #9, expanded entry points
+  table (Codex CLI, Cursor, Copilot, Windsurf), updated file structure and
+  interaction diagram.
+
 ## v1.20 — 2026-03-27
 
 ### MASTER_PLAN section index in MAP.md
