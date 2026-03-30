@@ -33,8 +33,10 @@ Update to `active` once the cartographer workflow finishes.
 | Last Blueprint Sync | YYYY-MM-DDTHH:MMZ |
 | Last Dependency Check | YYYY-MM-DDTHH:MMZ |
 | Last Conventions Check | YYYY-MM-DDTHH:MMZ |
+| Supported Tools | [SUPPORTED_TOOLS] |
 | Last Skeleton Check | YYYY-MM-DDTHH:MMZ |
 
+**Supported Tools** — comma-separated list of tools with native configs installed (e.g. `claude, cursor, copilot`). Valid values: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. `AGENTS.md` is always installed regardless. Only tools listed here get native config files created/updated during setup and sync.
 **Skeleton Path** — optional. If set, `sync-skeleton` and `check-skeleton` workflows read the skeleton from this local path instead of fetching from GitHub. Leave blank if no local clone is available.
 **Blueprint Path** — optional. If set, agents read domain knowledge (specs, parity, bus) from this local path. Only needed for multi-project teams with shared domain knowledge.
 **Last Blueprint Sync** — updated by `session-start` after reviewing blueprint changes. Used to detect new blueprint commits since last session.

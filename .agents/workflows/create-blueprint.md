@@ -29,6 +29,7 @@ Ask the user for the following. Do not proceed until all are confirmed.
 | Target platforms | `Android, iOS, Backend` |
 | Skeleton path on disk | e.g. `../agentskel` |
 | Domain areas (initial) | e.g. `prayer-times, auth, qibla, hijri-calendar` |
+| Supported tools | Comma-separated: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. Ask which tools the team uses. `AGENTS.md` is always installed. |
 
 Present the collected values to the user and ask for explicit confirmation before continuing.
 
@@ -155,6 +156,7 @@ Create a lightweight `CONFIG.md` at the repo root (NOT in `.memory/` — bluepri
 | Platforms | [TARGET_PLATFORMS] |
 | Default Branch | [DEFAULT_BRANCH] |
 | Skeleton Version | [SKELETON_VERSION] |
+| Supported Tools | [SUPPORTED_TOOLS] |
 
 ## Domain Areas
 [List each domain area from Step 1]
@@ -285,11 +287,11 @@ Read and follow the full [skill|workflow] at `[relative path to the source file]
 ## Step 6c — Set up .agent/ symlink and entry points
 
 ```bash
-# Antigravity compatibility
+# Antigravity compatibility (only if `antigravity` in Supported Tools)
 ln -s .agents .agent
 ```
 
-Create `AGENTS.md` — the universal entry point for all tools. Blueprint version has no
+Create `AGENTS.md` — the universal entry point for all tools (always created). Blueprint version has no
 `.memory/` references (blueprints have no ai-memory branch). Instead it references
 `CONFIG.md` at root and the domain knowledge directories.
 
@@ -328,7 +330,7 @@ Read `CONFIG.md` for blueprint identity and current skeleton version.
 Generate `[SKILLS_CATALOG]` and `[WORKFLOWS_CATALOG]` from `.agents/skills/*/SKILL.md`
 and `.agents/workflows/*.md` YAML frontmatter — same logic as setup-skeleton Step 5d.
 
-Create `CLAUDE.md` (thin wrapper referencing AGENTS.md):
+Create `CLAUDE.md` (only if `claude` in Supported Tools — thin wrapper referencing AGENTS.md):
 
 ```markdown
 # [BLUEPRINT_NAME] — Claude Code Instructions
@@ -340,7 +342,7 @@ Claude Code specifics:
 - When a skill or workflow name is mentioned, you can execute it as a Claude Code skill.
 ```
 
-Create `GEMINI.md` (thin wrapper referencing AGENTS.md):
+Create `GEMINI.md` (only if `antigravity` in Supported Tools — thin wrapper referencing AGENTS.md):
 
 ```markdown
 # [BLUEPRINT_NAME] — Antigravity Instructions
@@ -351,9 +353,9 @@ Antigravity specifics:
 - Rules and skills are also available at `.agent/rules/` and `.agent/skills/` (symlink to `.agents/`).
 ```
 
-Create native tool configs (thin wrappers referencing AGENTS.md):
+Create native tool configs (only for tools listed in Supported Tools):
 
-**Cursor** — create `.cursor/rules/agentskel.mdc`:
+**Cursor** (if `cursor` in Supported Tools) — create `.cursor/rules/agentskel.mdc`:
 ```
 ---
 description: "agentskel framework — rules, skills, workflows, and domain knowledge for [BLUEPRINT_NAME]"
@@ -363,14 +365,14 @@ alwaysApply: true
 Read and follow `AGENTS.md` for all rules, skills, workflows, and domain knowledge references.
 ```
 
-**Copilot** — create `.github/copilot-instructions.md`:
+**Copilot** (if `copilot` in Supported Tools) — create `.github/copilot-instructions.md`:
 ```markdown
 # [BLUEPRINT_NAME] — Copilot Instructions
 
 Read and follow `AGENTS.md` for all rules, skills, workflows, and domain knowledge references.
 ```
 
-**Windsurf** — create `.windsurf/rules/agentskel.md`:
+**Windsurf** (if `windsurf` in Supported Tools) — create `.windsurf/rules/agentskel.md`:
 ```
 ---
 trigger: always_on
@@ -428,9 +430,16 @@ Add standard ignores only:
 
 ## Step 9 — Commit and open PR
 
+Only include tool-specific files for tools listed in Supported Tools:
+
 ```bash
-git add .gitignore .claudeignore .agents/ .claude/ .cursor/ .windsurf/ .agent AGENTS.md CLAUDE.md GEMINI.md \
-       .github/copilot-instructions.md VERSION CHANGELOG.md CONFIG.md specs/ parity/ bus/
+git add .gitignore .agents/ AGENTS.md VERSION CHANGELOG.md CONFIG.md specs/ parity/ bus/
+# Add only tool-specific files that were created (based on Supported Tools):
+# claude: .claudeignore .claude/ CLAUDE.md
+# antigravity: .agent GEMINI.md
+# cursor: .cursor/
+# copilot: .github/copilot-instructions.md
+# windsurf: .windsurf/
 git commit -m "[chore] create blueprint repository
 
 - specs/: domain spec stubs for [DOMAIN_AREAS]
@@ -440,10 +449,8 @@ git commit -m "[chore] create blueprint repository
 - VERSION: 1.0
 - CHANGELOG.md: initial entry
 - .agents/: rules, workflows, skills, standards from agentskel v[SKELETON_VERSION]
-- .claude/skills/: Claude Code stubs
-- AGENTS.md: universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
-- CLAUDE.md, GEMINI.md: tool-specific entry points (thin wrappers → AGENTS.md)
-- .cursor/, .github/copilot-instructions.md, .windsurf/: native tool configs (thin wrappers → AGENTS.md)"
+- AGENTS.md: universal entry point
+- Tool-specific configs for: [SUPPORTED_TOOLS]"
 git push origin chore/create-blueprint
 ```
 

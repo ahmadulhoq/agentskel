@@ -114,9 +114,9 @@ Apply all **Apply** and **Adapt** decisions:
 - Updated standard templates: `.agents/standards/` (trim platform sections as with setup)
 - Updated skill templates: `.agents/skills/` (trim platform sections in `senior-developer`, `code-reviewer`, `test-engineer` — same as standards)
 - Updated `AGENTS.md` template: project root `AGENTS.md` (regenerate skill/workflow catalogs from frontmatter — same logic as setup-skeleton Step 5d)
-- Updated `CLAUDE.md` template: project root `CLAUDE.md`
-- Updated `GEMINI.md` template: project root `GEMINI.md`
-- Updated native tool configs: `.cursor/rules/agentskel.mdc`, `.github/copilot-instructions.md`, `.windsurf/rules/agentskel.md`
+- Updated `CLAUDE.md` template: project root `CLAUDE.md` (only if `claude` in Supported Tools)
+- Updated `GEMINI.md` template: project root `GEMINI.md` (only if `antigravity` in Supported Tools)
+- Updated native tool configs (only for tools listed in `Supported Tools` in `.memory/CONFIG.md`): `.cursor/rules/agentskel.mdc`, `.github/copilot-instructions.md`, `.windsurf/rules/agentskel.md`
 - Updated `CODEOWNERS` pattern: `.github/CODEOWNERS`
 
 Read individual template files from the appropriate `[SKELETON_PATH]` directory:
@@ -184,22 +184,31 @@ Include `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` in the Step 6 commit.
 
 ---
 
-## Step 5d — Migration: v1.21 to v1.22 (native tool configs)
+## Step 5d — Migration: v1.21 to v1.22 (Supported Tools + native tool configs)
 
 Skip this step if the project is already on skeleton v1.22+.
 
 If the project's recorded skeleton version is < 1.22, the following one-time
 migration is required:
 
-1. Create `.cursor/rules/agentskel.mdc` from `[SKELETON_PATH]/core/cursor-rule.mdc.template`.
-   Replace `[APP_NAME]` (read from `.memory/CONFIG.md`).
-2. Create `.github/copilot-instructions.md` from `[SKELETON_PATH]/core/copilot-instructions.md.template`.
-   Replace `[APP_NAME]` and `[PLATFORM]`. If `.github/copilot-instructions.md` already exists
-   (user-created), do not overwrite — notify the user and skip.
-3. Create `.windsurf/rules/agentskel.md` from `[SKELETON_PATH]/core/windsurf-rule.md.template`.
-   Replace `[APP_NAME]`.
+1. Add the `Supported Tools` field to `.memory/CONFIG.md` Operational Config table.
+   Populate it by detecting which tool configs already exist:
+   - `claude` — if `CLAUDE.md` exists in repo root
+   - `antigravity` — if `GEMINI.md` or `.agent` exists in repo root
+   - `codex` — if the user confirms they use Codex CLI
+   Ask the user if they want to add support for any additional tools: `cursor`, `copilot`, `windsurf`.
 
-Include `.cursor/`, `.github/copilot-instructions.md`, and `.windsurf/` in the Step 6 commit.
+2. For each newly added tool, create the native config:
+   - **Cursor** (if `cursor` added) — create `.cursor/rules/agentskel.mdc` from
+     `[SKELETON_PATH]/core/cursor-rule.mdc.template`. Replace `[APP_NAME]`.
+   - **Copilot** (if `copilot` added) — create `.github/copilot-instructions.md` from
+     `[SKELETON_PATH]/core/copilot-instructions.md.template`. Replace `[APP_NAME]` and
+     `[PLATFORM]`. If `.github/copilot-instructions.md` already exists (user-created),
+     do not overwrite — notify the user and skip.
+   - **Windsurf** (if `windsurf` added) — create `.windsurf/rules/agentskel.md` from
+     `[SKELETON_PATH]/core/windsurf-rule.md.template`. Replace `[APP_NAME]`.
+
+Include any new tool config files in the Step 6 commit.
 
 ---
 
@@ -229,8 +238,16 @@ for details on what changed and why migration is needed.
 
 ## Step 6 — Commit Project Files
 
+Only include tool-specific files for tools listed in `Supported Tools`:
+
 ```bash
-git add .agents/ .claude/ .cursor/ .windsurf/ .agent AGENTS.md CLAUDE.md GEMINI.md .github/CODEOWNERS .github/copilot-instructions.md .gitignore scripts/install-agent.sh
+git add .agents/ AGENTS.md .github/CODEOWNERS .gitignore scripts/install-agent.sh
+# Add only tool-specific files that exist (based on Supported Tools):
+# claude: .claude/ CLAUDE.md .claudeignore
+# antigravity: .agent GEMINI.md
+# cursor: .cursor/
+# copilot: .github/copilot-instructions.md
+# windsurf: .windsurf/
 git commit -m "[chore] sync agent setup to skeleton v[CURRENT_VERSION]
 
 Changes applied from skeleton CHANGELOG:
