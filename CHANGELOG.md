@@ -1,5 +1,22 @@
 # agentskel Changelog
 
+## v1.22 — 2026-03-30
+
+### Native tool configs for Cursor, Copilot, and Windsurf
+- New thin wrapper config templates: `core/cursor-rule.mdc.template` (Cursor),
+  `core/copilot-instructions.md.template` (Copilot), `core/windsurf-rule.md.template`
+  (Windsurf). Each tells the tool to read `AGENTS.md` via its native config format.
+- Updated `setup-skeleton.md`: new Step 5f generates `.cursor/rules/agentskel.mdc`,
+  `.github/copilot-instructions.md`, and `.windsurf/rules/agentskel.md` during setup.
+- Updated `sync-skeleton.md`: new migration Step 5d (v1.21→v1.22) creates native
+  tool configs for existing projects. Added templates to sync path and GitHub Fetch
+  Reference.
+- Updated `create-blueprint.md`: Step 6c now creates native tool configs for
+  blueprints alongside AGENTS.md, CLAUDE.md, and GEMINI.md.
+- Updated MASTER_PLAN.md Section 6.3: Cursor, Copilot, Windsurf rows now show
+  native config paths (thin wrapper → AGENTS.md). Section 6.4 file structure
+  includes `.cursor/`, `.github/copilot-instructions.md`, `.windsurf/`.
+
 ## v1.21 — 2026-03-30
 
 ### AGENTS.md universal entry point + enforcement hardening

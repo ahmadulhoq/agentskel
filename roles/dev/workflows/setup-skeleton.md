@@ -5,7 +5,7 @@ description: One-time setup workflow. Wires up agentic development infrastructur
 
 # Setup Skeleton Workflow
 
-**Purpose:** Set up everything needed for agentic development on a project repo — memory files, rules, workflows, skills, AGENTS.md, CLAUDE.md, and CODEOWNERS.
+**Purpose:** Set up everything needed for agentic development on a project repo — memory files, rules, workflows, skills, entry points (AGENTS.md, CLAUDE.md, GEMINI.md, native tool configs), and CODEOWNERS.
 
 **Scope:** This is a setup mission only. Do NOT modify any application code.
 
@@ -244,6 +244,18 @@ Create `GEMINI.md` in the repo root from `[SKELETON_PATH]/core/GEMINI.md.templat
 
 ---
 
+## Step 5f — Add native tool configs (Cursor, Copilot, Windsurf)
+
+Create tool-specific thin wrapper configs so each IDE discovers agentskel natively:
+
+1. **Cursor** — create `.cursor/rules/agentskel.mdc` from `[SKELETON_PATH]/core/cursor-rule.mdc.template`, replacing `[APP_NAME]`.
+2. **Copilot** — create `.github/copilot-instructions.md` from `[SKELETON_PATH]/core/copilot-instructions.md.template`, replacing `[APP_NAME]` and `[PLATFORM]`.
+3. **Windsurf** — create `.windsurf/rules/agentskel.md` from `[SKELETON_PATH]/core/windsurf-rule.md.template`, replacing `[APP_NAME]`.
+
+Each file is a thin wrapper that tells the tool to read `AGENTS.md`. This ensures agents get bootstrapped via the tool's own config mechanism, not just AGENTS.md fallback.
+
+---
+
 ## Step 6 — Add CLAUDE.md
 
 Create `CLAUDE.md` in the repo root from `[SKELETON_PATH]/core/CLAUDE.md.template`, replacing `[APP_NAME]` and `[PLATFORM]`.
@@ -350,7 +362,7 @@ Add `scripts/install-agent.sh` to the git staging in Step 9.
 Commit all project files to the setup branch and open a PR for review:
 
 ```bash
-git add .gitignore .claudeignore .agents/ .claude/ .agent AGENTS.md CLAUDE.md GEMINI.md .github/CODEOWNERS scripts/install-agent.sh
+git add .gitignore .claudeignore .agents/ .claude/ .cursor/ .windsurf/ .agent AGENTS.md CLAUDE.md GEMINI.md .github/CODEOWNERS .github/copilot-instructions.md scripts/install-agent.sh
 git commit -m "[chore] setup agentic development infrastructure
 
 - .gitignore: exclude .memory/ worktree
@@ -368,6 +380,9 @@ git commit -m "[chore] setup agentic development infrastructure
 - AGENTS.md: universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
 - CLAUDE.md: Claude Code entry point (thin wrapper → AGENTS.md)
 - GEMINI.md: Antigravity entry point (thin wrapper → AGENTS.md)
+- .cursor/rules/agentskel.mdc: Cursor native config (thin wrapper → AGENTS.md)
+- .github/copilot-instructions.md: Copilot native config (thin wrapper → AGENTS.md)
+- .windsurf/rules/agentskel.md: Windsurf native config (thin wrapper → AGENTS.md)
 - .github/CODEOWNERS: toolchain and dependency ownership
 - scripts/install-agent.sh: developer onboarding script"
 git push origin chore/setup-skeleton
@@ -390,6 +405,9 @@ gh pr create \
 - \`AGENTS.md\` — universal entry point (Codex CLI, Cursor, Copilot, Windsurf)
 - \`CLAUDE.md\` — Claude Code entry point (thin wrapper → AGENTS.md)
 - \`GEMINI.md\` — Antigravity entry point (thin wrapper → AGENTS.md)
+- \`.cursor/rules/agentskel.mdc\` — Cursor native config (thin wrapper → AGENTS.md)
+- \`.github/copilot-instructions.md\` — Copilot native config (thin wrapper → AGENTS.md)
+- \`.windsurf/rules/agentskel.md\` — Windsurf native config (thin wrapper → AGENTS.md)
 - \`.claudeignore\` — prevents agent from reading secrets, credentials, and key files
 - \`.github/CODEOWNERS\` — toolchain and dependency ownership rules
 - \`scripts/install-agent.sh\` — developer onboarding: run once after cloning to mount AI memory
@@ -419,6 +437,7 @@ Report to the user:
 - AGENTS.md added (universal entry point — Codex CLI, Cursor, Copilot, Windsurf)
 - CLAUDE.md added (Claude Code entry point → AGENTS.md)
 - GEMINI.md added (Antigravity entry point → AGENTS.md)
+- Native tool configs added: `.cursor/rules/agentskel.mdc` (Cursor), `.github/copilot-instructions.md` (Copilot), `.windsurf/rules/agentskel.md` (Windsurf)
 - `.claudeignore` added (agent will not read secrets or credentials)
 - CODEOWNERS configured
 - `scripts/install-agent.sh` generated (developers run this after cloning)

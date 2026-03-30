@@ -116,6 +116,7 @@ Apply all **Apply** and **Adapt** decisions:
 - Updated `AGENTS.md` template: project root `AGENTS.md` (regenerate skill/workflow catalogs from frontmatter — same logic as setup-skeleton Step 5d)
 - Updated `CLAUDE.md` template: project root `CLAUDE.md`
 - Updated `GEMINI.md` template: project root `GEMINI.md`
+- Updated native tool configs: `.cursor/rules/agentskel.mdc`, `.github/copilot-instructions.md`, `.windsurf/rules/agentskel.md`
 - Updated `CODEOWNERS` pattern: `.github/CODEOWNERS`
 
 Read individual template files from the appropriate `[SKELETON_PATH]` directory:
@@ -126,6 +127,7 @@ Read individual template files from the appropriate `[SKELETON_PATH]` directory:
 - Workflows: `[SKELETON_PATH]/roles/dev/workflows/[FILENAME]`
 - Standards: `[SKELETON_PATH]/roles/dev/standards/[FILENAME]`
 - Entry point templates: `[SKELETON_PATH]/core/AGENTS.md.template`, `[SKELETON_PATH]/core/CLAUDE.md.template`, `[SKELETON_PATH]/core/GEMINI.md.template`
+- Native tool config templates: `[SKELETON_PATH]/core/cursor-rule.mdc.template`, `[SKELETON_PATH]/core/copilot-instructions.md.template`, `[SKELETON_PATH]/core/windsurf-rule.md.template`
 
 For each **Adapt** change, note the platform-specific modification made alongside the
 standard template change.
@@ -182,6 +184,25 @@ Include `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` in the Step 6 commit.
 
 ---
 
+## Step 5d — Migration: v1.21 to v1.22 (native tool configs)
+
+Skip this step if the project is already on skeleton v1.22+.
+
+If the project's recorded skeleton version is < 1.22, the following one-time
+migration is required:
+
+1. Create `.cursor/rules/agentskel.mdc` from `[SKELETON_PATH]/core/cursor-rule.mdc.template`.
+   Replace `[APP_NAME]` (read from `.memory/CONFIG.md`).
+2. Create `.github/copilot-instructions.md` from `[SKELETON_PATH]/core/copilot-instructions.md.template`.
+   Replace `[APP_NAME]` and `[PLATFORM]`. If `.github/copilot-instructions.md` already exists
+   (user-created), do not overwrite — notify the user and skip.
+3. Create `.windsurf/rules/agentskel.md` from `[SKELETON_PATH]/core/windsurf-rule.md.template`.
+   Replace `[APP_NAME]`.
+
+Include `.cursor/`, `.github/copilot-instructions.md`, and `.windsurf/` in the Step 6 commit.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new
@@ -209,7 +230,7 @@ for details on what changed and why migration is needed.
 ## Step 6 — Commit Project Files
 
 ```bash
-git add .agents/ .claude/ .agent AGENTS.md CLAUDE.md GEMINI.md .github/CODEOWNERS .gitignore scripts/install-agent.sh
+git add .agents/ .claude/ .cursor/ .windsurf/ .agent AGENTS.md CLAUDE.md GEMINI.md .github/CODEOWNERS .github/copilot-instructions.md .gitignore scripts/install-agent.sh
 git commit -m "[chore] sync agent setup to skeleton v[CURRENT_VERSION]
 
 Changes applied from skeleton CHANGELOG:
@@ -277,6 +298,9 @@ Use these commands only when no local skeleton clone is available and the user c
 | Memory template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/memory/[FILENAME] --jq '.content' \| base64 -d` |
 | Rule template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/rules/[FILENAME] --jq '.content' \| base64 -d` |
 | Workflow template | `gh api repos/[ORG]/[SKELETON_REPO]/contents/roles/dev/workflows/[FILENAME] --jq '.content' \| base64 -d` |
+| `cursor-rule.mdc.template` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/cursor-rule.mdc.template --jq '.content' \| base64 -d` |
+| `copilot-instructions.md.template` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/copilot-instructions.md.template --jq '.content' \| base64 -d` |
+| `windsurf-rule.md.template` | `gh api repos/[ORG]/[SKELETON_REPO]/contents/core/windsurf-rule.md.template --jq '.content' \| base64 -d` |
 
 ---
 

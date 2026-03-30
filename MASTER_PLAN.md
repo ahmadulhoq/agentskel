@@ -549,9 +549,9 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 | **Claude Code** | `CLAUDE.md` → `AGENTS.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Thin wrapper that says "read AGENTS.md" plus Claude Code specifics: `.claude/skills/` stubs with YAML descriptions that survive compaction, enabling on-demand skill loading via redirects to `.agents/`. |
 | **Antigravity** | `GEMINI.md` → `AGENTS.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Thin wrapper that says "read AGENTS.md" plus Antigravity specifics: `.agent/` symlink pointing to `.agents/` for native rule and skill discovery. |
 | **Codex CLI** | `AGENTS.md` | `.agents/` | Reads AGENTS.md natively as primary entry point. Also reads `.agents/skills/` directly. |
-| **Cursor** | `AGENTS.md` | `.agents/`, `.cursor/rules/` | Reads AGENTS.md natively alongside any Cursor-specific rules. |
-| **Copilot** | `AGENTS.md` | `.agents/`, `.github/` | Reads AGENTS.md (enabled via setting). Also reads `.claude/skills/` natively. |
-| **Windsurf** | `AGENTS.md` | `.agents/`, `.windsurf/rules/` | Reads AGENTS.md natively alongside any Windsurf-specific rules. |
+| **Cursor** | `.cursor/rules/agentskel.mdc` → `AGENTS.md` | `.agents/`, `.cursor/rules/` | Native `.mdc` rule with `alwaysApply: true` bootstraps into AGENTS.md. Cursor also reads AGENTS.md directly. |
+| **Copilot** | `.github/copilot-instructions.md` → `AGENTS.md` | `.agents/`, `.github/` | Native instructions file bootstraps into AGENTS.md. Copilot also reads AGENTS.md directly. |
+| **Windsurf** | `.windsurf/rules/agentskel.md` → `AGENTS.md` | `.agents/`, `.windsurf/rules/` | Native rule with `trigger: always_on` bootstraps into AGENTS.md. Windsurf also reads AGENTS.md directly. |
 | **agentskills.io** | — | `.agents/` | The open standard (`agentskills.io`) specifies `.agents/skills/` format. Portable across all tools. This is the canonical directory. |
 
 ### 6.4 Repo File Structure
@@ -561,6 +561,15 @@ repo-root/
 ├── AGENTS.md                              ← Universal entry point (all tools)
 ├── CLAUDE.md                              ← Claude Code entry point (thin wrapper → AGENTS.md)
 ├── GEMINI.md                              ← Antigravity entry point (thin wrapper → AGENTS.md)
+├── .cursor/
+│   └── rules/
+│       └── agentskel.mdc                  ← Cursor native config (thin wrapper → AGENTS.md)
+├── .github/
+│   ├── copilot-instructions.md            ← Copilot native config (thin wrapper → AGENTS.md)
+│   └── CODEOWNERS
+├── .windsurf/
+│   └── rules/
+│       └── agentskel.md                   ← Windsurf native config (thin wrapper → AGENTS.md)
 ├── .claude/
 │   └── skills/                            ← Claude Code auto-discovery (stub files)
 │       ├── session-start.md               ← "Read .agents/skills/session-start/SKILL.md"
