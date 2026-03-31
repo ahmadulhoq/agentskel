@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.23: Session reload triggers. session-start skill re-executes after sync-skeleton, setup-skeleton, or when RESUME.md timestamp >24h stale. Post-sync/setup also re-reads .agents/rules/. Added Step 8 to sync-skeleton, Step 11 to setup-skeleton, reload rule to core-behavior Memory Protocol. 11 files changed. PR #22 open.
+- v1.25: Rationalization resistance + subagent dispatch. Resistance tables in session-start (7 entries) and task-completion (7 entries), inline counters in core-behavior. New subagent-dispatch skill with implementer/reviewer/researcher prompt templates. PR #24 merged. Also v1.24: skill-authoring guide + CSO descriptions for 11 workflows. PR #23 merged.
 
 ## Next Task
 - (none)
@@ -14,7 +14,7 @@ IDLE
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
-- CONFIG.md Skeleton Version updated to 1.23
+- CONFIG.md Skeleton Version updated to 1.25
 - RULES.md now holds project context + project rules only (behavioral rules in .agents/rules/)
 - CONFIG.md has Description field for project identity (moved from RULES.md in v1.18)
 - v1.19: All operational timestamps use ISO 8601 UTC format (YYYY-MM-DDTHH:MMZ)
@@ -22,6 +22,8 @@ IDLE
 - v1.21: AGENTS.md is the universal entry point (AGENTS.md open standard, Linux Foundation). CLAUDE.md/GEMINI.md are thin wrappers. One canonical source (.agents/ + .memory/), many entry points.
 - v1.22: Tool configs are opt-in via Supported Tools field. Native thin wrappers for Cursor/Copilot/Windsurf. Only AGENTS.md is unconditional.
 - v1.23: Session reload triggers — session-start re-executes after sync, setup, or 24h staleness.
+- v1.24: Skill authoring guide (meta-skill) + CSO descriptions for 11 workflows.
+- v1.25: Rationalization resistance tables + subagent-dispatch skill with prompt templates.
 
 ## Cartography State
 - Last indexed commit: d417c5cb56c24fc5e997fef5512a41bd9e2aea81
