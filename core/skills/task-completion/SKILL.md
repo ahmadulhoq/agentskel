@@ -130,5 +130,19 @@ This makes skip decisions visible to the user for review. Do not omit this step.
 
 ---
 
+## Common Rationalizations
+
+| Rationalization | Why it's wrong | Do this instead |
+|---|---|---|
+| "This was a tiny change, no CHANGELOG needed" | If files were modified, CHANGELOG gets an entry. Size doesn't matter. | Write the entry. |
+| "TIME_LOG is just bookkeeping, the user doesn't care" | TIME_LOG tracks agent ROI. Skip it and the framework loses its value case. | Always log. |
+| "I'll update RESUME later" | There is no later — your context dies when this session ends. | Update now. |
+| "No structural changes, I can skip SYMBOLS/MAP" | Did you add a public function? Rename a class? Verify before skipping. | Check, then decide. |
+| "The memory commit can wait until end of session" | If the session crashes, uncommitted memory is lost. | Commit after every task. |
+| "I already responded to the user" | The gate says: ALL steps BEFORE responding. | Go back and finish. |
+| "The completion summary is redundant" | It makes skip decisions visible — a review mechanism, not a status update. | Always include it. |
+
+---
+
 **Gate:** Do not respond to the user or start the next task until all applicable
 steps above are checked off and the completion summary is stated.

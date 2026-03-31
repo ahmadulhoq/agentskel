@@ -42,6 +42,7 @@ Read `.memory/RESUME.md` to restore session state and context.
 | task-planner | Feature decomposition and task tracking | `.agents/skills/task-planner/SKILL.md` |
 | domain-expert | Project-specific business logic expertise | `.agents/skills/domain-expert/SKILL.md` |
 | skill-authoring | When creating a new skill/workflow or improving an existing skill's effectiveness | `.agents/skills/skill-authoring/SKILL.md` |
+| subagent-dispatch | When delegating work to a subagent — implementation, review, research, or exploration | `.agents/skills/subagent-dispatch/SKILL.md` |
 
 ## Workflows
 | Workflow | Description | Path |

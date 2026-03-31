@@ -1,5 +1,19 @@
 # agentskel Changelog
 
+## v1.25 — 2026-03-31
+
+### Rationalization resistance + subagent dispatch
+- Rationalization resistance tables added to `session-start` (7 entries) and
+  `task-completion` (7 entries) — structured excuse/rebuttal tables that block
+  common agent shortcuts. Based on Cialdini's persuasion research.
+- Inline rationalization counters added to `core-behavior.md` for plan-first,
+  verify-before-done, no-changes-during-discussion, and discuss-agree-execute rules.
+- New `subagent-dispatch` skill with 3 prompt templates (implementer, reviewer,
+  researcher). Formalizes delegation to subagents with scope boundaries, context
+  contracts, and result validation.
+- Updated `task-planner` skill to reference `subagent-dispatch` instead of
+  inline subagent guidance.
+
 ## v1.24 — 2026-03-31
 
 ### Skill authoring guide + CSO descriptions
