@@ -134,6 +134,23 @@ Read all of the following files. Do not skip any:
 - [ ] Tell the user: session is ready. Summarise any alerts, version mismatches,
       stale checks, or pending bus entries found. Ask what they'd like to work on.
 
+## Session Reload
+
+Re-execute this entire procedure (Steps 1–8) when any of the following triggers
+occur mid-session:
+
+| Trigger | When | Why |
+|---------|------|-----|
+| **Post-sync** | Immediately after `sync-skeleton` completes | Rules, skills, and workflows may have changed. The agent must internalize the updated `.agents/` files. |
+| **Post-setup** | Immediately after `setup-skeleton` completes | Everything was just installed — the agent needs to read it all. |
+| **Stale session** | Before starting any workflow, if `Timestamp (UTC)` in `RESUME.md` is >24 hours ago | Long-running sessions lose context over time. A reload ensures the agent is working with fresh memory. |
+
+**Full reload:** When triggered by post-sync or post-setup, also re-read all files
+in `.agents/rules/` (rules may have changed). For stale-session triggers, the
+standard Steps 1–8 are sufficient.
+
+After reload, update `RESUME.md` `Timestamp (UTC)` to the current time.
+
 ---
 
 **Gate:** Do not begin any user task until all steps above are checked off.

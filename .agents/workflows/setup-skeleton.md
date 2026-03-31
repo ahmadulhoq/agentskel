@@ -467,6 +467,15 @@ development by running `./scripts/install-agent.sh` after cloning the repo.
 
 ---
 
+## Step 11 — Session Reload
+
+After setup is complete, re-execute the **`session-start`** skill (full procedure,
+Steps 1–8) including a re-read of all `.agents/rules/` files. The agent just
+installed everything — it must now internalize the full setup before continuing
+any other work (e.g. the cartographer workflow).
+
+---
+
 ## Notes
 
 - Never modify application code during this workflow.

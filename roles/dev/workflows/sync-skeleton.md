@@ -291,6 +291,15 @@ EOF
 
 ---
 
+## Step 8 — Session Reload
+
+After sync is complete, re-execute the **`session-start`** skill (full procedure,
+Steps 1–8) including a re-read of all `.agents/rules/` files. Rules, skills, and
+workflows may have changed — the agent must internalize the updated versions before
+continuing any other work.
+
+---
+
 ## Classifying Changes: Quick Reference
 
 | Change type | Decision |
