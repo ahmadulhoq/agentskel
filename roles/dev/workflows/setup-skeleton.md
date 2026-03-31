@@ -1,6 +1,7 @@
 ---
 name: setup-skeleton
-description: One-time setup workflow. Wires up agentic development infrastructure on a new or existing project repo.
+description: When setting up agentskel on a project for the first time. Run once per
+  project to install memory, rules, skills, workflows, entry points, and standards.
 ---
 
 # Setup Skeleton Workflow

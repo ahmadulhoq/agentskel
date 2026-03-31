@@ -1,6 +1,7 @@
 ---
 name: janitor
-description: Monthly maintenance — archives old Knowledge Bus entries and trims stale memory files.
+description: When Knowledge Bus entries are older than 30 days, or memory files have
+  accumulated stale content. Run monthly or when bus/ is cluttered.
 ---
 
 # Janitor Workflow

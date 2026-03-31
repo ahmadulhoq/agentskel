@@ -1,7 +1,8 @@
 ---
 name: develop-feature
-description: Full feature development with planning, implementation, testing,
-  and documentation.
+description: When the user asks to implement a new feature end-to-end requiring
+  planning, branch creation, implementation, testing, and PR. Use for work that
+  goes beyond a simple fix or ad-hoc task.
 ---
 
 # Feature Development Workflow

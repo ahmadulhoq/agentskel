@@ -1,5 +1,5 @@
 ---
-description: Detect stale dependencies, surface major version availability, and create tech debt entries.
+description: When dependency versions need auditing, Last Dependency Check in CONFIG.md is overdue (14-day cadence), or before security-sensitive work.
 ---
 
 Read and follow the full workflow at `.agents/workflows/check-dependencies.md`.
