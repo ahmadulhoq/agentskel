@@ -1,7 +1,8 @@
 ---
 name: create-blueprint
-description: Creates a new blueprint repo for shared team domain knowledge.
-  Run once per organization/team to set up specs, parity tracking, and the knowledge bus.
+description: When a team manages multiple platform projects sharing business logic and
+  needs a central domain knowledge repo. Run once per organization to set up specs,
+  parity tracking, and the knowledge bus.
 ---
 
 # Create Blueprint Workflow

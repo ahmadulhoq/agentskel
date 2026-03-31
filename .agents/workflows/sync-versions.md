@@ -1,3 +1,9 @@
+---
+name: sync-versions
+description: When actual project dependency versions may have drifted from VERSIONS.md.
+  Run after dependency upgrades or when VERSIONS.md looks stale.
+---
+
 # Workflow: sync-versions
 
 **Trigger:** Run manually after any PR that modifies dependency version files.

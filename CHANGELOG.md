@@ -1,5 +1,19 @@
 # agentskel Changelog
 
+## v1.24 — 2026-03-31
+
+### Skill authoring guide + CSO descriptions
+- New `skill-authoring` skill — meta-skill for creating new skills with quality
+  gates: CSO-optimized descriptions, rationalization resistance tables, token
+  budget awareness, self-sync checklist, and skill testing methodology.
+- CSO (Claude Search Optimization) applied to 11 workflow descriptions — rewritten
+  from summary-style ("Maps the codebase...") to triggering-condition style
+  ("When codebase structure has changed..."). Improves agent skill-matching accuracy.
+- Added YAML frontmatter to 3 workflows that lacked it (check-dependencies,
+  cut-release, sync-versions).
+- Updated AGENTS.md catalog, `.claude/skills/` stubs, and `.agents/` copies to
+  match all description changes.
+
 ## v1.23 — 2026-03-31
 
 ### Session reload triggers

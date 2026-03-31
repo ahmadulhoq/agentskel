@@ -41,25 +41,26 @@ Read `.memory/RESUME.md` to restore session state and context.
 | test-engineer | Test strategy, coverage analysis, test writing | `.agents/skills/test-engineer/SKILL.md` |
 | task-planner | Feature decomposition and task tracking | `.agents/skills/task-planner/SKILL.md` |
 | domain-expert | Project-specific business logic expertise | `.agents/skills/domain-expert/SKILL.md` |
+| skill-authoring | When creating a new skill/workflow or improving an existing skill's effectiveness | `.agents/skills/skill-authoring/SKILL.md` |
 
 ## Workflows
 | Workflow | Description | Path |
 |----------|-------------|------|
-| cartographer | Map modules, classes, functions into memory | `.agents/workflows/cartographer.md` |
-| develop-feature | Full feature development with planning, implementation, testing | `.agents/workflows/develop-feature.md` |
+| cartographer | When codebase structure has changed, MAP.md/SYMBOLS.md are missing or stale, or after major refactors | `.agents/workflows/cartographer.md` |
+| develop-feature | When implementing a new feature end-to-end requiring planning, branch, implementation, testing, PR | `.agents/workflows/develop-feature.md` |
 | implement-task | Generic wrapper for any ad-hoc task (default when no named workflow matches) | `.agents/workflows/implement-task.md` |
 | fix-tech-debt | Pick a debt item, fix it, update registry | `.agents/workflows/fix-tech-debt.md` |
 | hotfix | Emergency fix with expedited flow | `.agents/workflows/hotfix.md` |
-| cut-release | Version bump, changelog, dependency snapshot | `.agents/workflows/cut-release.md` |
-| check-dependencies | Scan for outdated/vulnerable dependencies | `.agents/workflows/check-dependencies.md` |
-| sync-versions | Keep VERSIONS.md in sync with actual version files | `.agents/workflows/sync-versions.md` |
-| update-conventions | Refresh CONVENTIONS.md from official sources | `.agents/workflows/update-conventions.md` |
-| janitor | Monthly cleanup of stale memory, dead code, tech debt | `.agents/workflows/janitor.md` |
-| setup-skeleton | One-time install of agentskel on a new project | `.agents/workflows/setup-skeleton.md` |
-| sync-skeleton | Update project when agentskel has new changes | `.agents/workflows/sync-skeleton.md` |
+| cut-release | When the team is ready to ship a new version — bumps, changelog, dependency snapshot | `.agents/workflows/cut-release.md` |
+| check-dependencies | When dependency versions need auditing or Last Dependency Check is overdue (14-day cadence) | `.agents/workflows/check-dependencies.md` |
+| sync-versions | When actual dependency versions may have drifted from VERSIONS.md — run after upgrades | `.agents/workflows/sync-versions.md` |
+| update-conventions | When coding conventions may have drifted from practice or Last Conventions Check is overdue (90 days) | `.agents/workflows/update-conventions.md` |
+| janitor | When Knowledge Bus entries are older than 30 days or memory files have stale content | `.agents/workflows/janitor.md` |
+| setup-skeleton | When setting up agentskel on a project for the first time — run once per project | `.agents/workflows/setup-skeleton.md` |
+| sync-skeleton | When skeleton version in CONFIG.md is behind current agentskel VERSION | `.agents/workflows/sync-skeleton.md` |
 | check-skeleton | Detect version gap between project and skeleton | `.agents/workflows/check-skeleton.md` |
-| create-blueprint | Set up shared domain knowledge repo for multi-project teams | `.agents/workflows/create-blueprint.md` |
-| parity-check | Cross-platform feature consistency audit | `.agents/workflows/parity-check.md` |
+| create-blueprint | When a team needs a central domain knowledge repo for multi-platform projects | `.agents/workflows/create-blueprint.md` |
+| parity-check | When checking feature parity across platforms after shipping or on scheduled cadence | `.agents/workflows/parity-check.md` |
 
 ## Memory
 Persistent project memory lives in `.memory/`. The `session-start` procedure reads all

@@ -1,6 +1,8 @@
 ---
 name: update-conventions
-description: Refreshes .memory/CONVENTIONS.md by cross-checking current best practices for the project's tech stack. Files gaps and deviations as NEEDS_REVIEW. Updates the architecture standard if it is missing or outdated.
+description: When project coding conventions may have drifted from actual practice,
+  or Last Conventions Check in CONFIG.md is overdue (90-day cadence). Also run when
+  adopting a new library or framework that needs convention coverage.
 ---
 
 # Update Conventions Workflow
