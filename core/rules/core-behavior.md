@@ -79,6 +79,10 @@ memory detection, file reading, version checks, and git state verification.
 After completing any development task, execute the **`task-completion`** skill. It
 handles CHANGELOG, TIME_LOG, SYMBOLS/MAP, RESUME, and memory commits.
 
+**Session reload triggers** — re-execute `session-start` (full procedure) after
+`sync-skeleton` completes, after `setup-skeleton` completes, or before any workflow
+if `RESUME.md` `Timestamp (UTC)` is >24 hours old. See the session-start skill for details.
+
 Key principles (always active):
 - Update RESUME.md after each completed sub-task and before ending any session.
 - Never delete RESUME.md. Set Status to IDLE when tasks are complete.

@@ -234,7 +234,7 @@ agentskel/
 
 ## Current version
 
-**v1.22** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.23** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 

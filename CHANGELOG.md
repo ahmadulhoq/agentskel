@@ -1,5 +1,16 @@
 # agentskel Changelog
 
+## v1.23 — 2026-03-31
+
+### Session reload triggers
+- `session-start` skill now defines three reload triggers: post-sync (after
+  `sync-skeleton`), post-setup (after `setup-skeleton`), and stale session
+  (`RESUME.md` timestamp >24h old). Post-sync and post-setup also re-read
+  `.agents/rules/` to internalize any changed rules.
+- `core-behavior.md` Memory Protocol reinforces the reload triggers as a rule.
+- `sync-skeleton.md` adds Step 8 (session reload after sync).
+- `setup-skeleton.md` adds Step 11 (session reload after setup).
+
 ## v1.22 — 2026-03-30
 
 ### Native tool configs (opt-in) for Cursor, Copilot, and Windsurf
