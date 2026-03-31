@@ -40,6 +40,8 @@ Skip this section if no blueprint is configured or the task is project-specific.
 - A rollback plan must be defined for every major change.
 
 ## Subagent Strategy
-- Use subagents to keep main context window clean.
-- Offload research, exploration, and parallel analysis to subagents.
-- One task per subagent for focused execution.
+
+When a task benefits from fresh context, parallel execution, or isolated scope,
+use the **`subagent-dispatch`** skill. It provides prompt templates for
+implementer, reviewer, and researcher subagents with explicit scope boundaries
+and result validation.

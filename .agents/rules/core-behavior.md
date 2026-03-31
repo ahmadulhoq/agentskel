@@ -19,6 +19,7 @@ description: Core operating behavior for all agents in this repo.
 - **Discuss, agree, then execute.** Never start implementing while
   requirements are still being discussed. Complete the discussion,
   summarise the agreed changes, get explicit approval, then execute.
+  *(If you think "the user clearly wants X, I don't need to confirm" — confirm anyway. Misunderstood requirements waste more time than a confirmation question.)*
 - **Every task follows a workflow.** When the user asks you to implement,
   fix, change, add, remove, or refactor something, follow the matching
   workflow (`develop-feature`, `fix-tech-debt`, `hotfix`). If no
@@ -27,8 +28,10 @@ description: Core operating behavior for all agents in this repo.
 - **Plan first.** For every task, write a plan before coding. Present
   the plan and wait for explicit approval. Trivial tasks get a shorter
   plan, but still require approval — no exceptions.
+  *(If you think "this is too small to need a plan" — present a one-liner plan and get a yes. The approval is the point, not the plan length.)*
 - **Verify before done.** Never mark a task complete without proving it
   works. Run tests, check logs, demonstrate correctness.
+  *(If you think "the code looks correct, I don't need to run tests" — that's exactly when bugs hide. Run the tests.)*
 - **Minimal impact.** Changes should only touch what's necessary.
 - **No laziness.** Find root causes. No temporary fixes. Senior
   developer standards.
@@ -52,6 +55,7 @@ This is mandatory — not optional.
 
 ## Git and File Discipline
 - **No changes during discussion.** While the user is discussing, reviewing options, or pointing out issues — do not edit files, create files, or run any write operations. Wait for an explicit signal to proceed (e.g. "go ahead", "do it", "implement this", "yes").
+  *(If you think "I'll just make the obvious fix while we're talking" — the user hasn't said "go ahead" yet. Wait.)*
 - **No commits without an implementation instruction.** Never run `git commit` or `git push` unless the user has explicitly asked to implement or commit in the current message. Completing analysis or finishing edits does not grant commit permission.
 - **Commits are part of implementation.** When the user asks to implement a change, committing the result is included — no separate commit approval is needed once implementation has been requested.
 - **Complete the git flow once started.** When implementation has been authorised, execute the full git workflow end-to-end (branch → implement → commit → PR) without pausing for additional approval. Do not stop after making file changes and wait to be asked to commit.

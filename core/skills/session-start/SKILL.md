@@ -153,4 +153,18 @@ After reload, update `RESUME.md` `Timestamp (UTC)` to the current time.
 
 ---
 
+## Common Rationalizations
+
+| Rationalization | Why it's wrong | Do this instead |
+|---|---|---|
+| "I already know this codebase" | Your context was reset. LESSONS.md has mistakes you'll repeat without reading it. | Read ALL files in Step 2. |
+| "The user's request is urgent, I'll read memory later" | Memory reading takes 30 seconds. Skipping costs 10 minutes of wrong assumptions. | Read first, act second. |
+| "I'll just read the files I need for this task" | CONFIG.md has freshness checks, SACRED.md has constraints you don't know about yet. | Read every file in Step 2 — no exceptions. |
+| "Memory pull failed, so I'll skip the memory step" | Stale memory is better than no memory. | Proceed with local files. |
+| "The skeleton version check isn't important right now" | Version drift causes silent failures. The check takes 5 seconds. | Always run Step 4. |
+| "I read these files last session" | Sessions don't share context. You are a new instance. | Read them again. |
+| "The user said 'skip session start'" | Only skeleton sync (Step 4) can be skipped by user request. Steps 1-3 are never optional. | Execute Steps 1-3 always. |
+
+---
+
 **Gate:** Do not begin any user task until all steps above are checked off.
