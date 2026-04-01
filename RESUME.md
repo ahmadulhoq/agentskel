@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.26: Plugin-based install + README simplification. Plugin manifests for Claude Code, Cursor, Gemini CLI. Session-start hook auto-detects project state and injects bootstrap context. $CLAUDE_PLUGIN_ROOT added to skeleton resolution chain. README simplified from 247→130 lines. PR #25 merged. Also v1.24 (skill-authoring + CSO, PR #23) and v1.25 (rationalization + subagent-dispatch, PR #24).
+- v1.27: Renamed senior-developer→developer (agents aren't senior/junior). Extracted skeleton-specific steps from task-completion into skeleton-contribution-checklist.md (50 lines lighter for downstream). Migration step 5f added. PR #27 merged.
 
 ## Next Task
 - (none)
@@ -14,7 +14,7 @@ IDLE
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
-- CONFIG.md Skeleton Version updated to 1.26
+- CONFIG.md Skeleton Version updated to 1.27
 - RULES.md now holds project context + project rules only (behavioral rules in .agents/rules/)
 - CONFIG.md has Description field for project identity (moved from RULES.md in v1.18)
 - v1.19: All operational timestamps use ISO 8601 UTC format (YYYY-MM-DDTHH:MMZ)
@@ -25,6 +25,7 @@ IDLE
 - v1.24: Skill authoring guide (meta-skill) + CSO descriptions for 11 workflows.
 - v1.25: Rationalization resistance tables + subagent-dispatch skill with prompt templates.
 - v1.26: Plugin-based install (Claude Code, Cursor, Gemini CLI) + session-start hook + README simplification.
+- v1.27: Renamed senior-developer→developer. Extracted skeleton checklist from task-completion.
 
 ## Cartography State
 - Last indexed commit: d417c5cb56c24fc5e997fef5512a41bd9e2aea81
