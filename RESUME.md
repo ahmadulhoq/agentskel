@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.25: Rationalization resistance + subagent dispatch. Resistance tables in session-start (7 entries) and task-completion (7 entries), inline counters in core-behavior. New subagent-dispatch skill with implementer/reviewer/researcher prompt templates. PR #24 merged. Also v1.24: skill-authoring guide + CSO descriptions for 11 workflows. PR #23 merged.
+- v1.26: Plugin-based install + README simplification. Plugin manifests for Claude Code, Cursor, Gemini CLI. Session-start hook auto-detects project state and injects bootstrap context. $CLAUDE_PLUGIN_ROOT added to skeleton resolution chain. README simplified from 247→130 lines. PR #25 merged. Also v1.24 (skill-authoring + CSO, PR #23) and v1.25 (rationalization + subagent-dispatch, PR #24).
 
 ## Next Task
 - (none)
@@ -14,7 +14,7 @@ IDLE
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
-- CONFIG.md Skeleton Version updated to 1.25
+- CONFIG.md Skeleton Version updated to 1.26
 - RULES.md now holds project context + project rules only (behavioral rules in .agents/rules/)
 - CONFIG.md has Description field for project identity (moved from RULES.md in v1.18)
 - v1.19: All operational timestamps use ISO 8601 UTC format (YYYY-MM-DDTHH:MMZ)
@@ -24,6 +24,7 @@ IDLE
 - v1.23: Session reload triggers — session-start re-executes after sync, setup, or 24h staleness.
 - v1.24: Skill authoring guide (meta-skill) + CSO descriptions for 11 workflows.
 - v1.25: Rationalization resistance tables + subagent-dispatch skill with prompt templates.
+- v1.26: Plugin-based install (Claude Code, Cursor, Gemini CLI) + session-start hook + README simplification.
 
 ## Cartography State
 - Last indexed commit: d417c5cb56c24fc5e997fef5512a41bd9e2aea81
