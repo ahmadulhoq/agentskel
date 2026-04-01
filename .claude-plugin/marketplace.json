@@ -2,7 +2,7 @@
   "name": "agentskel-dev",
   "description": "Development marketplace for agentskel framework",
   "owner": {
-    "name": "Ahmad Ul-Hoq"
+    "name": "Ahmadul Hoq"
   },
   "plugins": [
     {
