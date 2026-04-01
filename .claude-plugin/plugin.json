@@ -3,7 +3,7 @@
   "description": "Persistent memory, shared standards, and structured workflows for AI coding agents. Detects project setup and injects agent context automatically.",
   "version": "1.26.0",
   "author": {
-    "name": "Ahmad Ul-Hoq"
+    "name": "Ahmadul Hoq"
   },
   "homepage": "https://github.com/ahmadulhoq/agentskel",
   "repository": "https://github.com/ahmadulhoq/agentskel",
