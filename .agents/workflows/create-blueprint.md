@@ -253,7 +253,7 @@ Domain (copy and trim):
 - `.agents/skills/task-planner/SKILL.md` — replace `.memory/LESSONS.md` reference with generic wording, replace "Blueprint Check (if configured)" with "Domain Check" section pointing to local `specs/` and `parity/` paths
 
 Skip (not applicable to blueprints):
-- `senior-developer` — 100% about writing application code (SOLID, platform standards, performance)
+- `developer` — 100% about writing application code (SOLID, platform standards, performance)
 - `session-start` (project version) — requires `.memory/`; use the blueprint-specific version above instead
 - `task-completion` — requires `.memory/` for CHANGELOG, RESUME, TIME_LOG
 - `test-engineer` — blueprint has no code to test

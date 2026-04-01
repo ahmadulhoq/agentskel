@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.26
+> Corresponds to: agentskel v1.27
 
 ---
 
@@ -576,7 +576,7 @@ repo-root/
 │       ├── session-start.md               ← "Read .agents/skills/session-start/SKILL.md"
 │       ├── task-completion.md
 │       ├── git-flow.md
-│       ├── senior-developer.md
+│       ├── developer.md
 │       ├── develop-feature.md
 │       └── ... (auto-generated from skills + workflows)
 ├── .agent -> .agents                      ← Symlink for Antigravity native discovery
@@ -586,7 +586,7 @@ repo-root/
 │   │   ├── security-non-negotiables.md    ← Always on: hard security rules
 │   │   └── repo-rules.md                  ← Project-specific rules (never overwritten by sync)
 │   ├── skills/
-│   │   ├── senior-developer/SKILL.md      ← Domain: code quality, SOLID, UX
+│   │   ├── developer/SKILL.md      ← Domain: code quality, SOLID, UX
 │   │   ├── test-engineer/SKILL.md         ← Domain: testing, CI/CD
 │   │   ├── code-reviewer/SKILL.md         ← Domain: PR review, QA
 │   │   ├── task-planner/SKILL.md          ← Domain: decomposition, tracking
@@ -693,9 +693,9 @@ Hard security rules that apply to every task without exception. Covers: no hardc
 
 Skills are loaded only when the agent determines they're relevant to the current task. The agent sees a one-line description at session start (~50 tokens per skill) and loads full instructions only when needed.
 
-**Platform markers (v1.1):** Three domain skills (`senior-developer`, `code-reviewer`, `test-engineer`) contain `<!-- PLATFORM: X -->` / `<!-- END PLATFORM: X -->` HTML comment markers — the same mechanism used in standards. During `setup-skeleton`, sections for irrelevant platforms are stripped so the installed skill only contains guidance for the project's platform. `sync-skeleton` re-trims after updating from the skeleton source.
+**Platform markers (v1.1):** Three domain skills (`developer`, `code-reviewer`, `test-engineer`) contain `<!-- PLATFORM: X -->` / `<!-- END PLATFORM: X -->` HTML comment markers — the same mechanism used in standards. During `setup-skeleton`, sections for irrelevant platforms are stripped so the installed skill only contains guidance for the project's platform. `sync-skeleton` re-trims after updating from the skeleton source.
 
-#### .agents/skills/senior-developer/SKILL.md
+#### .agents/skills/developer/SKILL.md
 
 Generic sections (User Experience, Design Philosophy, SOLID, Code Quality, Process, System Extension) plus a `## Platform Standards` section with `<!-- PLATFORM: X -->` markers for Android (Compose/UDF, Coroutines, Detekt), iOS (SwiftUI, async/await, SwiftLint), Web (TypeScript, ESLint), and Backend (generic async/linting). Platform sections are trimmed during `setup-skeleton` — a project installed for Android only sees the Android block. Since v1.13, Code Quality includes explicit cleanup rules (unused imports, unused variables, dead code removal, import organization per STYLE_GUIDE) and per-platform static analysis is conditional ("if the project uses X") rather than mandatory.
 
@@ -747,13 +747,13 @@ Discovery mission that maps the codebase into MAP.md, SYMBOLS.md, and TECH_DEBT.
 
 #### .agents/workflows/develop-feature.md
 
-Full feature development lifecycle: Pre-Flight (read memory files, understand requirements) → Phase 1: Plan (write plan with estimates, wait for approval) → Phase 2: Implement (follow senior-developer standards, respect SACRED.md, update SYMBOLS/MAP) → Phase 3: Test (follow test-engineer standards, verify tests pass) → Phase 4: Document (CHANGELOG, TIME_LOG, Knowledge Bus if blueprint configured, memory commit).
+Full feature development lifecycle: Pre-Flight (read memory files, understand requirements) → Phase 1: Plan (write plan with estimates, wait for approval) → Phase 2: Implement (follow developer standards, respect SACRED.md, update SYMBOLS/MAP) → Phase 3: Test (follow test-engineer standards, verify tests pass) → Phase 4: Document (CHANGELOG, TIME_LOG, Knowledge Bus if blueprint configured, memory commit).
 
 **Source:** `roles/dev/workflows/develop-feature.md`
 
 #### .agents/workflows/implement-task.md (v1.9, updated v1.12)
 
-Generic wrapper for any ad-hoc implementation request (fix, change, add, remove, refactor) that doesn't match a named workflow. Pre-Flight (read memory files) → Plan (write plan scaled to task size, present to user, **wait for explicit approval — no exceptions**, no trivial-task bypass since v1.12) → Branch (create branch per git-flow before writing code — moved from Phase 4 since v1.12) → Implement (follow senior-developer standards) → Verify (follow test-engineer standards since v1.12, run tests if available) → Complete (commit, PR via git-flow, task-completion). Exists to close the enforcement gap where ad-hoc tasks could skip the post-task checklist — named workflows embed task-completion as their final step, but requests that don't match any workflow had no structural wrapper.
+Generic wrapper for any ad-hoc implementation request (fix, change, add, remove, refactor) that doesn't match a named workflow. Pre-Flight (read memory files) → Plan (write plan scaled to task size, present to user, **wait for explicit approval — no exceptions**, no trivial-task bypass since v1.12) → Branch (create branch per git-flow before writing code — moved from Phase 4 since v1.12) → Implement (follow developer standards) → Verify (follow test-engineer standards since v1.12, run tests if available) → Complete (commit, PR via git-flow, task-completion). Exists to close the enforcement gap where ad-hoc tasks could skip the post-task checklist — named workflows embed task-completion as their final step, but requests that don't match any workflow had no structural wrapper.
 
 **Source:** `roles/dev/workflows/implement-task.md`
 
@@ -774,7 +774,7 @@ Key design decisions:
 - Root-level `CONFIG.md` instead of `.memory/CONFIG.md` (no memory branch)
 - `.agents/` includes only: rules, git-flow skill, task-planner skill (trimmed),
   blueprint-specific session-start skill, sync-skeleton/check-skeleton workflows (trimmed)
-- Skips senior-developer, session-start (project version), task-completion,
+- Skips developer, session-start (project version), task-completion,
   test-engineer, code-reviewer, domain-expert (all require `.memory/` or are code-focused)
 - Symmetric `CLAUDE.md` and `GEMINI.md` entry points — both reference `.agents/rules/`,
   `CONFIG.md`, `specs/`, `parity/`, `bus/`, and skill triggers (v1.17)
@@ -797,7 +797,7 @@ Base cost: always-on rules (~2,400 tokens) are loaded in every scenario.
 | Scenario | What's Loaded | Est. Tokens |
 |----------|--------------|-------------|
 | Cartographer mission | Always-on rules + workflow | ~4,700 |
-| Simple bug fix | Always-on rules + senior-developer skill | ~3,900 |
+| Simple bug fix | Always-on rules + developer skill | ~3,900 |
 | Feature development | Always-on rules + senior-dev + test-engineer + task-planner | ~4,900 |
 | Code review | Always-on rules + code-reviewer skill | ~3,400 |
 | Session start | Always-on rules + session-start skill | ~4,200 |

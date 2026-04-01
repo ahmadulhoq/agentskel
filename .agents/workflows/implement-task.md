@@ -40,7 +40,7 @@ description: Generic wrapper for any ad-hoc implementation request that doesn't
    ```
 
 ## Phase 2: Implement
-8. Follow `senior-developer` skill standards for all code.
+8. Follow `developer` skill standards for all code.
 9. Match existing file style for edits.
 10. Respect all SACRED.md entries.
 11. Checkpoint to RESUME.md after each sub-task (for multi-step work).

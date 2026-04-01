@@ -36,7 +36,7 @@ Read `.memory/RESUME.md` to restore session state and context.
 | session-start | Session initialization — memory check, file reading, version checks, alerts | `.agents/skills/session-start/SKILL.md` |
 | task-completion | Post-task checklist — CHANGELOG, TIME_LOG, SYMBOLS/MAP, RESUME, memory commit | `.agents/skills/task-completion/SKILL.md` |
 | git-flow | Git branching, commit, and PR procedures | `.agents/skills/git-flow/SKILL.md` |
-| senior-developer | Code quality, SOLID principles, design philosophy, platform standards | `.agents/skills/senior-developer/SKILL.md` |
+| developer | Code quality, SOLID principles, design philosophy, platform standards | `.agents/skills/developer/SKILL.md` |
 | code-reviewer | PR review against standards and sacred behaviors | `.agents/skills/code-reviewer/SKILL.md` |
 | test-engineer | Test strategy, coverage analysis, test writing | `.agents/skills/test-engineer/SKILL.md` |
 | task-planner | Feature decomposition and task tracking | `.agents/skills/task-planner/SKILL.md` |

@@ -74,7 +74,7 @@ table. Agents will try to skip steps. Anticipate and block the excuses.
 4. Write the correct action in imperative form
 
 **When to include:** Any skill with a Gate statement, mandatory steps, or "do not skip"
-language. Not needed for advisory skills (senior-developer, domain-expert).
+language. Not needed for advisory skills (developer, domain-expert).
 
 Target 6-12 entries per enforcement skill. Cover the most tempting shortcuts.
 

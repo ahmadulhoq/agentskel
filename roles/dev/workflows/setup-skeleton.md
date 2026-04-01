@@ -173,13 +173,13 @@ Procedural (copy unchanged):
 - `.agents/skills/git-flow/SKILL.md` — from `core/skills/git-flow/`
 
 Domain (copy, then trim platform sections):
-- `.agents/skills/senior-developer/SKILL.md` — from `roles/dev/skills/senior-developer/`
+- `.agents/skills/developer/SKILL.md` — from `roles/dev/skills/developer/`
 - `.agents/skills/test-engineer/SKILL.md` — from `roles/dev/skills/test-engineer/`
 - `.agents/skills/code-reviewer/SKILL.md` — from `roles/dev/skills/code-reviewer/`
 - `.agents/skills/task-planner/SKILL.md` — from `roles/dev/skills/task-planner/`
 - `.agents/skills/domain-expert/SKILL.md` — from `roles/dev/skills/domain-expert/` (rename and fill in project domain)
 
-Domain skills (`senior-developer`, `code-reviewer`, `test-engineer`) contain `<!-- PLATFORM: X -->` markers — the same format as standards. After copying, remove platform sections for other platforms. Keep the project's platform section(s) and any unmarked universal content.
+Domain skills (`developer`, `code-reviewer`, `test-engineer`) contain `<!-- PLATFORM: X -->` markers — the same format as standards. After copying, remove platform sections for other platforms. Keep the project's platform section(s) and any unmarked universal content.
 
 ---
 
@@ -396,7 +396,7 @@ git commit -m "[chore] setup agentic development infrastructure
   parity-check, sync-skeleton, sync-versions, update-conventions
 - .agents/standards/: architecture, style-guide, dependency-management,
   git-workflow, api-contract (trimmed to [PLATFORM])
-- .agents/skills/: senior-developer, test-engineer, code-reviewer,
+- .agents/skills/: developer, test-engineer, code-reviewer,
   task-planner, domain-expert, session-start, task-completion, git-flow
 - .claude/skills/: Claude Code stub files for auto-discovery
 - .agent: symlink to .agents/ for Antigravity compatibility
@@ -422,7 +422,7 @@ gh pr create \
 - \`.agents/rules/\` — core behavior and security rules
 - \`.agents/workflows/\` — cartographer, check-dependencies, check-skeleton, cut-release, develop-feature, fix-tech-debt, hotfix, janitor, parity-check, sync-skeleton, sync-versions, update-conventions
 - \`.agents/standards/\` — architecture, style guide, dependency management, git workflow, API contracts (trimmed to [PLATFORM])
-- \`.agents/skills/\` — senior-developer, test-engineer, code-reviewer, task-planner, domain-expert, session-start, task-completion, git-flow
+- \`.agents/skills/\` — developer, test-engineer, code-reviewer, task-planner, domain-expert, session-start, task-completion, git-flow
 - \`.claude/skills/\` — Claude Code stub files for auto-discovery
 - \`.agent\` — symlink to .agents/ for Antigravity compatibility
 - \`AGENTS.md\` — universal entry point (Codex CLI, Cursor, Copilot, Windsurf)

@@ -34,7 +34,7 @@ description: Systematic resolution of catalogued tech debt items from TECH_DEBT.
 8. Record the task start time.
 
 ## Phase 2: Fix
-9. Follow `senior-developer` skill standards for all code.
+9. Follow `developer` skill standards for all code.
 10. Fix the root cause — not just the surface symptom.
 11. Keep scope tight. If you discover adjacent debt during the fix, log it in
     TECH_DEBT.md and address it in a separate PR. Do not expand the current branch.
