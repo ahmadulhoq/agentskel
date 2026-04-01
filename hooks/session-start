@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# agentskel session-start hook
+# Detects project state and injects bootstrap context into the agent's session.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# --- Detect project state and build context ---
+context=""
+
+if [ -d ".memory" ] && [ -d ".agents" ]; then
+    # Full setup — project has agentskel with memory mounted
+    context="You are in a project with agentskel installed."
+    context="${context}\n\nMANDATORY: Read and follow AGENTS.md in the project root. It contains your rules, skills, workflows, and memory references. Do NOT respond to any user request until you have completed the session-start procedure described there."
+    context="${context}\n\nDo not skip this. Do not summarize. Execute the full session-start procedure."
+
+    # Check for blueprint
+    if [ -f ".memory/CONFIG.md" ]; then
+        bp_line=$(grep -E '^\| *Blueprint Path' .memory/CONFIG.md 2>/dev/null || true)
+        if [ -n "${bp_line}" ]; then
+            bp_value=$(echo "${bp_line}" | sed 's/.*| *Blueprint Path *| *\([^|]*\).*/\1/' | xargs)
+            if [ -n "${bp_value}" ]; then
+                context="${context}\n\nThis project has a blueprint configured at ${bp_value}. The session-start procedure will check it."
+            fi
+        fi
+    fi
+
+elif [ -d ".agents" ]; then
+    # Partial setup — rules/workflows exist but memory not mounted
+    context="This project has agentskel rules and workflows (.agents/) but AI memory is not mounted."
+    context="${context}\n\nCheck if the ai-memory branch exists:\n  git branch -r | grep origin/ai-memory"
+    context="${context}\n\n- If found: tell the user to run ./scripts/install-agent.sh or: git worktree add .memory ai-memory"
+    context="${context}\n- If not found: the project needs the setup-skeleton workflow to initialize memory."
+    context="${context}\n\nRead AGENTS.md if it exists for available skills and workflows."
+
+elif [ -f "AGENTS.md" ]; then
+    # AGENTS.md exists but no .agents/ — minimal or external setup
+    context="This project has an AGENTS.md file. Read and follow it for all rules, skills, workflows, and memory references."
+
+else
+    # No setup — offer to set up
+    context="This project does not have agentskel set up."
+    context="${context}\n\nagentskel provides persistent memory, rules, skills, and workflows for AI coding agents. To set up this project, say:"
+    context="${context}\n\n  \"Set up agentskel on this project.\""
+    context="${context}\n\nThe agentskel skeleton is available at: ${PLUGIN_ROOT}"
+    context="${context}\n\nUntil setup is complete, follow these core principles:"
+    context="${context}\n- Plan before coding. Present the plan and wait for approval."
+    context="${context}\n- Verify before done. Run tests, check logs."
+    context="${context}\n- Minimal impact. Only touch what is necessary."
+fi
+
+# --- Escape content for JSON ---
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+escaped=$(escape_for_json "$(printf '%b' "${context}")")
+
+# --- Platform-specific JSON output ---
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+    # Cursor format
+    printf '{\n  "additional_context": "%s"\n}\n' "${escaped}"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+    # Claude Code format
+    printf '{\n  "hookSpecificOutput": {\n    "hookEventName": "SessionStart",\n    "additionalContext": "%s"\n  }\n}\n' "${escaped}"
+else
+    # SDK standard format (Copilot CLI, others)
+    printf '{\n  "additionalContext": "%s"\n}\n' "${escaped}"
+fi
+
+exit 0

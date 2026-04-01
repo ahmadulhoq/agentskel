@@ -21,6 +21,7 @@ description: Checks whether this project's skeleton version is current. Surfaces
 
 Follow this order to determine `[SKELETON_PATH]`:
 - Check `.memory/CONFIG.md` for a `Skeleton Path` field. If set and the path exists on disk — use it.
+- If not set, check `$CLAUDE_PLUGIN_ROOT` — if set and contains a `VERSION` file, use it.
 - If not set, probe common locations in order: `../agentskel`
 - If a local path is found — use it. If it wasn't stored in `CONFIG.md`, offer to save it now.
 - If **no local path is found** — ask the user:

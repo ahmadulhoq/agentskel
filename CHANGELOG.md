@@ -1,5 +1,25 @@
 # agentskel Changelog
 
+## v1.26 — 2026-04-01
+
+### Plugin-based install + README simplification
+- New plugin infrastructure for one-command install: `.claude-plugin/` (Claude Code),
+  `.cursor-plugin/` (Cursor), `gemini-extension.json` (Gemini CLI).
+- Session-start hook (`hooks/session-start`) auto-detects project state:
+  full setup (`.memory/` + `.agents/`), partial (`.agents/` only), or none.
+  Injects bootstrap context into the agent's session — no manual AGENTS.md reading needed.
+- Cross-platform hook launcher (`hooks/run-hook.cmd`) — polyglot bash+batch script
+  for macOS, Linux, and Windows (Git Bash).
+- New `setup-project` skill (plugin-level) — guides first-time setup, resolves
+  skeleton path from `$CLAUDE_PLUGIN_ROOT` automatically.
+- `$CLAUDE_PLUGIN_ROOT` added to skeleton path resolution chain in setup-skeleton,
+  sync-skeleton, check-skeleton, and session-start. Plugin users no longer need to
+  provide skeleton path manually.
+- Migration step 5e (v1.25→v1.26) in sync-skeleton for downstream projects.
+- README simplified from 247 lines to ~130 lines: leads with quick start (install
+  command), grouped memory table, "say this" workflow table. Detailed architecture
+  docs remain in MASTER_PLAN.md.
+
 ## v1.25 — 2026-03-31
 
 ### Rationalization resistance + subagent dispatch
