@@ -25,7 +25,7 @@ Ask the user for the following. Do not proceed until all are confirmed.
 | Lead engineer GitHub handle | `lead-dev` |
 | Leads team name (without org) | `android-leads` |
 | GitHub org | `my-org` |
-| Skeleton path on disk | e.g. `../agentskel` |
+| Skeleton path on disk | e.g. `../agentskel`. Auto-resolve: if `$CLAUDE_PLUGIN_ROOT` is set and contains a `VERSION` file, use it. Otherwise check `../agentskel`. Otherwise ask the user. |
 | Blueprint path on disk (optional) | e.g. `../my-blueprint` (only for multi-project teams) |
 | Supported tools | Comma-separated: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. Ask which tools the team uses. `AGENTS.md` is always installed. |
 

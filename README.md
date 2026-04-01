@@ -1,242 +1,141 @@
 # agentskel
 
-> Persistent memory, shared standards, and structured workflows for AI coding agents — installed on any existing project.
+> Persistent memory, shared standards, and structured workflows for AI coding agents.
 
-AI coding agents (Claude Code, Antigravity, Cursor, Copilot) are powerful but stateless. They forget everything between sessions, make inconsistent decisions across files, and have no awareness of your codebase's architecture, conventions, or history.
+AI agents forget everything between sessions. They re-scan your codebase, miss conventions, repeat past mistakes, and have no awareness of your architecture.
 
-**agentskel** fixes this. It gives every project:
-
-- **Memory that persists** — the agent maps your codebase once and remembers it across sessions
-- **Rules it always follows** — security, code quality, architecture standards
-- **Skills it can invoke** — specialist knowledge and step-by-step procedures
-- **Workflows for complex tasks** — develop features, review code, manage dependencies, cut releases
-
-Install it on your existing projects. No fork, no migration, no application code changes.
+**agentskel** gives your agents memory that persists, rules they always follow, and workflows for complex tasks. Install it on any existing project — no fork, no migration, no application code changes.
 
 ---
 
-## How it works
+## Quick start
 
-agentskel sets up three things on your project:
-
-### 1. Memory (`.memory/`)
-
-A separate Git branch (`ai-memory`) mounted as a worktree. Contains the agent's persistent knowledge:
-
-| File | Purpose |
-|------|---------|
-| `MAP.md` | Module registry — every module, its responsibility, key entry points |
-| `SYMBOLS.md` | Symbol index — every public class and function with file locations |
-| `RESUME.md` | Session state — what the agent was doing, what's next |
-| `RULES.md` | Project context and rules — vision, goals, domain knowledge, ad-hoc overrides |
-| `CONFIG.md` | Project identity — platform, GitHub slug, skeleton version |
-| `CONVENTIONS.md` | Observed patterns — naming, architecture, library usage |
-| `SACRED.md` | Protected behaviors — code that looks wrong but exists for a reason |
-| `LESSONS.md` | Past corrections — mistakes the agent must not repeat |
-| `TECH_DEBT.md` | Findings — anti-patterns, bugs, missing tests, dead code |
-| `NEEDS_REVIEW.md` | Triage queue — ambiguous patterns awaiting human classification |
-| `VERSIONS.md` | Dependency tracker — current versions, latest known, release notes |
-| `DEPENDENCY_ALERTS.md` | Open alerts — major/security dependency issues surfaced at session start |
-| `DEPENDENCY_HISTORY.md` | Upgrade log — historical record of dependency upgrades |
-| `CHANGELOG.md` | Agent changelog — every change with description and reasoning |
-| `TIME_LOG.md` | ROI tracking — estimated human hours vs agent duration |
-
-Memory lives on its own branch. It never touches your application code or requires code review.
-
-### 2. Rules, skills, and workflows (`.agents/`)
-
-Markdown files that define agent behavior:
-
-- **Rules** — always-on principles the agent follows on every task (security, code quality, git discipline)
-- **Skills** — specialist knowledge loaded on demand. Some are procedural (session start, task completion, git flow). Others are domain expertise (senior developer, code reviewer, test engineer)
-- **Workflows** — multi-step missions triggered by the user. Each has clear inputs, gates, and outputs
-- **Standards** — architecture, style guide, git workflow, dependency management, API contracts
-
-### 3. Entry points
-
-Each AI tool discovers the setup through its own mechanism:
-
-| Tool | Entry point | Discovery |
-|------|------------|-----------|
-| Codex CLI | `AGENTS.md` | Native format — reads AGENTS.md directly |
-| Cursor | `.cursor/rules/agentskel.mdc` → `AGENTS.md` | Native rule (`alwaysApply: true`) + reads AGENTS.md directly |
-| Copilot | `.github/copilot-instructions.md` → `AGENTS.md` | Native instructions file + reads AGENTS.md directly |
-| Windsurf | `.windsurf/rules/agentskel.md` → `AGENTS.md` | Native rule (`trigger: always_on`) + reads AGENTS.md directly |
-| Claude Code | `CLAUDE.md` → `AGENTS.md` | Thin wrapper + `.claude/skills/` stubs for compaction survival |
-| Antigravity | `GEMINI.md` → `AGENTS.md` | Thin wrapper + `.agent/` symlink for native discovery |
-
-All tools read the same rules, skills, and workflows from `.agents/`. `AGENTS.md` is the self-contained universal entry point. Each tool also gets a native config file that bootstraps into AGENTS.md via the tool's own discovery mechanism.
-
----
-
-## What's included
-
-### Core (always installed)
-
-| Component | Contents |
-|-----------|----------|
-| Memory templates | 15 files — CONFIG, RULES, MAP, SYMBOLS, RESUME, CONVENTIONS, SACRED, LESSONS, TECH_DEBT, NEEDS_REVIEW, VERSIONS, CHANGELOG, TIME_LOG, DEPENDENCY_ALERTS, DEPENDENCY_HISTORY |
-| Rules | `core-behavior.md` — planning, verification, communication, memory protocol |
-| | `security-non-negotiables.md` — credentials, input validation, least privilege |
-| Procedural skills | `session-start` — memory detection, file reading, version checks, alerts |
-| | `task-completion` — changelog, time log, symbols/map, resume, memory commit |
-| | `git-flow` — branch naming, commit format, PR rules |
-| Entry points | `AGENTS.md.template` (universal), `CLAUDE.md.template`, `GEMINI.md.template`, `cursor-rule.mdc.template`, `copilot-instructions.md.template`, `windsurf-rule.md.template`, `.claudeignore` |
-
-### Dev role (opt-in)
-
-| Component | Contents |
-|-----------|----------|
-| Workflows (15) | `cartographer` — map modules, classes, functions into memory |
-| | `develop-feature` — branch, implement, test, commit, PR |
-| | `implement-task` — generic wrapper for any ad-hoc task (default when no named workflow matches) |
-| | `fix-tech-debt` — pick a debt item, fix it, update registry |
-| | `hotfix` — emergency fix with expedited flow |
-| | `cut-release` — version bump, changelog, dependency snapshot |
-| | `check-dependencies` — scan for outdated/vulnerable dependencies |
-| | `sync-versions` — keep VERSIONS.md in sync with actual version files |
-| | `update-conventions` — refresh CONVENTIONS.md from official sources |
-| | `janitor` — monthly cleanup of stale memory, dead code, tech debt |
-| | `setup-skeleton` — one-time install of agentskel on a new project |
-| | `sync-skeleton` — update project when agentskel has new changes |
-| | `check-skeleton` — detect version gap between project and skeleton |
-| | `create-blueprint` — set up a shared domain knowledge repo for multi-project teams |
-| | `parity-check` — cross-platform feature consistency audit |
-| Domain skills (5) | `senior-developer` — architecture decisions, code quality, refactoring |
-| | `code-reviewer` — PR review against standards and sacred behaviors |
-| | `test-engineer` — test strategy, coverage analysis, test writing |
-| | `task-planner` — break down features into implementable tasks |
-| | `domain-expert` — project-specific business logic expertise |
-| Standards (7) | Architecture, Style Guide, Git Workflow, Dependency Management, API Contracts |
-| | Android Architecture — Compose/UDF, Hilt DI, Navigation, module graph, data layer |
-| | iOS Architecture — SwiftUI, NavigationStack, Swift Concurrency, SPM modules, data layer |
-
-Standards and skills support multiple platforms via `<!-- PLATFORM: X -->` markers. During setup, irrelevant platform sections are trimmed so each project gets clean, focused copies.
-
----
-
-## Getting started
-
-### Prerequisites
-
-- An existing Git repository
-- [Claude Code](https://claude.ai/download) or Antigravity installed
-- agentskel cloned locally:
+### Install (one-time)
 
 ```bash
-git clone https://github.com/ahmadulhoq/agentskel.git
+# Claude Code
+/plugin install agentskel
+
+# Gemini CLI
+gemini extensions install https://github.com/ahmadulhoq/agentskel
+
+# Codex / Cursor / Copilot / Windsurf — see docs/INSTALL.md
 ```
 
-You only need one clone. Every project on the same machine shares it.
+### Set up a project (tech lead, one-time)
 
-### Setting up a project (tech lead, one-time)
+Open your project and say:
 
-Open your project repo in Claude Code (or Antigravity) and say:
+> *"Set up agentskel on this project."*
 
-> *"Run the setup-skeleton workflow. The skeleton is at `../agentskel`."*
+The agent asks for project details, creates memory files, copies rules and workflows, and opens a PR. After merge, say *"Map this codebase"* to build the agent's memory.
 
-The agent will:
-
-1. **Ask** for project details — platform, app name, GitHub slug, default branch, lead engineer handle
-2. **Create** the `ai-memory` branch and mount it at `.memory/`
-3. **Populate** all 15 memory files with your project's identity
-4. **Copy** rules, workflows, skills, and standards into `.agents/`, trimmed to your platform
-5. **Generate** Claude Code skill stubs in `.claude/skills/`
-6. **Create** `CLAUDE.md`, `GEMINI.md`, `.claudeignore`, `CODEOWNERS`, and `scripts/install-agent.sh`
-7. **Open a PR** for the team to review before merging
-
-After the PR is merged, run the **cartographer** workflow to build the agent's memory of your codebase:
-
-> *"Map this codebase."*
-
-This scans every module, indexes classes and functions, and flags tech debt. For large codebases this takes multiple sessions — the agent checkpoints and resumes automatically.
-
-### Joining a project (any developer)
-
-After cloning a project that already has agentskel set up:
+### Join a project (any developer)
 
 ```bash
 ./scripts/install-agent.sh
 ```
 
-This mounts the AI memory. Open the project in Claude Code or Antigravity and start working — the agent reads its memory and picks up context automatically.
+Done. The agent reads its memory and picks up context automatically.
+
+---
+
+## What your agent gets
+
+### Memory (`.memory/`)
+
+A persistent knowledge base on a separate Git branch — never touches your application code.
+
+| What it remembers | Files |
+|---|---|
+| **Codebase structure** | `MAP.md` (modules), `SYMBOLS.md` (classes/functions) |
+| **Session state** | `RESUME.md` (what it was doing, what's next) |
+| **Project identity** | `CONFIG.md`, `RULES.md`, `CONVENTIONS.md` |
+| **Hard-won lessons** | `SACRED.md` (don't touch), `LESSONS.md` (past mistakes) |
+| **Dependency health** | `VERSIONS.md`, `DEPENDENCY_ALERTS.md` |
+| **Work tracking** | `CHANGELOG.md`, `TIME_LOG.md`, `TECH_DEBT.md` |
+
+### Rules (`.agents/rules/`)
+
+Always-on principles: planning before coding, verification before done, security non-negotiables, git discipline. Includes rationalization resistance — the agent can't talk itself out of following the rules.
+
+### Skills (`.agents/skills/`)
+
+Specialist knowledge loaded on demand:
+
+| Skill | What it does |
+|---|---|
+| `session-start` | Reads memory, checks versions, surfaces alerts |
+| `task-completion` | CHANGELOG, time log, memory commit — nothing gets skipped |
+| `senior-developer` | Architecture decisions, code quality, SOLID principles |
+| `code-reviewer` | PR review against standards and sacred behaviors |
+| `test-engineer` | Test strategy, coverage, test writing |
+| `subagent-dispatch` | Delegate tasks to fresh subagents with prompt templates |
+| `skill-authoring` | Guide for creating new skills with quality gates |
+
+### Workflows (`.agents/workflows/`)
+
+15 structured workflows for common tasks:
+
+| Task | Say this |
+|---|---|
+| Build a feature | *"Develop a feature for X"* |
+| Fix something | *"Fix this bug"* or *"Fix tech debt DEBT-001"* |
+| Emergency fix | *"Hotfix: production is broken"* |
+| Cut a release | *"Cut a release"* |
+| Audit dependencies | *"Check dependencies"* |
+| Map the codebase | *"Map this codebase"* |
+
+---
+
+## Works with every AI tool
+
+| Tool | How it discovers agentskel |
+|---|---|
+| Claude Code | Plugin + session-start hook |
+| Cursor | Plugin + native rule |
+| Copilot | `.github/copilot-instructions.md` |
+| Windsurf | Native rule |
+| Codex CLI | Reads `AGENTS.md` natively |
+| Gemini / Antigravity | Extension + `GEMINI.md` |
+
+All tools read the same rules, skills, and workflows from `.agents/`. One setup, every tool.
 
 ---
 
 ## Keeping in sync
 
-agentskel is versioned. Each project tracks which version it was set up with (in `.memory/CONFIG.md`). When agentskel is updated:
+agentskel is versioned. Your agent detects version gaps at session start:
 
-1. The agent detects the version gap at session start
-2. Run: *"Sync this project with the latest skeleton."*
-3. The agent walks through each CHANGELOG entry since last sync (Apply / Adapt / Skip)
-4. Opens a PR for the team to review
+> *"Sync this project with the latest skeleton."*
 
----
-
-## Two components
-
-### Skeleton (this repo — always required)
-
-agentskel is the skeleton. It contains rules, workflows, skills, standards, and memory templates. No business logic, no org-specific content, no product knowledge.
-
-### Blueprint (optional — for multi-project teams)
-
-When multiple projects share the same business domain (e.g. Android app, iOS app, and backend for the same product), you create a **blueprint** — a separate repo of shared domain knowledge.
-
-A blueprint contains:
-
-| Directory | Purpose |
-|-----------|---------|
-| `specs/` | Business logic specs, API contracts, edge case documentation |
-| `parity/` | Feature parity matrix — which platform implements what |
-| `bus/` | Knowledge Bus — cross-project notifications when one agent changes shared logic |
-| `.agents/` | Safety net — rules and subset of workflows for direct access |
-| `CONFIG.md` | Blueprint identity — name, platforms, connected projects |
-
-A blueprint has **no ai-memory branch** — it is a pure knowledge hub. Project-specific agents manage blueprint content by reading and writing to it via `Blueprint Path` in their own `.memory/CONFIG.md`. The blueprint includes a lightweight `.agents/` as a safety net if someone opens it directly.
-
-**You don't need a blueprint to start.** For single-project teams, all domain knowledge lives in `.memory/`. Create a blueprint when you have 2+ projects that need shared knowledge.
+The agent walks through each change (Apply / Adapt / Skip) and opens a PR.
 
 ---
 
-## Repo structure
+## Blueprints (optional)
 
+For teams with multiple projects sharing business logic (e.g. Android + iOS + backend), create a **blueprint** — a shared knowledge repo with specs, feature parity tracking, and a Knowledge Bus for cross-project notifications. Projects connect via `Blueprint Path` in their CONFIG.md; agents pull specs and check for cross-platform action items at session start.
+
+You don't need a blueprint to start. Create one when you have 2+ projects that need shared domain knowledge.
+
+---
+
+## Manual install (without plugin)
+
+If you prefer not to use the plugin system:
+
+```bash
+git clone https://github.com/ahmadulhoq/agentskel.git
 ```
-agentskel/
-├── core/                          # Always installed
-│   ├── memory/                    # Memory file templates (15 files)
-│   ├── rules/                     # Core rules (always-on)
-│   │   ├── core-behavior.md
-│   │   └── security-non-negotiables.md
-│   ├── skills/                    # Procedural skills
-│   │   ├── session-start/
-│   │   ├── task-completion/
-│   │   └── git-flow/
-│   ├── AGENTS.md.template
-│   ├── CLAUDE.md.template
-│   ├── GEMINI.md.template
-│   ├── cursor-rule.mdc.template
-│   ├── copilot-instructions.md.template
-│   ├── windsurf-rule.md.template
-│   └── .claudeignore
-├── roles/
-│   └── dev/                       # Dev role (opt-in)
-│       ├── workflows/             # 15 workflow files
-│       ├── skills/                # 5 domain skills
-│       ├── standards/             # 7 standard documents
-│       └── prompts/               # Mission start prompts
-├── VERSION                        # Current skeleton version
-└── CHANGELOG.md                   # What changed in each version
-```
+
+Then open your project and say: *"Run the setup-skeleton workflow. The skeleton is at `../agentskel`."*
 
 ---
 
 ## Current version
 
-**v1.25** — see [CHANGELOG.md](CHANGELOG.md) for details.
-
----
+**v1.26** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ## Contributing
 

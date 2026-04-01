@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.20
+> Corresponds to: agentskel v1.26
 
 ---
 
@@ -540,6 +540,7 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 7. **Symlinks for skeleton/blueprint repos, copies for projects**: Repos that contain source templates (`core/`, `roles/`) use symlinks in `.agents/` pointing to those templates — zero internal drift. Downstream projects (which don't have `core/` or `roles/`) use copies created during setup.
 8. **`repo-rules.md` for project-specific rules**: Each project can have a `.agents/rules/repo-rules.md` for rules unique to that repo (e.g. architecture documentation requirements, domain constraints). This file has no upstream template and is never overwritten by setup or sync.
 9. **Universal entry point**: `AGENTS.md` is the self-contained entry point for any tool that adopts the AGENTS.md open standard (Linux Foundation). It includes hardened enforcement rules (session-start, task-completion, workflow routing, memory usage), skill/workflow catalogs with paths, and memory references. `CLAUDE.md` and `GEMINI.md` are thin wrappers that say "read AGENTS.md" plus tool-specific quirks (stub discovery, symlink paths). One canonical source, many entry points.
+10. **Plugin-based distribution**: agentskel can be installed as a plugin/extension for Claude Code (`.claude-plugin/`), Cursor (`.cursor-plugin/`), and Gemini CLI (`gemini-extension.json`). A session-start hook (`hooks/session-start`) auto-detects project state and injects bootstrap context. The plugin is the skeleton — `$CLAUDE_PLUGIN_ROOT` resolves to the agentskel repo, eliminating the need for a separate clone. The hook is additive: projects with CLAUDE.md continue to work without the plugin.
 
 ### 6.3 Entry Points by Tool
 

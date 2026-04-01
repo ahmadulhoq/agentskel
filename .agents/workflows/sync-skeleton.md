@@ -29,6 +29,7 @@ If you are not sure whether the current user is authorized, ask before proceedin
 2. Confirm `git status` is clean — no uncommitted changes on the default branch.
 3. Resolve the skeleton location — follow this order:
    - Check `.memory/CONFIG.md` for a `Skeleton Path` field. If set and the path exists on disk — use it as `[SKELETON_PATH]`.
+   - If not set, check `$CLAUDE_PLUGIN_ROOT` — if set and contains a `VERSION` file, use it.
    - If not set, probe common locations in order: `../agentskel`
    - If a local path is found — use it as `[SKELETON_PATH]`. If it wasn't stored in `CONFIG.md`, offer to save it now.
    - If **no local path is found** — ask the user:
@@ -209,6 +210,32 @@ migration is required:
      `[SKELETON_PATH]/core/windsurf-rule.md.template`. Replace `[APP_NAME]`.
 
 Include any new tool config files in the Step 6 commit.
+
+---
+
+## Step 5e — Migration: v1.25 to v1.26 (plugin-based skeleton resolution)
+
+Skip this step if the project is already on skeleton v1.26+.
+
+If the project's recorded skeleton version is < 1.26, the following one-time
+migration is required:
+
+1. In `.agents/skills/session-start/SKILL.md` Step 4, update the skeleton version
+   resolution chain from:
+   `Skeleton Path in CONFIG.md → ../agentskel → GitHub fetch fallback`
+   to:
+   `Skeleton Path in CONFIG.md → $CLAUDE_PLUGIN_ROOT → ../agentskel → GitHub fetch fallback`
+
+2. In `.agents/workflows/setup-skeleton.md` Step 1, update the `Skeleton path on disk`
+   input to include: "If `$CLAUDE_PLUGIN_ROOT` is set and contains a `VERSION` file, use it."
+
+3. In `.agents/workflows/sync-skeleton.md` Pre-Flight step 3, add `$CLAUDE_PLUGIN_ROOT`
+   check between CONFIG.md and `../agentskel` in the resolution chain.
+
+4. In `.agents/workflows/check-skeleton.md` Step 1, add `$CLAUDE_PLUGIN_ROOT`
+   check between CONFIG.md and `../agentskel` in the resolution chain.
+
+Include these changes in the Step 6 commit.
 
 ---
 

@@ -54,7 +54,7 @@ Read all of the following files. Do not skip any:
 ## Step 4 — Check skeleton version
 
 - [ ] Read `VERSION` from the skeleton repo (resolve location via
-      `Skeleton Path` in CONFIG.md → `../agentskel` → GitHub fetch fallback).
+      `Skeleton Path` in CONFIG.md → `$CLAUDE_PLUGIN_ROOT` → `../agentskel` → GitHub fetch fallback).
 - [ ] Compare with `Skeleton Version` in `.memory/CONFIG.md`.
 - [ ] If they differ → run `sync-skeleton` before any other task
       (unless the user explicitly says to skip the sync this session).

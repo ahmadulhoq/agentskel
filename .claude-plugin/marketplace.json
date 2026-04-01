@@ -1,0 +1,15 @@
+{
+  "name": "agentskel-dev",
+  "description": "Development marketplace for agentskel framework",
+  "owner": {
+    "name": "Ahmad Ul-Hoq"
+  },
+  "plugins": [
+    {
+      "name": "agentskel",
+      "description": "Persistent memory, shared standards, and structured workflows for AI coding agents",
+      "version": "1.26.0",
+      "source": "./"
+    }
+  ]
+}
