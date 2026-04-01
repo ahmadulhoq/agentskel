@@ -67,7 +67,7 @@ Specialist knowledge loaded on demand:
 |---|---|
 | `session-start` | Reads memory, checks versions, surfaces alerts |
 | `task-completion` | CHANGELOG, time log, memory commit — nothing gets skipped |
-| `senior-developer` | Architecture decisions, code quality, SOLID principles |
+| `developer` | Architecture decisions, code quality, SOLID principles |
 | `code-reviewer` | PR review against standards and sacred behaviors |
 | `test-engineer` | Test strategy, coverage, test writing |
 | `subagent-dispatch` | Delegate tasks to fresh subagents with prompt templates |
@@ -135,7 +135,7 @@ Then open your project and say: *"Run the setup-skeleton workflow. The skeleton 
 
 ## Current version
 
-**v1.26** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.27** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ## Contributing
 

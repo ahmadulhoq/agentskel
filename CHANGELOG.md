@@ -1,5 +1,16 @@
 # agentskel Changelog
 
+## v1.27 — 2026-04-01
+
+### Skill rename + task-completion extraction
+- Renamed `senior-developer` skill to `developer` — agents are not senior/junior,
+  the skill is about code quality and standards regardless of implied seniority.
+  Breaking change: file paths changed from `.agents/skills/senior-developer/` to
+  `.agents/skills/developer/`.
+- Extracted skeleton-specific steps (README, migration, MASTER_PLAN, self-sync) from
+  `task-completion` into `skeleton-contribution-checklist.md`. Downstream projects
+  now skip these entirely — task-completion is 50 lines lighter.
+
 ## v1.26 — 2026-04-01
 
 ### Plugin-based install + README simplification
@@ -219,13 +230,13 @@
   re-scanning the codebase. The cartographer indexed it; use the index.
 
 ### Skills — Code cleanup rules
-- `senior-developer/SKILL.md`: Added explicit code cleanup rules to Code
+- `developer/SKILL.md`: Added explicit code cleanup rules to Code
   Quality section — remove unused imports, organize imports per STYLE_GUIDE,
   remove unused variables/parameters/local functions, review own changes for
   leftover debug code and temporary comments.
 
 ### Skills & Workflows — Static analysis made optional
-- `senior-developer/SKILL.md`: Per-platform static analysis changed from
+- `developer/SKILL.md`: Per-platform static analysis changed from
   mandatory ("New code must pass X") to conditional ("If the project uses X,
   run it and fix violations"). Applies to Detekt (Android), SwiftLint (iOS),
   ESLint/Prettier (Web), and project linter (Backend).
@@ -364,7 +375,7 @@
   no ai-memory commits, no task completion checklist)
 - **Standards:** `GIT_WORKFLOW.md` must be simplified for blueprint context (branch naming,
   commits, PRs only — no release/hotfix flows, no AI session protocol)
-- **Skills:** `senior-developer` excluded (100% code-focused); `task-planner` must be trimmed
+- **Skills:** `developer` excluded (100% code-focused); `task-planner` must be trimmed
   (remove `.memory/` references, localize Blueprint Check to direct `specs/` paths);
   blueprint-specific `session-start` created (reads root CONFIG.md, checks skeleton version,
   checks git state — no memory mount, no dependency alerts, no freshness dates)
@@ -439,7 +450,7 @@
 ## v1.1 — 2026-03-24
 
 ### Skills — Platform markers
-- `senior-developer`: Added `## Platform Standards` section with Android (Compose/UDF,
+- `developer`: Added `## Platform Standards` section with Android (Compose/UDF,
   Coroutines, Detekt), iOS (async/await, SwiftUI, SwiftLint), Web (TypeScript, ESLint),
   Backend (generic async/linting) platform markers
 - `code-reviewer`: Added platform markers to checklist items 4 (architecture standards),
@@ -477,7 +488,7 @@ Initial release. 2-component architecture: skeleton (agentskel) + optional bluep
 - 5 standards: architecture, git workflow, style guide, dependency management, API contracts
 - Claude Code skill stubs (auto-generated from skills + workflows)
 - 8 mission prompts
-- Domain skills: senior-developer, test-engineer, code-reviewer, task-planner, domain-expert
+- Domain skills: developer, test-engineer, code-reviewer, task-planner, domain-expert
 
 ### Architecture
 - Skeleton = agentskel framework (rules, workflows, skills, standards), installed per project

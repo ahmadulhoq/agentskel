@@ -113,7 +113,7 @@ Apply all **Apply** and **Adapt** decisions:
 - Updated workflow templates: `.agents/workflows/`
 - Updated rule templates: `.agents/rules/`
 - Updated standard templates: `.agents/standards/` (trim platform sections as with setup)
-- Updated skill templates: `.agents/skills/` (trim platform sections in `senior-developer`, `code-reviewer`, `test-engineer` — same as standards)
+- Updated skill templates: `.agents/skills/` (trim platform sections in `developer`, `code-reviewer`, `test-engineer` — same as standards)
 - Updated `AGENTS.md` template: project root `AGENTS.md` (regenerate skill/workflow catalogs from frontmatter — same logic as setup-skeleton Step 5d)
 - Updated `CLAUDE.md` template: project root `CLAUDE.md` (only if `claude` in Supported Tools)
 - Updated `GEMINI.md` template: project root `GEMINI.md` (only if `antigravity` in Supported Tools)
@@ -234,6 +234,36 @@ migration is required:
 
 4. In `.agents/workflows/check-skeleton.md` Step 1, add `$CLAUDE_PLUGIN_ROOT`
    check between CONFIG.md and `../agentskel` in the resolution chain.
+
+Include these changes in the Step 6 commit.
+
+---
+
+## Step 5f — Migration: v1.26 to v1.27 (skill rename + task-completion extraction)
+
+Skip this step if the project is already on skeleton v1.27+.
+
+If the project's recorded skeleton version is < 1.27, the following one-time
+migration is required:
+
+1. Rename the `developer` skill (formerly `senior-developer`):
+   ```bash
+   mv .agents/skills/senior-developer .agents/skills/developer
+   mv .claude/skills/senior-developer.md .claude/skills/developer.md
+   ```
+   Update the `name:` field in `.agents/skills/developer/SKILL.md` frontmatter
+   from `senior-developer` to `developer`.
+   Update the path in `.claude/skills/developer.md` to point to `.agents/skills/developer/SKILL.md`.
+
+2. Update all references to `senior-developer` in:
+   - `AGENTS.md` catalog table
+   - `.agents/workflows/develop-feature.md`, `fix-tech-debt.md`, `implement-task.md`
+   - Any project-specific files that reference the skill by name
+
+3. Replace `task-completion` Steps 5-5d with the new Step 5 that references
+   `skeleton-contribution-checklist.md`. Copy the new checklist file from
+   `[SKELETON_PATH]/core/skills/task-completion/skeleton-contribution-checklist.md`
+   to `.agents/skills/task-completion/`.
 
 Include these changes in the Step 6 commit.
 

@@ -1,5 +1,5 @@
 ---
-name: senior-developer
+name: developer
 description: Code quality standards, SOLID principles, design philosophy,
   and performance requirements. Use when writing, modifying, or
   refactoring application code.

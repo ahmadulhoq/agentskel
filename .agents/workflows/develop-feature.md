@@ -34,7 +34,7 @@ description: When the user asks to implement a new feature end-to-end requiring
 8. Record the task start time.
 
 ## Phase 2: Implement
-9. Follow `senior-developer` skill standards for all code.
+9. Follow `developer` skill standards for all code.
 10. Match existing file style for edits. Use STYLE_GUIDE.md for new files.
 11. Respect all SACRED.md entries. Flag if a sacred behavior must change.
 12. Update `.memory/SYMBOLS.md` for any new public classes/functions.

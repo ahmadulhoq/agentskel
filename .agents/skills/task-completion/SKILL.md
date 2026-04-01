@@ -51,58 +51,12 @@ to the user or starting anything else.**
       The bus entry exists locally and will be picked up on the next manual push.
 - Skip if no blueprint is configured, or if the change is purely project-specific.
 
-## Step 5 — README (skeleton/agentskel repos only)
+## Step 5 — Skeleton Contribution (skeleton repos only)
 
-- [ ] If this task changed something that is **already mentioned** in `README.md`
-      (e.g. workflow count, role description, architecture overview) → update README
-      to keep it accurate.
-- Only update README for user-facing structural changes (added/removed components,
-  changed architecture). Do not add entries for internal fixes, rewording, or
-  minor adjustments that don't affect what README communicates.
-- Skip if this is not the agentskel repo, or if the change has no README impact.
-
-## Step 5b — Migration Step (skeleton/agentskel repos only)
-
-- [ ] If this task bumped `VERSION` with a **breaking change** (MAJOR version) →
-      ensure a corresponding migration step exists in `sync-skeleton.md`.
-- [ ] The migration step must include exact commands and file changes needed for
-      downstream projects to adopt the breaking change.
-- **This is mandatory for breaking changes. Without it, downstream syncs will fail.**
-- Skip if this is not the agentskel repo, or if the VERSION bump is non-breaking.
-
-## Step 5c — MASTER_PLAN (skeleton/agentskel repos only)
-
-- [ ] Read `MAINTAIN_MASTER_PLAN.md` and check the trigger list against this
-      task's changes. The triggers are:
-      - Added, removed, or renamed a workflow, skill, prompt, or standard
-      - Changed the install/setup path (setup-skeleton, sync-skeleton)
-      - Added or removed a role
-      - Changed core/ vs roles/ boundaries
-      - Changed the .memory/ file set or schema
-      - Modified the blueprint integration
-      - Changed architecture decisions or principles
-- [ ] State which triggers matched and which did not.
-- [ ] If any trigger matched → update `MASTER_PLAN.md` per
-      `MAINTAIN_MASTER_PLAN.md` "What to Check" section.
-- [ ] Update the `Corresponds to:` version marker in MASTER_PLAN.md to match
-      the new VERSION.
-- Skip only if this is not the agentskel repo, or if zero triggers matched.
-
-## Step 5d — Self-sync verification (skeleton/agentskel repos only)
-
-- [ ] If `Skeleton Path` in `.memory/CONFIG.md` is `.` (i.e. this IS the skeleton),
-      verify self-sync before committing:
-  1. **File sync:** For every file changed under `core/` or `roles/`, confirm
-     the corresponding `.agents/` copy is identical. Run:
-     ```
-     diff <source_file> <.agents_counterpart>
-     ```
-     If any diff is non-empty, copy the source to `.agents/` and stage it in
-     the same commit.
-  2. **Version sync:** Confirm `.memory/CONFIG.md` `Skeleton Version` matches
-     the `VERSION` file. If not, update CONFIG.md.
-- **This is a gate.** Do not commit until both checks pass.
-- Skip if this is not the agentskel repo (Skeleton Path ≠ `.`).
+- [ ] If `Skeleton Path` in `.memory/CONFIG.md` is `.` (this IS the skeleton repo),
+      read and execute `skeleton-contribution-checklist.md` (in the same directory
+      as this skill).
+- Skip entirely for downstream projects (Skeleton Path ≠ `.`).
 
 ## Step 6 — RESUME.md
 
