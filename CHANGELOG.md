@@ -2,14 +2,17 @@
 
 ## v1.29 — 2026-04-02
 
-### SYMBOLS.md indexes all named functions
+### SYMBOLS.md indexes all named functions + codebase-navigator skill
 - Cartographer now indexes all named functions (public, internal, private,
   protected) — not just public. Skips anonymous lambdas and trivial
   getters/setters. Agents reported skipping SYMBOLS.md because bug fixes
   involve internal functions not in the index.
 - SYMBOLS.md template updated to reflect the broader scope.
-- core-behavior "Use your memory" rule nuanced: use MAP/SYMBOLS for
-  navigation (where does X live?), grep for investigation (who calls X?).
+- New `codebase-navigator` skill — advisory skill for using MAP.md and
+  SYMBOLS.md effectively. Covers when to use the index vs grep, how to
+  trace flows, and when to skip the index entirely.
+- core-behavior "Use your memory" rule simplified to one line — detailed
+  guidance moved to the codebase-navigator skill.
 
 ## v1.28 — 2026-04-02
 
