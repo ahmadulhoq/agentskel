@@ -1,5 +1,13 @@
 # agentskel Changelog
 
+## v1.28 — 2026-04-02
+
+### Platform trimming enforcement in sync-skeleton
+- New mandatory Step 4b in `sync-skeleton.md` — platform trimming gate after
+  file copy. Lists all files with `<!-- PLATFORM: X -->` markers, enforces
+  removal of non-project platform sections, and requires verification before
+  proceeding. Previously this was a parenthetical note that agents skipped.
+
 ## v1.27 — 2026-04-01
 
 ### Skill rename + task-completion extraction

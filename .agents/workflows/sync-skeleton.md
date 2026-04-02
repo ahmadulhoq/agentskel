@@ -112,8 +112,8 @@ Apply all **Apply** and **Adapt** decisions:
 
 - Updated workflow templates: `.agents/workflows/`
 - Updated rule templates: `.agents/rules/`
-- Updated standard templates: `.agents/standards/` (trim platform sections as with setup)
-- Updated skill templates: `.agents/skills/` (trim platform sections in `developer`, `code-reviewer`, `test-engineer` — same as standards)
+- Updated standard templates: `.agents/standards/`
+- Updated skill templates: `.agents/skills/`
 - Updated `AGENTS.md` template: project root `AGENTS.md` (regenerate skill/workflow catalogs from frontmatter — same logic as setup-skeleton Step 5d)
 - Updated `CLAUDE.md` template: project root `CLAUDE.md` (only if `claude` in Supported Tools)
 - Updated `GEMINI.md` template: project root `GEMINI.md` (only if `antigravity` in Supported Tools)
@@ -134,6 +134,35 @@ For each **Adapt** change, note the platform-specific modification made alongsid
 standard template change.
 
 For each **Skip**, do not modify the file — record only (Step 6 handles this).
+
+### Step 4b — Platform Trimming (MANDATORY)
+
+After copying updated files, trim platform-specific content that does not belong to
+this project. Read `Platform` from `.memory/CONFIG.md`.
+
+**Files to check:** All files in `.agents/skills/` and `.agents/standards/` that
+contain `<!-- PLATFORM: X -->` markers.
+
+**Procedure:**
+1. For each `<!-- PLATFORM: X -->` / `<!-- END PLATFORM: X -->` block where X is
+   NOT this project's platform: **remove the entire block** (opening comment,
+   content, closing comment).
+2. For blocks where X IS this project's platform: **keep the content but strip
+   the comment markers** so the file reads cleanly.
+3. Keep all unmarked (universal) content unchanged.
+
+**Known files with platform markers:**
+- `.agents/skills/developer/SKILL.md`
+- `.agents/skills/code-reviewer/SKILL.md`
+- `.agents/skills/test-engineer/SKILL.md`
+- `.agents/standards/ARCHITECTURE.md`
+- `.agents/standards/STYLE_GUIDE.md`
+- `.agents/standards/DEPENDENCY_MANAGEMENT.md`
+- `.agents/workflows/cut-release.md`
+
+**Gate:** Do not proceed to Step 5 until all non-platform sections are removed.
+Verify by searching for `<!-- PLATFORM:` — the only remaining markers should be
+for this project's platform (and those should have their comment tags stripped).
 
 ---
 
