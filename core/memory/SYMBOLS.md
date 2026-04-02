@@ -8,7 +8,8 @@
 <!-- Entry format:
      - Class rows:    | ClassName              | class    | path/to/File.kt |
      - Function rows: | ClassName.functionName | function | path/to/File.kt |
-     List every public function for each primary class. Do not skip. -->
+     List every named function (public, internal, private, protected).
+     Skip anonymous lambdas and trivial getters/setters. -->
 
 ## [Module Name]
 | Symbol | Type | File |

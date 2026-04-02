@@ -43,6 +43,7 @@ Read `.memory/RESUME.md` to restore session state and context.
 | domain-expert | Project-specific business logic expertise | `.agents/skills/domain-expert/SKILL.md` |
 | skill-authoring | When creating a new skill/workflow or improving an existing skill's effectiveness | `.agents/skills/skill-authoring/SKILL.md` |
 | subagent-dispatch | When delegating work to a subagent — implementation, review, research, or exploration | `.agents/skills/subagent-dispatch/SKILL.md` |
+| codebase-navigator | When searching for code, tracing a bug, or understanding how modules connect | `.agents/skills/codebase-navigator/SKILL.md` |
 
 ## Workflows
 | Workflow | Description | Path |
