@@ -65,10 +65,12 @@ modules already marked complete. Record the current HEAD commit SHA in
    b. For each primary class, **open and read the source file**.
       Extract:
       - The class responsibility (one sentence)
-      - Every public function/method name and the file it lives in
+      - Every named function/method (public, internal, private, protected)
+        and the file it lives in. Skip anonymous lambdas and trivial
+        getters/setters.
       Write both class-level and function-level rows to SYMBOLS.md
       using the format defined in the SYMBOLS.md template header. Do not
-      skip any public function — the goal is a complete index.
+      skip any named function — the goal is a complete index.
    c. While reading each file, actively look for triage triggers:
       - FIXME, TODO, HACK, or XXX comments
       - Patterns that contradict `.memory/CONVENTIONS.md`

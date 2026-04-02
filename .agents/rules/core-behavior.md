@@ -11,11 +11,11 @@ description: Core operating behavior for all agents in this repo.
   or code before concluding. Incorrect assumptions waste time and
   lead to unnecessary changes.
 - **Use your memory.** When `.memory/MAP.md` and `.memory/SYMBOLS.md`
-  exist, use them to locate relevant files, modules, and symbols. Do
-  not re-scan or re-search the codebase for information the
-  cartographer has already indexed. MAP.md tells you which modules own
-  which responsibilities; SYMBOLS.md tells you exactly where each
-  class, function, and file lives. Go directly to the source.
+  exist, use them for navigation — finding which module owns a
+  responsibility, where a class or function is defined, or tracing
+  critical flows. For investigation (who calls this function? what's
+  the implementation?) grep is the right tool. Use the index to
+  navigate, grep to investigate.
 - **Discuss, agree, then execute.** Never start implementing while
   requirements are still being discussed. Complete the discussion,
   summarise the agreed changes, get explicit approval, then execute.

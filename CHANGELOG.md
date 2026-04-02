@@ -1,5 +1,16 @@
 # agentskel Changelog
 
+## v1.29 — 2026-04-02
+
+### SYMBOLS.md indexes all named functions
+- Cartographer now indexes all named functions (public, internal, private,
+  protected) — not just public. Skips anonymous lambdas and trivial
+  getters/setters. Agents reported skipping SYMBOLS.md because bug fixes
+  involve internal functions not in the index.
+- SYMBOLS.md template updated to reflect the broader scope.
+- core-behavior "Use your memory" rule nuanced: use MAP/SYMBOLS for
+  navigation (where does X live?), grep for investigation (who calls X?).
+
 ## v1.28 — 2026-04-02
 
 ### Platform trimming enforcement in sync-skeleton
