@@ -14,6 +14,7 @@
 | v1.26 | Plugin-based install + README simplification — plugin manifests for Claude Code/Cursor/Gemini, session-start hook with project state detection, $CLAUDE_PLUGIN_ROOT resolution, setup-project skill, README rewrite | 2026-04-01 | 3h | — | — | ~30 min | 21 (4 plugin manifests + 4 hook files + 1 skill + 4 workflow sources + 4 .agents/ copies + CHANGELOG + MASTER_PLAN + README + VERSION) + .memory/CONFIG.md on ai-memory | completed |
 | v1.27 | Rename senior-developer→developer + extract skeleton-contribution-checklist from task-completion | 2026-04-01 | 1h | — | — | ~15 min | 26 (skill rename + 6 workflow sources + 6 .agents/ copies + skeleton checklist x2 + AGENTS.md + CHANGELOG + MASTER_PLAN + README + VERSION) + .memory/ on ai-memory | completed |
 | v1.28 | Mandatory platform trimming gate in sync-skeleton — Step 4b with file list and verification gate | 2026-04-02 | 0.5h | — | — | ~10 min | 5 (sync-skeleton source + .agents/ copy + CHANGELOG + README + VERSION) + .memory/CONFIG.md on ai-memory | completed |
+| v1.29 | All named functions + module-based symbols split + codebase-navigator — cartographer indexes all named functions, split mode for 5+ modules, new advisory skill, migration step 5g | 2026-04-07 | 2h | — | — | ~25 min | 18 (SYMBOLS template + cartographer + 3 skills + core-behavior + sync-skeleton + 6 .agents/ copies + .claude/ stub + AGENTS.md + CHANGELOG + README + VERSION) + .memory/ on ai-memory | completed |
 
 <!-- Notes on estimates:
      - "Est. Human Hours" is the agent's estimate of how long a senior developer

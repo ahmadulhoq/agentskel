@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.28: Mandatory platform trimming gate (Step 4b) in sync-skeleton. Previously a parenthetical note agents skipped — now a gate with file list and verification. PR #28 merged.
+- v1.29: All named functions in SYMBOLS + module-based split + codebase-navigator skill. Cartographer indexes all named functions (not just public). Projects with 5+ modules use split mode (SYMBOLS.md index + symbols/*.md per module). New codebase-navigator advisory skill. Migration step 5g resets cartographer for full re-index. PR #29 merged.
 
 ## Next Task
 - (none)
@@ -14,7 +14,7 @@ IDLE
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
-- CONFIG.md Skeleton Version updated to 1.28
+- CONFIG.md Skeleton Version updated to 1.29
 - RULES.md now holds project context + project rules only (behavioral rules in .agents/rules/)
 - CONFIG.md has Description field for project identity (moved from RULES.md in v1.18)
 - v1.19: All operational timestamps use ISO 8601 UTC format (YYYY-MM-DDTHH:MMZ)
@@ -27,6 +27,7 @@ IDLE
 - v1.26: Plugin-based install (Claude Code, Cursor, Gemini CLI) + session-start hook + README simplification.
 - v1.27: Renamed senior-developer→developer. Extracted skeleton checklist from task-completion.
 - v1.28: Platform trimming gate in sync-skeleton (Step 4b). Caught by PR review on Muslim-Pro-Android.
+- v1.29: All named functions in SYMBOLS + module-based split (5+ modules) + codebase-navigator skill.
 
 ## Cartography State
 - Last indexed commit: d417c5cb56c24fc5e997fef5512a41bd9e2aea81
