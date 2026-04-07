@@ -135,7 +135,7 @@ Then open your project and say: *"Run the setup-skeleton workflow. The skeleton 
 
 ## Current version
 
-**v1.28** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.29** — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 ## Contributing
 

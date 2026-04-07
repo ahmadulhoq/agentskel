@@ -298,6 +298,37 @@ Include these changes in the Step 6 commit.
 
 ---
 
+## Step 5g — Migration: v1.28 to v1.29 (module-based symbols + all named functions)
+
+Skip this step if the project is already on skeleton v1.29+.
+
+If the project's recorded skeleton version is < 1.29, the following one-time
+migration is required:
+
+1. **Symbols scope change:** SYMBOLS.md now indexes all named functions (public,
+   internal, private, protected) — not just public. The existing index is incomplete.
+
+2. **Split mode (if project has 5+ modules in MAP.md):**
+   - Create `.memory/symbols/` directory
+   - Split each `## Module Name` section from SYMBOLS.md into its own
+     `symbols/[module-name].md` file
+   - Rewrite SYMBOLS.md as a lightweight index:
+     ```
+     | Module | Classes | Functions | File |
+     |--------|---------|-----------|------|
+     | [name] | [count] | [count]   | symbols/[name].md |
+     ```
+
+3. **Reset cartographer for full re-index:**
+   - In RESUME.md, clear `Last indexed commit` (set to empty)
+   - Uncheck all module completion markers (`[x]` → `[ ]`)
+   - Next cartographer run will do a full re-index with all named functions
+   - Note: full re-index takes multiple sessions for large codebases
+
+4. Commit `.memory/` changes (including `symbols/` if created) to ai-memory branch.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new

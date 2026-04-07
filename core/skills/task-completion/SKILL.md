@@ -18,8 +18,10 @@ to the user or starting anything else.**
 
 ## Step 2 — SYMBOLS / MAP
 
-- [ ] If any public class or function was created, renamed, or deleted →
-      update `.memory/SYMBOLS.md`.
+- [ ] If any class or function was created, renamed, or deleted →
+      update the relevant symbol file. Split mode: update
+      `symbols/[module].md` and the SYMBOLS.md index counts.
+      Single-file mode: update the module section in SYMBOLS.md.
 - [ ] If a module was added or architecture changed → update `.memory/MAP.md`.
 - Skip only if no structural changes were made.
 

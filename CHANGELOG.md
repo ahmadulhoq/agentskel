@@ -1,5 +1,26 @@
 # agentskel Changelog
 
+## v1.29 — 2026-04-02
+
+### All named functions + module-based symbols + codebase-navigator
+- Cartographer now indexes all named functions (public, internal, private,
+  protected) — not just public. Skips anonymous lambdas and trivial
+  getters/setters. Agents reported skipping SYMBOLS.md because bug fixes
+  involve internal functions not in the index.
+- **Module-based symbols split:** Projects with 5+ modules use split mode —
+  SYMBOLS.md becomes a lightweight index (~30 lines), actual symbols live in
+  `symbols/[module].md` files. Agents load only the module they need instead
+  of the entire symbol table. Projects with < 5 modules keep single-file mode.
+  Cartographer auto-converts from single to split when modules grow.
+- SYMBOLS.md template rewritten as dual-purpose (explains both modes).
+- New `codebase-navigator` skill — advisory skill for using MAP.md and
+  SYMBOLS.md effectively. Covers both split and single-file modes, when to
+  use the index vs grep, how to trace flows, and when to skip the index.
+- core-behavior "Use your memory" rule simplified to one line — detailed
+  guidance moved to the codebase-navigator skill.
+- Migration step 5g (v1.28→v1.29): split existing SYMBOLS.md into per-module
+  files, reset cartographer for full re-index with all named functions.
+
 ## v1.28 — 2026-04-02
 
 ### Platform trimming enforcement in sync-skeleton

@@ -1,20 +1,25 @@
 # Symbol Registry: [REPO_NAME]
 > Auto-generated. Do not edit manually. Last updated: [UTC_TIMESTAMP]
 
-<!-- Organized by module/framework. Every internal module, framework, and
-     feature package gets its own section. No line numbers — they go stale
-     within minutes. Agents use ripgrep for precise location at query time. -->
+<!-- The symbol registry has two modes:
 
-<!-- Entry format:
-     - Class rows:    | ClassName              | class    | path/to/File.kt |
-     - Function rows: | ClassName.functionName | function | path/to/File.kt |
-     List every public function for each primary class. Do not skip. -->
+     SPLIT MODE (projects with 5+ modules):
+       This file is an INDEX — lightweight summary of modules.
+       Actual symbols live in symbols/[module-name].md files.
 
-## [Module Name]
-| Symbol | Type | File |
-|--------|------|------|
-| ExampleRepository | class | module/data/ExampleRepository.kt |
-| ExampleRepository.fetchAll | function | module/data/ExampleRepository.kt |
-| ExampleRepository.save | function | module/data/ExampleRepository.kt |
-| ExampleViewModel | class | module/ui/ExampleViewModel.kt |
-| ExampleViewModel.onLoad | function | module/ui/ExampleViewModel.kt |
+       Index format:
+       | Module | Classes | Functions | File |
+       |--------|---------|-----------|------|
+       | auth   | 8       | 43        | symbols/auth.md |
+
+     SINGLE-FILE MODE (flat projects or < 5 modules):
+       This file contains ALL symbols directly, organized by module section.
+
+       Entry format:
+       | ClassName              | class    | path/to/File.kt |
+       | ClassName.functionName | function | path/to/File.kt |
+
+     The cartographer chooses the mode based on module count in MAP.md.
+     List every named function (public, internal, private, protected).
+     Skip anonymous lambdas and trivial getters/setters.
+     No line numbers — they go stale within minutes. Use ripgrep for precise location. -->
