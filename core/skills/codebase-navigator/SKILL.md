@@ -16,13 +16,15 @@ code efficiently. The cartographer has already mapped the codebase — use the m
 | File | What it tells you | When to use it |
 |---|---|---|
 | `MAP.md` | Module registry — every module, its responsibility, key entry points, critical flows | Which module owns this? How do modules connect? What's the end-to-end flow? |
-| `SYMBOLS.md` | Every class and named function (public, internal, private) with file paths | Where is this class/function defined? What functions does this class have? |
+| `SYMBOLS.md` | Symbol index — every class and named function with file paths | Where is this class/function defined? What functions does this class have? |
+| `symbols/*.md` | Per-module symbol files (split mode only) | Full symbol table for a specific module |
 
 ## How to use them
 
 ### Finding where something lives
-1. Check `SYMBOLS.md` for the class or function name
-2. The file path is right there — go directly to it
+1. Check `SYMBOLS.md` — if it's an index (split mode), find the module row
+2. Read `symbols/[module].md` for the full symbol table of that module
+3. If `symbols/` doesn't exist (single-file mode), SYMBOLS.md has everything directly
 
 ### Understanding module ownership
 1. Check `MAP.md` for the module that owns the responsibility

@@ -36,7 +36,7 @@ Read all of the following files. Do not skip any:
 - [ ] `.memory/CONFIG.md` — repo identity, operational config, check dates
 - [ ] `.memory/RULES.md` — project-specific context and rules
 - [ ] `.memory/MAP.md` — module and architecture map
-- [ ] `.memory/SYMBOLS.md` — public classes and functions index
+- [ ] `.memory/SYMBOLS.md` — symbol index (module list in split mode, full symbols in single-file mode)
 - [ ] `.memory/RESUME.md` — session state and persistent context
 - [ ] `.memory/LESSONS.md` — past mistakes to avoid
 - [ ] `.memory/SACRED.md` — behaviors that must never be changed

@@ -40,6 +40,18 @@ modules already marked complete. Record the current HEAD commit SHA in
    d. The total file count from the find command is the coverage target.
       Record it in RESUME.md as `Coverage target: N source files`.
       Do not proceed until every module directory appears in the pending list.
+   e. **Choose symbols format** based on module count:
+      - **5+ modules** → split mode. Create `.memory/symbols/` directory.
+        SYMBOLS.md becomes a lightweight index (module name, class count,
+        function count, file path). Each module gets its own
+        `symbols/[module-name].md` file.
+      - **< 5 modules** → single-file mode. SYMBOLS.md holds all symbols
+        directly, organized by `## Module Name` sections.
+      - If SYMBOLS.md already exists as a single file but the project now
+        has 5+ modules, **convert**: split existing sections into per-module
+        files, rewrite SYMBOLS.md as the index.
+      Record the chosen format in RESUME.md as `Symbols format: split` or
+      `Symbols format: single`.
 4.5 Tech-stack research — run after the module list is built, before processing any module:
    a. Identify the platform and primary tech stack from build configuration files
       (e.g., `build.gradle.kts` / `build.gradle` for Android, `Package.swift` for iOS,
@@ -68,9 +80,13 @@ modules already marked complete. Record the current HEAD commit SHA in
       - Every named function/method (public, internal, private, protected)
         and the file it lives in. Skip anonymous lambdas and trivial
         getters/setters.
-      Write both class-level and function-level rows to SYMBOLS.md
-      using the format defined in the SYMBOLS.md template header. Do not
-      skip any named function — the goal is a complete index.
+      Write both class-level and function-level rows:
+      - **Split mode:** write to `symbols/[module-name].md`. After
+        completing the module, update the SYMBOLS.md index row with
+        class and function counts.
+      - **Single-file mode:** write to the `## [Module Name]` section
+        in SYMBOLS.md.
+      Do not skip any named function — the goal is a complete index.
    c. While reading each file, actively look for triage triggers:
       - FIXME, TODO, HACK, or XXX comments
       - Patterns that contradict `.memory/CONVENTIONS.md`
@@ -95,7 +111,7 @@ modules already marked complete. Record the current HEAD commit SHA in
       RESUME.md is local-only — exclude it from every commit.
       ```
       cd .memory
-      git add -A && git reset HEAD RESUME.md
+      git add -A && git reset HEAD RESUME.md   # includes symbols/ if split mode
       git commit -m "cartographer: mapped [module name]"
       git push origin ai-memory
       ```
