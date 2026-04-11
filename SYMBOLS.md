@@ -61,6 +61,8 @@
 | sync-versions | workflow | roles/dev/workflows/sync-versions.md |
 | implement-task | workflow | roles/dev/workflows/implement-task.md |
 | update-conventions | workflow | roles/dev/workflows/update-conventions.md |
+| brainstorm-feature | workflow | roles/dev/workflows/brainstorm-feature.md |
+| debug-issue | workflow | roles/dev/workflows/debug-issue.md |
 
 ## roles/dev/skills
 | Symbol | Type | File |
@@ -70,6 +72,9 @@
 | test-engineer | skill | roles/dev/skills/test-engineer/SKILL.md |
 | task-planner | skill | roles/dev/skills/task-planner/SKILL.md |
 | domain-expert | skill | roles/dev/skills/domain-expert/SKILL.md |
+| test-driven-development | skill | roles/dev/skills/test-driven-development/SKILL.md |
+| systematic-debugger | skill | roles/dev/skills/systematic-debugger/SKILL.md |
+| using-git-worktrees | skill | roles/dev/skills/using-git-worktrees/SKILL.md |
 
 ## roles/dev/standards
 | Symbol | Type | File |

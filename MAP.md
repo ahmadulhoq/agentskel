@@ -19,13 +19,13 @@
 | `core/rules/` | Always-on agent behavior rules | core-behavior.md (planning, communication, memory protocol, skeleton contribution), security-non-negotiables.md (credentials, validation, least privilege) |
 | `core/skills/` | 3 procedural skills — mandatory lifecycle procedures | session-start/SKILL.md (8-step init), task-completion/SKILL.md (7-step post-task with Steps 5b/5c for skeleton repos), git-flow/SKILL.md (branch/commit/PR) |
 | `core/` (root) | Entry point templates, native tool config templates, and secret exclusions | AGENTS.md.template, CLAUDE.md.template, GEMINI.md.template, cursor-rule.mdc.template, copilot-instructions.md.template, windsurf-rule.md.template, .claudeignore |
-| `roles/dev/workflows/` | 15 dev workflows — multi-step missions triggered by user | setup-skeleton.md (install), cartographer.md (map codebase), develop-feature.md (build), implement-task.md (ad-hoc tasks), sync-skeleton.md (update), create-blueprint.md (blueprint setup), check-dependencies.md (staleness), update-conventions.md (best practices) |
-| `roles/dev/skills/` | 5 domain skills — specialist agent knowledge | senior-developer, code-reviewer, test-engineer, task-planner, domain-expert |
+| `roles/dev/workflows/` | 17 dev workflows — multi-step missions triggered by user | setup-skeleton.md (install), cartographer.md (map codebase), develop-feature.md (build), implement-task.md (ad-hoc tasks), sync-skeleton.md (update), brainstorm-feature.md (pre-impl spec), debug-issue.md (structured debugging) |
+| `roles/dev/skills/` | 8 domain skills — specialist agent knowledge | developer, code-reviewer, test-engineer, task-planner, domain-expert, test-driven-development, systematic-debugger, using-git-worktrees |
 | `roles/dev/standards/` | 7 standards — architecture, style, git, dependency, API, platform-specific architecture | ARCHITECTURE.md (multi-platform with markers), STYLE_GUIDE.md, GIT_WORKFLOW.md, DEPENDENCY_MANAGEMENT.md, API_CONTRACT.md, ANDROID_ARCHITECTURE.md, IOS_ARCHITECTURE.md |
 | `roles/dev/prompts/` | 8 mission start prompts — context-setting for workflows | cartographer.md, develop-feature.md, setup-skeleton.md, sync-skeleton.md, code-review.md, check-skeleton.md, update-conventions.md, parity-check.md |
 | `roles/devops/` | Placeholder for future DevOps role | README.md (planned: deployment, monitoring, incident response) |
 | `.agents/` | Installed copy of rules, workflows, skills, standards (self-install for dogfooding) | Mirrors core/ and roles/dev/ — kept in sync via sync-skeleton |
-| `.claude/skills/` | 23 auto-generated Claude Code stubs for skill/workflow discovery | One stub per skill (8) and workflow (15) |
+| `.claude/skills/` | 28 auto-generated Claude Code stubs for skill/workflow discovery | One stub per skill (11) and workflow (17) |
 | `root` | Project identity, versioning, ADR, maintenance docs | VERSION (skeleton version), CHANGELOG.md, README.md, MASTER_PLAN.md (ADR), MAINTAIN_MASTER_PLAN.md (gitignored checklist), AGENTS.md, CLAUDE.md, GEMINI.md, CONTRIBUTING.md, LICENSE |
 | `scripts/` | Developer onboarding | install-agent.sh (mount ai-memory worktree) |
 
