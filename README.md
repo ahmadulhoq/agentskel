@@ -22,7 +22,7 @@ Install it on any project. No forks. No migrations. No changes to your applicati
 
 **With agentskel:**
 > You: "Add a payment retry flow."
-> Agent: *reads its memory (knows your architecture, past mistakes, sacred behaviors), asks the right questions to nail the spec, implements with TDD, logs what it did — and picks up exactly here next session.*
+> Agent: *reads its memory — knows your codebase, where every class and function lives, how modules connect, past mistakes, sacred behaviors — navigates straight to the right files, asks the right questions to nail the spec, implements with TDD, logs what it did — and picks up exactly here next session.*
 
 ---
 
@@ -172,8 +172,6 @@ Then in your project:
 **v1.30** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ---
-
-*Built by the Head of Engineering at [Muslim Pro](https://www.muslimpro.com) — serving 100M+ users across iOS, Android, and web.*
 
 ## Contributing
 
