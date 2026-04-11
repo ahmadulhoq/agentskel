@@ -13,6 +13,11 @@
 - `domain-expert` description updated from [TODO] to usable placeholder
   instructions for downstream projects.
 - `README.md` rewritten for public launch and reframed as team infrastructure.
+- **Fix:** Session-start mandate added directly to all tool config files and
+  templates (CLAUDE.md, GEMINI.md, Cursor, Copilot, Windsurf). Previously only
+  in AGENTS.md, which Claude Code and other tools never read eagerly at session
+  start. Mandate is now in every tool's always-loaded context. Syncs to
+  downstream projects via `sync-skeleton` → `core/` template propagation.
 
 ## v1.30 — 2026-04-11
 
