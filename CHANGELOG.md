@@ -1,5 +1,26 @@
 # agentskel Changelog
 
+## v1.30 — 2026-04-11
+
+### Brainstorm workflow + TDD + systematic debugging + git worktrees
+- New `brainstorm-feature` workflow — Socratic pre-implementation spec. Forces
+  the agent to ask 2–3 targeted questions about failure states, data shapes, and
+  edge cases before any code is written. Output is a technical spec passed to
+  `develop-feature`. Blocks code and plan writing until spec is agreed.
+- New `debug-issue` workflow — 4-phase structured debugging: (1) reproduce &
+  hypothesize, (2) write failing test, (3) isolate root cause, (4) fix & verify.
+  Stops guess-and-check loops. Gates code changes on confirmed hypothesis + failing test.
+- New `test-driven-development` skill — RED→GREEN→REFACTOR cycle. Gates production
+  code on a prior failing test. Integrated into `develop-feature` Phase 2 as highly
+  recommended for all logic changes.
+- New `systematic-debugger` skill — prohibits console.log-without-hypothesis and
+  "change and see" patterns. Requires root cause tracing, defense-in-depth, or
+  bisect technique before any code change.
+- New `using-git-worktrees` skill — sibling-directory worktree setup/teardown.
+  Prevents IDE re-indexing loops and branch pollution during long feature runs.
+- `git-flow` skill updated with worktree quick-reference section.
+- `develop-feature` Phase 2 updated to recommend TDD with explicit exemption rule.
+
 ## v1.29 — 2026-04-02
 
 ### All named functions + module-based symbols + codebase-navigator

@@ -37,33 +37,37 @@ description: When the user asks to implement a new feature end-to-end requiring
 9. Follow `developer` skill standards for all code.
 10. Match existing file style for edits. Use STYLE_GUIDE.md for new files.
 11. Respect all SACRED.md entries. Flag if a sacred behavior must change.
-12. Update `.memory/SYMBOLS.md` for any new public classes/functions.
-13. Update `.memory/MAP.md` if architecture changes.
-14. Checkpoint to RESUME.md after each sub-task.
+12. **TDD is highly recommended** for all logic changes. For each behavior unit:
+    - Use the `test-driven-development` skill (RED → GREEN → REFACTOR cycle).
+    - Write the failing test first. Confirm it fails before writing production code.
+    - Skip only for trivial config/boilerplate — document the exemption reason.
+13. Update `.memory/SYMBOLS.md` for any new public classes/functions.
+14. Update `.memory/MAP.md` if architecture changes.
+15. Checkpoint to RESUME.md after each sub-task.
 
 ## Phase 3: Test & Verify
-15. Follow `test-engineer` skill standards.
-16. Write unit tests for all new logic.
-17. Run tests and verify they pass.
-18. If the repo has a static analysis tool configured, run it and fix violations
+16. Follow `test-engineer` skill standards.
+17. Write unit tests for all new logic (covered by TDD above if followed).
+18. Run tests and verify they pass.
+19. If the repo has a static analysis tool configured, run it and fix violations
     before opening a PR.
 
 ## Phase 4: Document & Ship
-19. Update relevant documentation.
-20. Log the change in `.memory/CHANGELOG.md`.
-21. If this affects other platforms and a blueprint is configured
+20. Update relevant documentation.
+21. Log the change in `.memory/CHANGELOG.md`.
+22. If this affects other platforms and a blueprint is configured
     (`Blueprint Path` in `.memory/CONFIG.md`), create a Knowledge Bus entry
     in the blueprint's `bus/` directory.
-22. Write a walkthrough summarising what was done.
-23. **Record the task in `.memory/TIME_LOG.md`** with estimated human hours,
+23. Write a walkthrough summarising what was done.
+24. **Record the task in `.memory/TIME_LOG.md`** with estimated human hours,
     agent start/end times, duration, and files changed.
-24. Commit and push all `.memory/` changes:
+25. Commit and push all `.memory/` changes:
     `cd .memory && git add -A && git commit -m "agent: completed [task summary]" && git push origin ai-memory`
-25. Push the feature branch and open a PR to `development`:
+26. Push the feature branch and open a PR to `development`:
     - PR title: `[TICKET-XXXX] short description` or `[DEBT-ID] short description`
     - PR body: what changed, why, how to test, risk level
     - **Do NOT merge** — a human reviewer must approve
-26. Set RESUME.md Status to IDLE.
+27. Set RESUME.md Status to IDLE.
 
 ---
 
