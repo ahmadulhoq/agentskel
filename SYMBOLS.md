@@ -63,6 +63,7 @@
 | update-conventions | workflow | roles/dev/workflows/update-conventions.md |
 | brainstorm-feature | workflow | roles/dev/workflows/brainstorm-feature.md |
 | debug-issue | workflow | roles/dev/workflows/debug-issue.md |
+| refactor-code | workflow | roles/dev/workflows/refactor-code.md |
 
 ## roles/dev/skills
 | Symbol | Type | File |
