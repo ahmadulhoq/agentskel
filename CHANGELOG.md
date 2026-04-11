@@ -1,5 +1,13 @@
 # agentskel Changelog
 
+## v1.32 — 2026-04-12
+
+### Fix: VERSION bump missing from skeleton-contribution-checklist
+- Added `VERSION + Config` section to `skeleton-contribution-checklist.md` — the
+  checklist executed during task-completion Step 5. VERSION bump and CONFIG.md
+  Skeleton Version update were mandated in `core-behavior.md` but absent from
+  the checklist, so they were silently skipped every session.
+
 ## v1.31 — 2026-04-12
 
 ### refactor-code workflow + CSO descriptions + README rewrite

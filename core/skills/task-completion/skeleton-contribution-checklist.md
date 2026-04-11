@@ -5,6 +5,12 @@ Skip this entire file for downstream projects.
 
 ---
 
+## VERSION + Config
+
+- [ ] Bump `VERSION` (MINOR for new features/fixes, MAJOR for breaking changes).
+- [ ] Update `Skeleton Version` in `.memory/CONFIG.md` to match the new `VERSION`.
+- **Every skeleton file change requires a version bump — no exceptions.**
+
 ## README
 
 - [ ] If this task changed something **already mentioned** in `README.md`
