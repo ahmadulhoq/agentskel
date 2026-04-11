@@ -1,4 +1,4 @@
-# agentskel Framework — Claude Code Instructions
+# agentskel Framework (shell/markdown) — Claude Code Instructions
 
 Read and follow `AGENTS.md` for all rules, skills, workflows, and memory references.
 

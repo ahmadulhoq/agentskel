@@ -1,4 +1,4 @@
-# agentskel Framework — Antigravity Instructions
+# agentskel Framework (shell/markdown) — Antigravity Instructions
 
 Read and follow `AGENTS.md` for all rules, skills, workflows, and memory references.
 
