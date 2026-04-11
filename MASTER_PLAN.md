@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.27
+> Corresponds to: agentskel v1.30
 
 ---
 
@@ -715,6 +715,24 @@ Task Management (6-step plan-first process), Task Quality, Change Tracking, and 
 
 Project-specific domain skill (not part of skeleton templates). Example of a custom domain expert skill — covers prayer time calculation constraints, Athan scheduling, references to blueprint specs and SACRED.md entries. Each project creates its own domain expert skills as needed.
 
+#### .agents/skills/test-driven-development/SKILL.md (v1.30)
+
+Enforces the RED → GREEN → REFACTOR cycle. Gates production code on a prior failing test — if the test was never red, it proves nothing. One cycle per behavior unit; batching multiple behaviors is prohibited. Integrated into `develop-feature` Phase 2 as highly recommended. Exemptions (config/boilerplate, pure UI layout, explicit user opt-out) must be documented. Advisory — loaded when implementing logic, not at every session.
+
+**Source:** `roles/dev/skills/test-driven-development/SKILL.md`
+
+#### .agents/skills/systematic-debugger/SKILL.md (v1.30)
+
+Prohibits guess-and-check debugging: no `console.log` without a stated hypothesis, no code changes "to see what happens." Three techniques: Root Cause Tracing (follow call stack to originating decision), Defense in Depth (audit input validation → business logic → persistence), Bisect (binary-search commits or code paths). Includes a rationalization resistance table covering the four most common excuses agents use to skip root cause analysis. Complements `debug-issue` workflow.
+
+**Source:** `roles/dev/skills/systematic-debugger/SKILL.md`
+
+#### .agents/skills/using-git-worktrees/SKILL.md (v1.30)
+
+Manages isolated sibling-directory execution environments for long feature runs or parallel branch work. Sibling directories only — nesting inside the repo causes IDE re-indexing loops and nested-git errors. Covers: worktree creation, entering the worktree before any build/test commands, read-only main repo rule during active worktree session, and cleanup after PR merge. Decision table for when to use (long runs, parallel comparison, full test suite) vs. when not to (quick hotfix, single-file change). Referenced from `git-flow` skill.
+
+**Source:** `roles/dev/skills/using-git-worktrees/SKILL.md`
+
 ### 7.2b Procedural Skills (v4.0)
 
 Procedural skills are step-by-step checklists with explicit gates. Unlike domain skills (which provide standards and guidelines), procedural skills enforce **specific sequences of actions** that must be completed in order. Each step has a checkbox; the skill includes a gate at the end that prevents the agent from proceeding until all applicable steps are done.
@@ -747,9 +765,21 @@ Discovery mission that maps the codebase into MAP.md, SYMBOLS.md, and TECH_DEBT.
 
 #### .agents/workflows/develop-feature.md
 
-Full feature development lifecycle: Pre-Flight (read memory files, understand requirements) → Phase 1: Plan (write plan with estimates, wait for approval) → Phase 2: Implement (follow developer standards, respect SACRED.md, update SYMBOLS/MAP) → Phase 3: Test (follow test-engineer standards, verify tests pass) → Phase 4: Document (CHANGELOG, TIME_LOG, Knowledge Bus if blueprint configured, memory commit).
+Full feature development lifecycle: Pre-Flight (read memory files, understand requirements) → Phase 1: Plan (write plan with estimates, wait for approval) → Phase 2: Implement (follow developer standards, TDD highly recommended — use `test-driven-development` skill for RED→GREEN→REFACTOR cycle, respect SACRED.md, update SYMBOLS/MAP) → Phase 3: Test (follow test-engineer standards, verify tests pass) → Phase 4: Document (CHANGELOG, TIME_LOG, Knowledge Bus if blueprint configured, memory commit).
 
 **Source:** `roles/dev/workflows/develop-feature.md`
+
+#### .agents/workflows/brainstorm-feature.md (v1.30)
+
+Socratic pre-implementation workflow. Runs *before* `develop-feature` to prevent mid-implementation reversals. Strictly prohibits writing code or implementation plans — the only outputs are questions and, after user answers, a technical spec. Three phases: Orient (read memory, restate feature) → Interrogate (2–3 targeted questions on failure states, data shapes, concurrency, scope boundaries) → Spec (goal, inputs/outputs, happy path, failure modes ×3, out-of-scope, SACRED entries affected). Hands the spec to `develop-feature`.
+
+**Source:** `roles/dev/workflows/brainstorm-feature.md`
+
+#### .agents/workflows/debug-issue.md (v1.30)
+
+Structured debugging workflow triggered by "fix this bug" or "debug X." Four mandatory phases: (1) Reproduction & Hypothesis — reproduce reliably, state a falsifiable hypothesis, list 2+ alternatives; (2) Failing Test Creation — write a test that reproduces the bug, confirm it fails; (3) Root Cause Isolation — Root Cause Tracing, Defense in Depth, or Bisect; rule out alternatives explicitly; (4) Fix & Verify — minimal fix only, failing test must now pass, full suite must have no regressions, update LESSONS.md. Gates code changes on confirmed root cause + failing test.
+
+**Source:** `roles/dev/workflows/debug-issue.md`
 
 #### .agents/workflows/implement-task.md (v1.9, updated v1.12)
 
