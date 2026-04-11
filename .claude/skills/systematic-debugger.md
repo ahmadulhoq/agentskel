@@ -1,6 +1,7 @@
 ---
-description: When diagnosing a bug, tracing an error, or fixing unexpected behavior.
-  Enforces structured root cause analysis and prohibits guess-and-check code changes.
+description: When applying debugging techniques during any investigation — root cause
+  tracing, bisect, defense-in-depth. Enforces hypothesis-first analysis and prohibits
+  guess-and-check changes. Use standalone or inside the debug-issue workflow.
 ---
 
 Read and follow the full skill at `.agents/skills/systematic-debugger/SKILL.md`.
