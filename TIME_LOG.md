@@ -16,6 +16,7 @@
 | v1.28 | Mandatory platform trimming gate in sync-skeleton — Step 4b with file list and verification gate | 2026-04-02 | 0.5h | — | — | ~10 min | 5 (sync-skeleton source + .agents/ copy + CHANGELOG + README + VERSION) + .memory/CONFIG.md on ai-memory | completed |
 | v1.29 | All named functions + module-based symbols split + codebase-navigator — cartographer indexes all named functions, split mode for 5+ modules, new advisory skill, migration step 5g | 2026-04-07 | 2h | — | — | ~25 min | 18 (SYMBOLS template + cartographer + 3 skills + core-behavior + sync-skeleton + 6 .agents/ copies + .claude/ stub + AGENTS.md + CHANGELOG + README + VERSION) + .memory/ on ai-memory | completed |
 | v1.30 | Brainstorm, TDD, systematic-debugger, git-worktrees — 2 new workflows, 3 new skills, develop-feature TDD patch, git-flow worktree section | 2026-04-11 | 2h | — | — | ~40 min | 17 (brainstorm-feature x3, debug-issue x3, test-driven-development x3, systematic-debugger x3, using-git-worktrees x3, develop-feature x2, git-flow x2, AGENTS.md, VERSION, CHANGELOG.md) + .memory/ on ai-memory | completed |
+| v1.31 | refactor-code workflow + CSO descriptions + README rewrite | 2026-04-12 | 1h | — | — | ~15 min | 13 files | completed |
 
 <!-- Notes on estimates:
      - "Est. Human Hours" is the agent's estimate of how long a senior developer
