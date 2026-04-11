@@ -781,6 +781,12 @@ Structured debugging workflow triggered by "fix this bug" or "debug X." Four man
 
 **Source:** `roles/dev/workflows/debug-issue.md`
 
+#### .agents/workflows/refactor-code.md (v1.31)
+
+Safe restructuring workflow triggered when code needs reorganisation without behavior change. Four phases: (1) Characterize & Safety Net — run tests, record baseline (must pass before starting), write characterization tests for coverage gaps; (2) Scope & Plan — declare refactor type (rename, extract, inline, reorder, pattern adoption), write explicit out-of-scope list, break into atomic steps, wait for user approval; (3) Execute — one atomic step at a time, tests must pass after each; (4) Verify & Ship — full suite, static analysis, no behavioral diff, MAP/SYMBOLS update, PR with "Refactor only" declaration. Gates: no code changes without test safety net; behavior changes go in a separate task.
+
+**Source:** `roles/dev/workflows/refactor-code.md`
+
 #### .agents/workflows/implement-task.md (v1.9, updated v1.12)
 
 Generic wrapper for any ad-hoc implementation request (fix, change, add, remove, refactor) that doesn't match a named workflow. Pre-Flight (read memory files) → Plan (write plan scaled to task size, present to user, **wait for explicit approval — no exceptions**, no trivial-task bypass since v1.12) → Branch (create branch per git-flow before writing code — moved from Phase 4 since v1.12) → Implement (follow developer standards) → Verify (follow test-engineer standards since v1.12, run tests if available) → Complete (commit, PR via git-flow, task-completion). Exists to close the enforcement gap where ad-hoc tasks could skip the post-task checklist — named workflows embed task-completion as their final step, but requests that don't match any workflow had no structural wrapper.
