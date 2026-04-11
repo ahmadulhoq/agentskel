@@ -44,6 +44,9 @@ Read `.memory/RESUME.md` to restore session state and context.
 | skill-authoring | When creating a new skill/workflow or improving an existing skill's effectiveness | `.agents/skills/skill-authoring/SKILL.md` |
 | subagent-dispatch | When delegating work to a subagent — implementation, review, research, or exploration | `.agents/skills/subagent-dispatch/SKILL.md` |
 | codebase-navigator | When searching for code, tracing a bug, or understanding how modules connect | `.agents/skills/codebase-navigator/SKILL.md` |
+| test-driven-development | When implementing logic changes — use Red-Green-Refactor cycle before writing production code | `.agents/skills/test-driven-development/SKILL.md` |
+| systematic-debugger | When diagnosing a bug or tracing an error — enforces structured root cause analysis, prohibits guess-and-check | `.agents/skills/systematic-debugger/SKILL.md` |
+| using-git-worktrees | When running long feature implementations or parallel branches — creates isolated sibling-directory environments | `.agents/skills/using-git-worktrees/SKILL.md` |
 
 ## Workflows
 | Workflow | Description | Path |
@@ -63,6 +66,8 @@ Read `.memory/RESUME.md` to restore session state and context.
 | check-skeleton | Detect version gap between project and skeleton | `.agents/workflows/check-skeleton.md` |
 | create-blueprint | When a team needs a central domain knowledge repo for multi-platform projects | `.agents/workflows/create-blueprint.md` |
 | parity-check | When checking feature parity across platforms after shipping or on scheduled cadence | `.agents/workflows/parity-check.md` |
+| brainstorm-feature | When thinking through a feature idea, exploring edge cases, or producing a spec before implementation | `.agents/workflows/brainstorm-feature.md` |
+| debug-issue | When fixing a bug — enforces reproduction, failing test, root cause isolation, fix and verify phases | `.agents/workflows/debug-issue.md` |
 
 ## Memory
 Persistent project memory lives in `.memory/`. The `session-start` procedure reads all

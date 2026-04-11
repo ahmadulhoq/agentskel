@@ -56,6 +56,24 @@ When implementation is complete:
 - When implementation is authorised, execute the full flow end-to-end
   (branch → implement → commit → PR) without pausing for additional approval.
 
+## Git Worktrees (for long or parallel runs)
+
+For long feature runs or parallel branch work, use an isolated worktree instead of
+working directly in the main repo. See `using-git-worktrees` skill for full procedure.
+
+**Quick reference:**
+```bash
+# Create (branch must already exist)
+git worktree add "../$(basename $(git rev-parse --show-toplevel))-<branch-name>" <branch-name>
+
+# Cleanup after merge
+git worktree remove "../<repo>-<branch-name>"
+git branch -d <branch-name>
+```
+
+- Use sibling directories only — never nest inside the repo.
+- Run all build/test commands inside the worktree directory.
+
 ---
 
 **Gate:** Do not write any application code until a branch has been created.
