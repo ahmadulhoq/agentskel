@@ -1,7 +1,7 @@
 ---
 name: task-planner
-description: Task decomposition, planning, and tracking standards.
-  Use when breaking down complex work or managing multi-step tasks.
+description: When decomposing a feature or spec into implementable subtasks,
+  estimating scope, or orchestrating multi-step work across subagents.
 ---
 
 # Task Planner Standards

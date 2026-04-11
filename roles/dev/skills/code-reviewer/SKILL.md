@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
-description: Code review procedures, documentation standards, and QA checks.
-  Use when reviewing PRs, checking code quality, or validating documentation.
+description: When reviewing a PR, auditing code quality, or validating changes
+  against the project's standards and sacred behaviors.
 ---
 
 # Code Reviewer Standards

@@ -1,7 +1,8 @@
 ---
 name: test-engineer
-description: Testing standards, simulation rules, and CI/CD requirements.
-  Use when writing tests, validating changes, or working with CI pipelines.
+description: When designing test strategy, analysing coverage, or writing tests
+  outside the TDD cycle. Also use when working with CI pipelines or
+  validating changes end-to-end.
 ---
 
 # Test Engineer Standards

@@ -24,7 +24,7 @@ description: When the user asks to implement a new feature end-to-end requiring
    ```
 
 ## Phase 1: Plan
-6. Write a plan with checkable items. Include:
+6. Use the `task-planner` skill to decompose the work. Write a plan with checkable items. Include:
    - Files to create or modify
    - Dependencies and risks
    - Testing approach
