@@ -20,6 +20,15 @@
   Prevents IDE re-indexing loops and branch pollution during long feature runs.
 - `git-flow` skill updated with worktree quick-reference section.
 - `develop-feature` Phase 2 updated to recommend TDD with explicit exemption rule.
+- CSO descriptions sharpened: `code-reviewer`, `task-planner`, `developer`,
+  `test-engineer`, `systematic-debugger` — all changed to triggering-condition
+  format ("When...") to improve agent selection accuracy.
+- `task-planner` wired into `develop-feature` Phase 1 (was unreferenced).
+- New `refactor-code` workflow — 4-phase safe restructure: characterize & safety
+  net, scope lock, atomic execution, verify. Enforces test baseline before any
+  change and prohibits behavior changes during refactoring.
+- `domain-expert` description updated from [TODO] to usable placeholder
+  instructions for downstream projects.
 
 ## v1.29 — 2026-04-02
 

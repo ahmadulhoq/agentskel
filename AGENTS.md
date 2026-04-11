@@ -68,6 +68,7 @@ Read `.memory/RESUME.md` to restore session state and context.
 | parity-check | When checking feature parity across platforms after shipping or on scheduled cadence | `.agents/workflows/parity-check.md` |
 | brainstorm-feature | When thinking through a feature idea, exploring edge cases, or producing a spec before implementation | `.agents/workflows/brainstorm-feature.md` |
 | debug-issue | When fixing a bug — enforces reproduction, failing test, root cause isolation, fix and verify phases | `.agents/workflows/debug-issue.md` |
+| refactor-code | When restructuring or reorganising code without changing behavior — enforces safety net and scope lock | `.agents/workflows/refactor-code.md` |
 
 ## Memory
 Persistent project memory lives in `.memory/`. The `session-start` procedure reads all
