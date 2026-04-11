@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.29: All named functions in SYMBOLS + module-based split + codebase-navigator skill. Cartographer indexes all named functions (not just public). Projects with 5+ modules use split mode (SYMBOLS.md index + symbols/*.md per module). New codebase-navigator advisory skill. Migration step 5g resets cartographer for full re-index. PR #29 merged.
+- v1.30: Brainstorm-feature workflow, debug-issue workflow, test-driven-development skill, systematic-debugger skill, using-git-worktrees skill. develop-feature Phase 2 now recommends TDD. git-flow skill has worktree quick-reference. VERSION bumped to 1.30, CONFIG.md Skeleton Version updated to 1.30.
 
 ## Next Task
 - (none)
@@ -27,6 +27,7 @@ IDLE
 - v1.26: Plugin-based install (Claude Code, Cursor, Gemini CLI) + session-start hook + README simplification.
 - v1.27: Renamed senior-developer→developer. Extracted skeleton checklist from task-completion.
 - v1.28: Platform trimming gate in sync-skeleton (Step 4b). Caught by PR review on Muslim-Pro-Android.
+- v1.30: brainstorm-feature + debug-issue workflows. TDD, systematic-debugger, using-git-worktrees skills. develop-feature TDD patch. git-flow worktree section.
 - v1.29: All named functions in SYMBOLS + module-based split (5+ modules) + codebase-navigator skill.
 
 ## Cartography State
@@ -48,4 +49,4 @@ IDLE
 - Coverage gate passed — 13 modules complete, 0 remaining.
 
 ## Timestamp (UTC)
-- 2026-03-30T12:00Z
+- 2026-04-11T10:00Z
