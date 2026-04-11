@@ -1,42 +1,103 @@
 # Contributing to agentskel
 
-## How to contribute
+Skills and workflows are plain Markdown. If you can write a checklist, you can contribute.
 
-1. Fork this repo
-2. Create a branch (`feature/my-change` or `fix/my-fix`)
-3. Make your changes
-4. Open a PR with a clear description
+---
 
-## Rules
+## What we're looking for
 
-Every change to a skeleton file (template, workflow, standard, prompt, skill) **must**:
+| Type | Examples | Difficulty |
+|------|---------|------------|
+| **New skill** | `api-designer`, `performance-profiler`, `accessibility-reviewer` | Easy — just Markdown |
+| **New workflow** | `migrate-database`, `incident-postmortem`, `onboard-feature` | Medium — multi-step flow |
+| **New standard** | Architecture guide for a framework/platform not yet covered | Medium |
+| **Bug fix** | Wrong step order, missing gate, broken self-sync | Easy |
+| **Role** | A new agent role (e.g. `roles/devops/`, `roles/data/`) | Hard — new territory |
 
-1. Bump `VERSION` (MINOR for additions, MAJOR for breaking changes)
+Not sure if your idea fits? Open an issue first. One conversation saves a wasted PR.
+
+---
+
+## Anatomy of a skill
+
+Every skill is a single file: `roles/dev/skills/<name>/SKILL.md`
+
+```markdown
+---
+name: your-skill-name
+description: When [triggering condition]. Use when [scenario in user's words].
+---
+
+# Your Skill Name
+
+## Step 1 — Do something
+- [ ] Concrete action
+
+## Step 2 — Do something else
+- [ ] Concrete action
+
+---
+
+**Gate:** Do not proceed until all steps above are checked off.
+```
+
+That's it. The `description` field is what the agent reads to decide whether to load the skill — write it as a triggering condition, not a summary. See [`skill-authoring/SKILL.md`](.agents/skills/skill-authoring/SKILL.md) for the full quality guide.
+
+---
+
+## Self-sync requirement (mandatory)
+
+Every skill or workflow added to `roles/dev/` must be synced to 4 locations. Missing any causes drift in downstream projects.
+
+| # | Location | What to do |
+|---|----------|-----------|
+| 1 | `roles/dev/skills/<name>/SKILL.md` | Source of truth — your new file |
+| 2 | `.agents/skills/<name>/SKILL.md` | Installed copy — identical content |
+| 3 | `.claude/skills/<name>.md` | Stub — frontmatter + one-liner pointing to `.agents/` |
+| 4 | `AGENTS.md` Skills or Workflows table | One-line catalog entry |
+
+Stub format (`.claude/skills/<name>.md`):
+```markdown
+---
+description: [same description as SKILL.md frontmatter]
+---
+
+Read and follow the full skill at `.agents/skills/<name>/SKILL.md`.
+```
+
+---
+
+## Version and changelog rules
+
+Every change to a template, workflow, standard, or skill must:
+
+1. Bump `VERSION` — minor bump for additions, major for breaking changes
 2. Add an entry to `CHANGELOG.md`
-3. Update `README.md` "Current version" if the version changed
+3. If breaking: add a migration step to `sync-skeleton.md` (Step 5x pattern)
 
-No exceptions. This is how downstream repos detect they're out of sync.
+No exceptions. This is how downstream projects detect they're out of sync.
 
-## What belongs here vs. in a blueprint
+---
 
-**agentskel (this repo — the skeleton):**
-- Generic capabilities that apply to any project, any tech stack, any organization
-- Universal standards (architecture principles, git workflow, style conventions)
-- Core memory system, rules, skills, workflows
+## What belongs here vs. a blueprint
 
-**Your blueprint (optional — team domain knowledge repo):**
-- Domain specs, API contracts, business logic documentation
-- Cross-platform parity tracking
-- Knowledge Bus for cross-project coordination
-- Domain-specific skills unique to your team
+**Here (agentskel — the skeleton):**
+Skills, workflows, and standards that apply to *any* project on *any* tech stack.
 
-## Adding a new role
+**Your blueprint (your team's domain repo):**
+Domain-specific skills, API contracts, business logic, cross-platform specs. Don't put Muslim Pro prayer times or Acme Corp payment flows here.
 
-1. Create `roles/[role-name]/` with subdirectories: `workflows/`, `skills/`, `standards/`, `prompts/`
-2. Add a `README.md` describing the role
-3. Update the Roles table in the main `README.md`
-4. Follow the version bump rules above
+---
+
+## Opening a PR
+
+1. Fork → branch (`feat/skill-name` or `fix/what-you-fixed`)
+2. Check the self-sync table above — all 4 locations updated?
+3. Run through the [`skill-authoring`](.agents/skills/skill-authoring/SKILL.md) quality gates
+4. Open PR with: what it does, when it triggers, what problem it solves
+
+---
 
 ## Code of conduct
 
-Be respectful and constructive. We're all here to make AI agents better at their job.
+Be direct. Be constructive. We're all here to make AI agents less annoying and more useful.
