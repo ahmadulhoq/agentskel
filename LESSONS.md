@@ -15,6 +15,11 @@
 - **Pattern:** Jumping to conclusions about what's missing without reading the actual mechanism first. Assessed the `.agents/` directory but didn't check `.claude/skills/`.
 - **Rule:** Never assume something is missing or broken. Verify by reading the actual files, mechanisms, and code before reporting a gap. This is now codified in core-behavior.md as "Never assume."
 
+## Lesson 004 — 2026-04-12
+- **Mistake:** Completed multiple skeleton changes without bumping VERSION. The rule existed in `core-behavior.md` but the executable checklist (`skeleton-contribution-checklist.md`) had no VERSION step — so it was silently skipped every task-completion run.
+- **Pattern:** Rules in always-on files get forgotten under compaction. Checklists are the enforcement mechanism — if a rule isn't in the checklist, it won't be followed.
+- **Rule:** After any skeleton change, VERSION bump is the first step of skeleton-contribution-checklist (now enforced). If you notice a version hasn't been bumped after a commit, bump it immediately and note the sequence error in CHANGELOG.
+
 ## Lesson 003 — 2026-03-27
 - **Mistake:** Launched 3 explore agents to scan the entire codebase for static analysis references, when MAP.md already listed which files use platform markers and SYMBOLS.md had exact paths for every skill, workflow, and standard.
 - **Pattern:** Defaulting to broad codebase search instead of consulting cartographed memory first. The whole point of cartography is to avoid re-scanning.
