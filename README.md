@@ -1,16 +1,34 @@
 # agentskel
 
-> Persistent memory, shared standards, and structured workflows for AI coding agents.
+> Give your AI coding agent a memory, a methodology, and a team.
 
-AI agents forget everything between sessions. They re-scan your codebase, miss conventions, repeat past mistakes, and have no awareness of your architecture.
+---
 
-**agentskel** gives your agents memory that persists, rules they always follow, and workflows for complex tasks. Install it on any existing project — no fork, no migration, no application code changes.
+Every time you start a new session, your AI agent starts from zero.
+
+It re-scans your codebase. It forgets the conventions you established last week. It repeats the same mistakes. It has no idea what it was doing yesterday — or why.
+
+**agentskel fixes this.** It gives your agent a persistent memory that survives between sessions, structured workflows for complex tasks, and a shared knowledge system so every developer on your team gets the same well-behaved agent.
+
+Install it on any project. No forks. No migrations. No changes to your application code.
+
+---
+
+## What it looks like in practice
+
+**Without agentskel:**
+> You: "Add a payment retry flow."
+> Agent: *re-reads 40 files, asks questions you've answered before, proposes an approach that breaks a convention it doesn't know about, forgets all of this tomorrow.*
+
+**With agentskel:**
+> You: "Add a payment retry flow."
+> Agent: *reads its memory (knows your architecture, past mistakes, sacred behaviors), asks the right questions to nail the spec, implements with TDD, logs what it did — and picks up exactly here next session.*
 
 ---
 
 ## Quick start
 
-### Install (one-time)
+### 1. Install (one-time per developer)
 
 ```bash
 # Claude Code
@@ -19,127 +37,147 @@ AI agents forget everything between sessions. They re-scan your codebase, miss c
 # Gemini CLI
 gemini extensions install https://github.com/ahmadulhoq/agentskel
 
-# Codex / Cursor / Copilot / Windsurf — see docs/INSTALL.md
+# Cursor / Copilot / Windsurf / Codex — see INSTALL.md
 ```
 
-### Set up a project (tech lead, one-time)
+### 2. Set up your project (tech lead, once)
 
 Open your project and say:
 
 > *"Set up agentskel on this project."*
 
-The agent asks for project details, creates memory files, copies rules and workflows, and opens a PR. After merge, say *"Map this codebase"* to build the agent's memory.
+The agent asks for your project details, creates memory files, installs rules and workflows, and opens a PR. After merge, say *"Map this codebase"* — the agent reads every file and builds its own knowledge base.
 
-### Join a project (any developer)
+### 3. Join a project (any developer, once)
 
 ```bash
 ./scripts/install-agent.sh
 ```
 
-Done. The agent reads its memory and picks up context automatically.
+Done. The agent reads the team's shared memory and gets to work.
 
 ---
 
 ## What your agent gets
 
-### Memory (`.memory/`)
+### Memory that persists
 
-A persistent knowledge base on a separate Git branch — never touches your application code.
+Agent knowledge lives on a separate Git branch (`.memory/`). It never touches your application code. Every session starts informed, not blank.
 
-| What it remembers | Files |
+| What it remembers | File |
 |---|---|
-| **Codebase structure** | `MAP.md` (modules), `SYMBOLS.md` (classes/functions) |
-| **Session state** | `RESUME.md` (what it was doing, what's next) |
-| **Project identity** | `CONFIG.md`, `RULES.md`, `CONVENTIONS.md` |
-| **Hard-won lessons** | `SACRED.md` (don't touch), `LESSONS.md` (past mistakes) |
-| **Dependency health** | `VERSIONS.md`, `DEPENDENCY_ALERTS.md` |
-| **Work tracking** | `CHANGELOG.md`, `TIME_LOG.md`, `TECH_DEBT.md` |
+| Your codebase structure | `MAP.md` — modules, entry points, critical flows |
+| Every class and function | `SYMBOLS.md` — indexed, searchable |
+| Where it left off | `RESUME.md` — task state, what's next |
+| Your conventions | `RULES.md`, `CONVENTIONS.md` |
+| What must never change | `SACRED.md` — behaviors the agent won't touch without asking |
+| Past mistakes | `LESSONS.md` — so it doesn't repeat them |
+| Dependency health | `VERSIONS.md`, `DEPENDENCY_ALERTS.md` |
+| Work history | `CHANGELOG.md`, `TIME_LOG.md`, `TECH_DEBT.md` |
 
-### Rules (`.agents/rules/`)
+### Rules it always follows
 
-Always-on principles: planning before coding, verification before done, security non-negotiables, git discipline. Includes rationalization resistance — the agent can't talk itself out of following the rules.
+Always-on principles loaded at every session: plan before coding, verify before shipping, git discipline, security non-negotiables. The rules include rationalization resistance — the agent can't talk itself out of following them.
 
-### Skills (`.agents/skills/`)
-
-Specialist knowledge loaded on demand:
+### Skills loaded on demand
 
 | Skill | What it does |
 |---|---|
-| `session-start` | Reads memory, checks versions, surfaces alerts |
-| `task-completion` | CHANGELOG, time log, memory commit — nothing gets skipped |
-| `developer` | Architecture decisions, code quality, SOLID principles |
-| `code-reviewer` | PR review against standards and sacred behaviors |
-| `test-engineer` | Test strategy, coverage, test writing |
-| `subagent-dispatch` | Delegate tasks to fresh subagents with prompt templates |
-| `skill-authoring` | Guide for creating new skills with quality gates |
+| `session-start` | Reads memory, surfaces alerts, checks versions — before touching anything |
+| `task-completion` | CHANGELOG, time log, memory commit — every task, every time |
+| `brainstorm-feature` | Asks targeted questions to nail the spec *before* any code is written |
+| `developer` | Code quality, SOLID principles, architecture decisions |
+| `code-reviewer` | Reviews PRs against your standards and sacred behaviors |
+| `test-engineer` | Test strategy, coverage analysis, test writing |
+| `test-driven-development` | Enforces RED → GREEN → REFACTOR — no production code without a failing test first |
+| `systematic-debugger` | Root cause analysis before any fix — stops guess-and-check loops |
+| `using-git-worktrees` | Isolated workspaces for long runs — keeps your branch clean |
+| `subagent-dispatch` | Delegates tasks to fresh subagents with structured prompts |
+| `codebase-navigator` | Traces flows, finds symbols, navigates without re-scanning |
 
-### Workflows (`.agents/workflows/`)
+### Workflows for complex tasks
 
-15 structured workflows for common tasks:
+17 structured workflows triggered by plain English:
 
-| Task | Say this |
+| Say this | Workflow |
 |---|---|
-| Build a feature | *"Develop a feature for X"* |
-| Fix something | *"Fix this bug"* or *"Fix tech debt DEBT-001"* |
-| Emergency fix | *"Hotfix: production is broken"* |
-| Cut a release | *"Cut a release"* |
-| Audit dependencies | *"Check dependencies"* |
-| Map the codebase | *"Map this codebase"* |
+| *"Think through this feature with me"* | `brainstorm-feature` — spec-first, no code until it's right |
+| *"Develop a feature for X"* | `develop-feature` — plan → branch → TDD → PR |
+| *"Fix this bug"* | `debug-issue` — reproduce → failing test → root cause → fix |
+| *"Fix tech debt DEBT-001"* | `fix-tech-debt` |
+| *"Hotfix: production is down"* | `hotfix` — expedited flow |
+| *"Cut a release"* | `cut-release` |
+| *"Check dependencies"* | `check-dependencies` |
+| *"Map this codebase"* | `cartographer` — builds MAP.md and SYMBOLS.md |
 
 ---
 
 ## Works with every AI tool
 
+One setup. Every tool reads the same rules, skills, and workflows from `.agents/`.
+
 | Tool | How it discovers agentskel |
 |---|---|
 | Claude Code | Plugin + session-start hook |
 | Cursor | Plugin + native rule |
-| Copilot | `.github/copilot-instructions.md` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
 | Windsurf | Native rule |
 | Codex CLI | Reads `AGENTS.md` natively |
 | Gemini / Antigravity | Extension + `GEMINI.md` |
 
-All tools read the same rules, skills, and workflows from `.agents/`. One setup, every tool.
+---
+
+## Why not just use a system prompt?
+
+A system prompt resets every session. agentskel doesn't.
+
+The difference: a system prompt tells the agent *how to behave*. agentskel tells it *what it already knows* — your architecture, your conventions, your past mistakes, what it was doing yesterday. That knowledge compounds over time. A system prompt stays flat.
 
 ---
 
-## Keeping in sync
+## For teams: Blueprints
 
-agentskel is versioned. Your agent detects version gaps at session start:
+If you have multiple projects sharing business logic (e.g. iOS + Android + API), create a **Blueprint** — a shared knowledge repo with domain specs, feature parity tracking, and a Knowledge Bus for cross-project notifications.
+
+When a backend agent changes an API contract, it posts a bus entry. iOS and Android agents read it at session start and know what action to take. No Slack ping required.
+
+> You don't need a Blueprint to start. Create one when two or more of your projects need to stay in sync.
+
+---
+
+## Staying up to date
+
+agentskel is versioned. Your agent detects gaps at session start and says so. To sync:
 
 > *"Sync this project with the latest skeleton."*
 
-The agent walks through each change (Apply / Adapt / Skip) and opens a PR.
+The agent walks through each change — Apply, Adapt, or Skip — and opens a PR. You stay in control of what changes.
 
 ---
 
-## Blueprints (optional)
-
-For teams with multiple projects sharing business logic (e.g. Android + iOS + backend), create a **blueprint** — a shared knowledge repo with specs, feature parity tracking, and a Knowledge Bus for cross-project notifications. Projects connect via `Blueprint Path` in their CONFIG.md; agents pull specs and check for cross-platform action items at session start.
-
-You don't need a blueprint to start. Create one when you have 2+ projects that need shared domain knowledge.
-
----
-
-## Manual install (without plugin)
-
-If you prefer not to use the plugin system:
+## Manual install (no plugin)
 
 ```bash
 git clone https://github.com/ahmadulhoq/agentskel.git
 ```
 
-Then open your project and say: *"Run the setup-skeleton workflow. The skeleton is at `../agentskel`."*
+Then in your project:
+
+> *"Run the setup-skeleton workflow. The skeleton is at `../agentskel`."*
 
 ---
 
 ## Current version
 
-**v1.29** — see [CHANGELOG.md](CHANGELOG.md) for details.
+**v1.30** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
+
+---
+
+*Built by the Head of Engineering at [Muslim Pro](https://www.muslimpro.com) — serving 100M+ users across iOS, Android, and web.*
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues are labeled — skills and workflows are plain Markdown, no code required.
 
 ## License
 
