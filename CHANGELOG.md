@@ -4,6 +4,19 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-12 — v1.31: refactor-code + CSO fixes + session-start mandate
+
+Added refactor-code workflow (4-phase safe restructure with test safety net gate).
+Sharpened CSO descriptions for systematic-debugger (techniques vs process) and
+domain-expert (removed [TODO] placeholder). Wired task-planner into develop-feature
+Phase 1. Fixed session-start mandate missing from tool config files — Claude Code,
+Cursor, Copilot, and Windsurf all load their config eagerly but read AGENTS.md
+lazily, so the mandate was never seen. Added "Session Start — MANDATORY" block
+directly to all 5 tool config files and their core/ templates. sync-skeleton
+propagates this to downstream projects automatically.
+Files: core/CLAUDE.md.template, core/GEMINI.md.template, core/cursor-rule.mdc.template,
+core/copilot-instructions.md.template, core/windsurf-rule.md.template + installed copies.
+
 ## 2026-04-11 — v1.30: brainstorm, TDD, systematic-debugger, git-worktrees
 
 Added 2 workflows (brainstorm-feature, debug-issue), 3 skills (test-driven-development,
