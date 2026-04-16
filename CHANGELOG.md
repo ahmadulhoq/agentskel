@@ -4,6 +4,14 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-17 — v1.45: cross-tool enforcement hooks + GEMINI.md condensed rules
+
+Enforcement hooks (pre-commit, pre-push, stop) now have templates for all 5 tools.
+GEMINI.md upgraded from thin wrapper to condensed rules inline. setup-skeleton
+Step 5b3 installs hooks for all supported tools.
+Files: 4 new core/*-hooks/ directories, GEMINI.md template + self-install,
+setup-skeleton updated.
+
 ## 2026-04-17 — v1.42: subagent dispatch simplification
 
 Rewrote subagent-dispatch skill: parent passes plan steps instead of templates.
