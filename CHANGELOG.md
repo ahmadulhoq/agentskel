@@ -4,6 +4,28 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-16 — Session summary: v1.34→v1.39 (5 releases in one session)
+
+Complete session scope: native-first rule delivery architecture, enforcement hooks,
+operational audit, and iterative hook hardening.
+
+- **v1.34**: Architecture change — rules moved to native auto-load locations
+  (.claude/rules/, AGENTS.md inline, condensed in Cursor/Windsurf/Copilot).
+  Pre-commit hook blocks commits without CHANGELOG/TIME_LOG. Stop hook verifies
+  task-completion. 10 skill-wiring gaps fixed across 7 workflows. 45 files changed.
+- **v1.37**: INSTALL.md for issue #30 (manual install for Cursor/Copilot/Windsurf/Codex).
+- **v1.38**: Pre-memory-push hook (auto-pull before ai-memory push). Operational
+  audit found 30+ gaps: pre-commit 1h window, task type mismatch, error suppression,
+  race conditions, missing recovery paths.
+- **v1.39**: Hook hardening — VERSION/README/MASTER_PLAN consistency check, 8h session
+  window, pull error reporting, dirty worktree detection.
+- **Context load analysis**: measured startup cost (~1,400 tokens small project,
+  ~1,800 large). Identified 17-41% savings via deferred loading of RESUME, VERSIONS,
+  LESSONS, NEEDS_REVIEW, and partial MAP reads. Queued for implementation.
+
+Compliance baseline measured on Muslim-Pro-Android: 0/6 bug fixes had CHANGELOG
+or TIME_LOG entries. After hooks: deterministically enforced (100%).
+
 ## 2026-04-16 — v1.39: hook hardening
 
 Pre-commit hook now checks VERSION/README/MASTER_PLAN version consistency for
