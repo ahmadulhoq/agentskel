@@ -4,10 +4,11 @@
 IDLE
 
 ## Last Completed Task
-- v1.35: Fix pre-commit-check.sh worktree branch detection. Hook used `git branch --show-current` at project root (always returns `main`), never skipping ai-memory commits. Fixed with three-pronged guard: root branch, `git -C .memory branch --show-current`, command string grep. Both .claude/hooks/ and core/claude-hooks/ patched. CONFIG.md Skeleton Version corrected 1.33→1.35.
+- v1.37: INSTALL.md for issue #30. Stop hook caught missing task-completion — .memory/CHANGELOG.md and TIME_LOG.md were not updated for v1.34 or v1.37 work until the hook flagged it.
 
 ## Previously Completed
-- v1.34: Native-first rule delivery + deterministic enforcement hooks. Rules now in each tool's native auto-load location (.claude/rules/, AGENTS.md inline, condensed in Cursor/Windsurf/Copilot). Pre-commit hook blocks commits without CHANGELOG/TIME_LOG (0%→100%). 10 skill-wiring gaps fixed across 7 workflows. PR #31 merged.
+- v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.
+- v1.34: Native-first rule delivery + deterministic enforcement hooks. .claude/rules/ auto-load, AGENTS.md inline, condensed configs, pre-commit hook, 10 skill-wiring gaps fixed. PR #31 merged.
 - v1.31: refactor-code workflow (4-phase safe restructure). CSO description fixes (systematic-debugger, domain-expert, task-planner wired into develop-feature). Session-start mandate added directly to all tool config files and templates (CLAUDE.md, GEMINI.md, Cursor, Copilot, Windsurf) — was only in AGENTS.md which tools read lazily. sync-skeleton propagates fix to downstream projects.
 
 ## Next Task

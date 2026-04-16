@@ -4,6 +4,22 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-16 — v1.37: INSTALL.md for issue #30
+
+Created INSTALL.md with manual installation instructions for Cursor, Copilot,
+Windsurf, and Codex CLI. Resolves issue #30 (INSTALL.md referenced in README
+but missing). VERSION bumped to 1.37, CHANGELOG entry added.
+
+## 2026-04-15 — v1.34: native-first rule delivery + enforcement hooks
+
+Architecture change: rules moved from `.agents/rules/` (not auto-loaded) to each
+tool's native auto-load location. Measured baseline: 0/6 bug fixes on Muslim-Pro-Android
+had CHANGELOG or TIME_LOG entries. Root cause: 3-hop instruction chain with ~34% compliance.
+Changes: `.claude/rules/` (3 files auto-loaded), AGENTS.md self-contained with rules
+inline, condensed rules in Cursor/Windsurf/Copilot configs, pre-commit hook blocks
+commits without CHANGELOG/TIME_LOG, Stop hook verifies task-completion, 10 skill-wiring
+gaps fixed across 7 workflows. 45 files changed.
+
 ## 2026-04-16 — v1.36: fix sync-skeleton cd .memory directory bleed
 
 Step 5 used `cd .memory && git ... && cd ..`. Bash tool persists CWD between
