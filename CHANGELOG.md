@@ -4,27 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
-## 2026-04-17 — Context load analysis: session-start optimization findings
+## 2026-04-17 — v1.40: stop hook precision + NEEDS_REVIEW triage escalation
 
-Measured startup cost: ~880 lines (small project), ~1,300 lines (large project).
-Analysed all 10 memory files for actual usage across every workflow.
-
-Safe optimizations identified:
-- VERSIONS.md: remove from session-start Step 2 (saves 44-194 lines). Session-start
-  only checks CONFIG.md timestamp; workflows load VERSIONS.md when needed.
-- RESUME.md: skip Previously Completed + Cartography State sections (saves ~25 lines).
-  Only cartographer needs full RESUME.
-- NEEDS_REVIEW.md: check line count first, skip if empty (saves 0-13 lines).
-
-Rejected optimizations (would break workflows):
-- MAP.md partial read — Critical Business Logic Flows section is essential for bug
-  fixes (contains sacred constraints, cross-module data flows). 320 lines is the
-  cost of architecture knowledge.
-- LESSONS.md deferred — compliance risk; agents won't load things they're told to
-  load on-demand. Keep at 27 lines in session-start.
-- Session-start skill drop — Claude Code keeps invoked skills in context by design.
-
-Honest saving: 5-18% for large projects, not the 37% originally claimed.
+Stop hook no longer triggers for pure analysis/discussion sessions. Cartographer
+Step 9 now creates a TECH_DEBT entry for untriaged NEEDS_REVIEW items so triage
+surfaces when asking "what's pending?" Removed erroneous analysis CHANGELOG entry.
+Files: core/claude-hooks/settings.json, roles/dev/workflows/cartographer.md,
+.claude/settings.json, .agents/workflows/cartographer.md.
 
 ## 2026-04-16 — Session summary: v1.34→v1.39 (5 releases in one session)
 
