@@ -7,9 +7,14 @@ set -euo pipefail
 # Read the tool input from stdin (Claude Code passes JSON with tool details)
 INPUT=$(cat)
 
-# Only check commits on the project branch, not ai-memory
+# Only check commits on the project branch, not ai-memory.
+# git branch --show-current runs in the project root (always returns main),
+# so also check: (a) the .memory worktree's own branch, and (b) the commit command path.
 BRANCH=$(git branch --show-current 2>/dev/null || echo "")
-if [ "$BRANCH" = "ai-memory" ]; then
+MEMORY_BRANCH=$(git -C .memory branch --show-current 2>/dev/null || echo "")
+COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))" 2>/dev/null || echo "")
+
+if [ "$BRANCH" = "ai-memory" ] || [ "$MEMORY_BRANCH" = "ai-memory" ] || echo "$COMMAND" | grep -q '\.memory'; then
     exit 0
 fi
 
