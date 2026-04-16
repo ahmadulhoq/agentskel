@@ -1,5 +1,15 @@
 # agentskel Changelog
 
+## v1.40 — 2026-04-17
+
+### Stop hook precision + NEEDS_REVIEW triage escalation
+- Stop hook prompt sharpened: only triggers CHANGELOG/TIME_LOG for sessions that
+  modified files. Pure discussion/analysis sessions no longer create fake entries.
+- Cartographer Step 9: untriaged NEEDS_REVIEW items now create a single TECH_DEBT
+  entry (NR-TRIAGE) so triage work surfaces when asking "what's pending?" without
+  requiring a full cartographer re-run.
+- Removed erroneous CHANGELOG entry for analysis work (no files were modified).
+
 ## v1.39 — 2026-04-16
 
 ### Hook hardening

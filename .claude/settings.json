@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Before finishing: verify .memory/CHANGELOG.md and .memory/TIME_LOG.md were updated for this task. If they were not updated and this was a development task (code change, bug fix, refactor), update them now by running the task-completion skill."
+            "prompt": "Before finishing: check if FILES were modified in this session (code, configs, workflows, skills — not just .memory/). If yes, verify .memory/CHANGELOG.md and .memory/TIME_LOG.md were updated. If no files were modified (pure discussion, analysis, or research), do NOT create CHANGELOG or TIME_LOG entries — those are for actual changes only."
           }
         ]
       }

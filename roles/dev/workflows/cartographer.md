@@ -147,7 +147,13 @@ modules already marked complete. Record the current HEAD commit SHA in
    fetch the `Latest Known` stable version for each entry and surface any immediate
    staleness alerts. This gives a complete dependency picture at the end of every
    cartography run.
-9. Verify NEEDS_REVIEW.md is empty. Flag any remaining items in RESUME.md.
+9. Check NEEDS_REVIEW.md. If items remain untriaged (user skipped classification
+   during module pauses), add a single tech debt entry to TECH_DEBT.md:
+   ```
+   | NR-TRIAGE | cartographer | Untriaged NEEDS_REVIEW items from cartography session (N items). Triage to classify as SACRED or TECH_DEBT. | medium | [DATE] |
+   ```
+   This ensures the triage work surfaces when the user asks "what's pending?" without
+   requiring a full cartographer re-run.
 10. Write a final RESUME.md update: Status IDLE, full Cartography State with HEAD
     SHA, and summary of all findings.
 11. Commit and push all `.memory/` changes:
