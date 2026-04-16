@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-17 — v1.42: subagent dispatch simplification
+
+Rewrote subagent-dispatch skill: parent passes plan steps instead of templates.
+Deleted prompts/ directory. Changed "consider" to "use" in workflows. Added
+mandatory review dispatch to develop-feature Phase 4.
+Files: core/skills/subagent-dispatch/SKILL.md, prompts/ deleted, 3 workflows updated.
+
 ## 2026-04-17 — v1.41: session-start context optimization
 
 VERSIONS.md removed from session-start (loaded by workflows instead). RESUME.md
