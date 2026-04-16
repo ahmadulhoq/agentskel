@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-16 — v1.38: enforced auto-pull before ai-memory push
+
+New PreToolUse hook (pre-memory-push.sh) auto-runs git pull --rebase before any
+push to ai-memory. Prevents the non-fast-forward conflicts that happened when
+this session tried to push after another agent had pushed v1.35/v1.36. Hook fires
+at the transport layer — agents cannot skip it.
+
 ## 2026-04-16 — v1.37: INSTALL.md for issue #30
 
 Created INSTALL.md with manual installation instructions for Cursor, Copilot,
