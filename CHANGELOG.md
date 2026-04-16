@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-16 — v1.39: hook hardening
+
+Pre-commit hook now checks VERSION/README/MASTER_PLAN version consistency for
+skeleton repos. Catches the version drift that was missed every release since v1.34.
+Session window widened from 1 hour to 8 hours. Pre-memory-push hook no longer
+suppresses pull errors with || true.
+
 ## 2026-04-16 — v1.38: enforced auto-pull before ai-memory push + operational audit
 
 New PreToolUse hook (pre-memory-push.sh) auto-runs git pull --rebase before any
