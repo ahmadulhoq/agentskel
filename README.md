@@ -113,12 +113,12 @@ Specialist behavior loaded when relevant:
 | `code-reviewer` | PR review against your standards and sacred behaviors |
 | `test-engineer` | Test strategy, coverage analysis, test writing |
 | `using-git-worktrees` | Isolated workspaces for long runs — keeps your branch clean |
-| `subagent-dispatch` | Delegate tasks to fresh subagents with structured prompts |
+| `subagent-dispatch` | Parallelize plan steps across fresh subagents |
 | `codebase-navigator` | Traces flows, finds symbols — no re-scanning |
 
 ### Workflows (`.agents/workflows/`)
 
-17 structured workflows triggered by plain English:
+18 structured workflows triggered by plain English:
 
 | Say this | Workflow |
 |---|---|

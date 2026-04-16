@@ -531,8 +531,8 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 
 ### 6.2 Design Principles
 
-1. **Single source of truth**: `.agents/` (plural) contains all rules, skills, and workflows. Other directories point to it.
-2. **Tool-specific entry points**: Each tool gets a thin entry point file (`CLAUDE.md`, `GEMINI.md`) that bootstraps the agent into the shared system.
+1. **Single source of truth**: `.agents/` (plural) contains the authoritative rules, skills, and workflows. Rules are also delivered to each tool's native auto-load location (`.claude/rules/`, inline in AGENTS.md, condensed in Cursor/Windsurf/Copilot configs) for enforcement without instruction chains.
+2. **Native-first delivery**: Each tool gets rules in its natively auto-loaded location — not behind an instruction chain. Claude Code: `.claude/rules/`. Codex: rules inline in AGENTS.md. Cursor/Windsurf/Copilot: condensed rules inline in native configs.
 3. **Tool-specific discovery shims**: Each tool gets a discovery directory (`.claude/skills/`, `.agent/`) that maps to `.agents/`.
 4. **Rules are principles**: Short, always-active statements that survive compaction. No step-by-step procedures.
 5. **Skills are procedures**: Step-by-step checklists with gates. Loaded just-in-time when the task requires them. Descriptions survive compaction; full content loads fresh.
@@ -541,13 +541,15 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 8. **`repo-rules.md` for project-specific rules**: Each project can have a `.agents/rules/repo-rules.md` for rules unique to that repo (e.g. architecture documentation requirements, domain constraints). This file has no upstream template and is never overwritten by setup or sync.
 9. **Universal entry point**: `AGENTS.md` is the self-contained entry point for any tool that adopts the AGENTS.md open standard (Linux Foundation). It includes hardened enforcement rules (session-start, task-completion, workflow routing, memory usage), skill/workflow catalogs with paths, and memory references. `CLAUDE.md` and `GEMINI.md` are thin wrappers that say "read AGENTS.md" plus tool-specific quirks (stub discovery, symlink paths). One canonical source, many entry points.
 10. **Plugin-based distribution**: agentskel can be installed as a plugin/extension for Claude Code (`.claude-plugin/`), Cursor (`.cursor-plugin/`), and Gemini CLI (`gemini-extension.json`). A session-start hook (`hooks/session-start`) auto-detects project state and injects bootstrap context. The plugin is the skeleton — `$CLAUDE_PLUGIN_ROOT` resolves to the agentskel repo, eliminating the need for a separate clone. The hook is additive: projects with CLAUDE.md continue to work without the plugin.
+11. **Deterministic enforcement via hooks**: Critical artifacts (CHANGELOG, TIME_LOG) are enforced by PreToolUse hooks that block commits without them. PreToolUse hooks also auto-pull before ai-memory pushes. Stop hooks verify task-completion before session end. These are 100% enforcement — the agent cannot bypass them.
+12. **Plan-passing for subagents**: Parent agent creates the plan with full project context, then passes specific plan steps to subagents. Subagents don't rediscover the project — they execute. Review subagents get SACRED/CONVENTIONS references. Research subagents get only the question.
 
 ### 6.3 Entry Points by Tool
 
 | Tool | Entry Point | Discovery Directory | How It Works |
 |------|------------|-------------------|-------------|
 | **All tools** | `AGENTS.md` | `.agents/` | Universal entry point with hardened enforcement rules, skill/workflow catalogs, and memory references. Self-contained — any tool that reads AGENTS.md gets full instructions. |
-| **Claude Code** | `CLAUDE.md` → `AGENTS.md` | `.claude/skills/` | `CLAUDE.md` survives compaction (re-injected every turn). Thin wrapper that says "read AGENTS.md" plus Claude Code specifics: `.claude/skills/` stubs with YAML descriptions that survive compaction, enabling on-demand skill loading via redirects to `.agents/`. |
+| **Claude Code** | `.claude/rules/` + `CLAUDE.md` → `AGENTS.md` | `.claude/skills/`, `.claude/rules/`, `.claude/hooks/` | `.claude/rules/` natively auto-loaded every turn (core-behavior, security, bootstrap). `.claude/hooks/` enforce pre-commit checks and auto-pull. `CLAUDE.md` survives compaction. `.claude/skills/` stubs enable on-demand skill loading. |
 | **Antigravity** | `GEMINI.md` → `AGENTS.md` | `.agent/` (symlink → `.agents/`) | `GEMINI.md` survives compaction (re-injected every turn). Thin wrapper that says "read AGENTS.md" plus Antigravity specifics: `.agent/` symlink pointing to `.agents/` for native rule and skill discovery. |
 | **Codex CLI** | `AGENTS.md` | `.agents/` | Reads AGENTS.md natively as primary entry point. Also reads `.agents/skills/` directly. |
 | **Cursor** | `.cursor/rules/agentskel.mdc` → `AGENTS.md` | `.agents/`, `.cursor/rules/` | Native `.mdc` rule with `alwaysApply: true` bootstraps into AGENTS.md. Cursor also reads AGENTS.md directly. |
