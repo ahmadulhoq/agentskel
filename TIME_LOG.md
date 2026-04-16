@@ -21,6 +21,7 @@
 | v1.34 | Native-first rule delivery + enforcement hooks — .claude/rules/ auto-load, AGENTS.md inline, condensed configs, pre-commit hook, skill wiring in 7 workflows, task-planner expansion | 2026-04-15 | 4h | — | — | ~45 min | 45 (10 new files + 35 modified across core/, roles/, .agents/, .claude/, AGENTS.md, tool configs, setup-skeleton, sync-skeleton) + .memory/ on ai-memory | completed |
 | v1.35 | Fix pre-commit hook worktree branch detection | 2026-04-16 | 0.25h | — | — | ~5 min | 2 (.claude/hooks/pre-commit-check.sh, core/claude-hooks/pre-commit-check.sh) | completed |
 | v1.36 | Fix sync-skeleton cd .memory directory bleed in Bash tool | 2026-04-16 | 0.25h | — | — | ~5 min | 2 (roles/dev/workflows/sync-skeleton.md, .agents/workflows/sync-skeleton.md) | completed |
+| v1.37 | Create INSTALL.md with manual installation instructions for Cursor, Copilot, Windsurf, and Codex | 2026-04-16 | 0.25h | 14:53Z | 14:55Z | ~2 min | 2 (INSTALL.md, CHANGELOG.md) | completed |
 
 <!-- Notes on estimates:
      - "Est. Human Hours" is the agent's estimate of how long a senior developer

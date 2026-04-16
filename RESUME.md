@@ -4,11 +4,12 @@
 IDLE
 
 ## Last Completed Task
-- v1.35: Fix pre-commit-check.sh worktree branch detection. Hook used `git branch --show-current` at project root (always returns `main`), never skipping ai-memory commits. Fixed with three-pronged guard: root branch, `git -C .memory branch --show-current`, command string grep. Both .claude/hooks/ and core/claude-hooks/ patched. CONFIG.md Skeleton Version corrected 1.33→1.35.
+- v1.37: Created INSTALL.md with manual installation instructions for Cursor, GitHub Copilot, Windsurf, and Codex. Addressed issue #30.
 
 ## Previously Completed
-- v1.34: Native-first rule delivery + deterministic enforcement hooks. Rules now in each tool's native auto-load location (.claude/rules/, AGENTS.md inline, condensed in Cursor/Windsurf/Copilot). Pre-commit hook blocks commits without CHANGELOG/TIME_LOG (0%→100%). 10 skill-wiring gaps fixed across 7 workflows. PR #31 merged.
-- v1.31: refactor-code workflow (4-phase safe restructure). CSO description fixes (systematic-debugger, domain-expert, task-planner wired into develop-feature). Session-start mandate added directly to all tool config files and templates (CLAUDE.md, GEMINI.md, Cursor, Copilot, Windsurf) — was only in AGENTS.md which tools read lazily. sync-skeleton propagates fix to downstream projects.
+- v1.36: Fix sync-skeleton cd .memory directory bleed. Step 5 used cd .memory/cd .. — Bash tool persists CWD, causing gh pr create to run from .memory/ on ai-memory branch. Replaced with git -C .memory throughout. Added warning callout block.
+- v1.35: Fix pre-commit-check.sh worktree branch detection. Three-pronged guard: root branch, git -C .memory branch --show-current, command string grep.
+- v1.34: Native-first rule delivery + deterministic enforcement hooks. PR #31 merged.
 
 ## Next Task
 - (none)
@@ -31,11 +32,7 @@ IDLE
 - v1.26: Plugin-based install (Claude Code, Cursor, Gemini CLI) + session-start hook + README simplification.
 - v1.27: Renamed senior-developer→developer. Extracted skeleton checklist from task-completion.
 - v1.28: Platform trimming gate in sync-skeleton (Step 4b). Caught by PR review on Muslim-Pro-Android.
-<<<<<<< Updated upstream
-=======
-- v1.30: brainstorm-feature + debug-issue workflows. TDD, systematic-debugger, using-git-worktrees skills. develop-feature TDD patch. git-flow worktree section.
-- v1.31: refactor-code workflow. CSO fixes. Session-start mandate in all tool config files + templates. MASTER_PLAN section 7.3 updated with refactor-code entry.
->>>>>>> Stashed changes
+
 - v1.29: All named functions in SYMBOLS + module-based split (5+ modules) + codebase-navigator skill.
 - v1.30: brainstorm-feature + debug-issue workflows. TDD, systematic-debugger, using-git-worktrees skills.
 - v1.31-v1.33: refactor-code workflow, CSO sharpening, session-start mandate in all tool configs, VERSION bump in skeleton checklist.
@@ -60,4 +57,4 @@ IDLE
 - Coverage gate passed — 13 modules complete, 0 remaining.
 
 ## Timestamp (UTC)
-- 2026-04-16T00:00Z
+- 2026-04-16T14:57Z
