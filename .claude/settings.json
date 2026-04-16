@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": ".claude/hooks/pre-commit-check.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Before finishing: verify .memory/CHANGELOG.md and .memory/TIME_LOG.md were updated for this task. If they were not updated and this was a development task (code change, bug fix, refactor), update them now by running the task-completion skill."
+          }
+        ]
+      }
+    ]
+  }
+}
