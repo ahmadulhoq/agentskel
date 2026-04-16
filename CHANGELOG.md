@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-17 — v1.41: session-start context optimization
+
+VERSIONS.md removed from session-start (loaded by workflows instead). RESUME.md
+partial read up to --- marker. NEEDS_REVIEW.md line-count check instead of full read.
+RESUME.md template restructured with deferrable sections below marker.
+Files: core/skills/session-start/SKILL.md, core/memory/RESUME.md, .agents/ copies.
+
 ## 2026-04-17 — v1.40: stop hook precision + NEEDS_REVIEW triage escalation
 
 Stop hook no longer triggers for pure analysis/discussion sessions. Cartographer
