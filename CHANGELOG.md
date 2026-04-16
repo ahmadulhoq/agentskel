@@ -1,5 +1,10 @@
 # agentskel Changelog
 
+## v1.37 — 2026-04-16
+
+### Documentation updates
+- Created `INSTALL.md` outlining manual installation instructions for Cursor, GitHub Copilot, Windsurf, and Codex CLI to address issue #30.
+
 ## v1.34 — 2026-04-15
 
 ### Native-first rule delivery + deterministic enforcement hooks
