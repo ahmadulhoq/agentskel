@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.30: Brainstorm-feature workflow, debug-issue workflow, test-driven-development skill, systematic-debugger skill, using-git-worktrees skill. develop-feature Phase 2 now recommends TDD. git-flow skill has worktree quick-reference. VERSION bumped to 1.30, CONFIG.md Skeleton Version updated to 1.30.
+- v1.34: Native-first rule delivery + deterministic enforcement hooks. Rules now in each tool's native auto-load location (.claude/rules/, AGENTS.md inline, condensed in Cursor/Windsurf/Copilot). Pre-commit hook blocks commits without CHANGELOG/TIME_LOG (0%→100%). 10 skill-wiring gaps fixed across 7 workflows. PR #31 merged.
 
 ## Next Task
 - (none)
@@ -14,7 +14,7 @@ IDLE
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
 - MASTER_PLAN.md tracked in git since v1.6; MAINTAIN_MASTER_PLAN.md is gitignored (private maintenance checklist)
 - roles/devops/ is a placeholder (not implemented)
-- CONFIG.md Skeleton Version updated to 1.29
+- CONFIG.md Skeleton Version updated to 1.34
 - RULES.md now holds project context + project rules only (behavioral rules in .agents/rules/)
 - CONFIG.md has Description field for project identity (moved from RULES.md in v1.18)
 - v1.19: All operational timestamps use ISO 8601 UTC format (YYYY-MM-DDTHH:MMZ)
@@ -27,8 +27,10 @@ IDLE
 - v1.26: Plugin-based install (Claude Code, Cursor, Gemini CLI) + session-start hook + README simplification.
 - v1.27: Renamed senior-developer→developer. Extracted skeleton checklist from task-completion.
 - v1.28: Platform trimming gate in sync-skeleton (Step 4b). Caught by PR review on Muslim-Pro-Android.
-- v1.30: brainstorm-feature + debug-issue workflows. TDD, systematic-debugger, using-git-worktrees skills. develop-feature TDD patch. git-flow worktree section.
 - v1.29: All named functions in SYMBOLS + module-based split (5+ modules) + codebase-navigator skill.
+- v1.30: brainstorm-feature + debug-issue workflows. TDD, systematic-debugger, using-git-worktrees skills.
+- v1.31-v1.33: refactor-code workflow, CSO sharpening, session-start mandate in all tool configs, VERSION bump in skeleton checklist.
+- v1.34: Native-first rule delivery (.claude/rules/ auto-load, AGENTS.md inline, condensed configs). Deterministic pre-commit hook. 10 skill-wiring gaps fixed.
 
 ## Cartography State
 - Last indexed commit: d417c5cb56c24fc5e997fef5512a41bd9e2aea81
