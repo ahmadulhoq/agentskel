@@ -1,4 +1,8 @@
-# agentskel Framework (shell/markdown) — Copilot Instructions
+# Condensed Critical Rules
+
+<!-- This is a curated extract of core-behavior.md and security-non-negotiables.md
+     for tools with tight character limits (Cursor 12K, Windsurf 6K).
+     When updating core-behavior.md, review this file for consistency. -->
 
 ## Session Start — MANDATORY
 Do NOT respond to any user request until you have run the session-start procedure.
@@ -24,9 +28,13 @@ Wait for "go ahead" / "do it" / "implement this" before editing files.
 ## Use Your Memory
 Consult `.memory/MAP.md` and `.memory/SYMBOLS.md` before grepping.
 
+## Minimal Impact
+Only touch what's necessary. No drive-by refactoring.
+
 ## Security — Non-Negotiable
 - No hardcoded credentials. Never log secrets.
 - Validate all inputs. No eval or unsanitised shell calls.
+- Least privilege for file and process operations.
 - Never modify signing configs, keystores, or secrets files.
 
 For full rules, skills, and workflows: read `AGENTS.md`.

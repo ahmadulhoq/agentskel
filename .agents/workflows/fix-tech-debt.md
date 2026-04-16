@@ -15,7 +15,8 @@ description: Systematic resolution of catalogued tech debt items from TECH_DEBT.
 1. Read `.memory/RULES.md`, `.memory/MAP.md`, `.memory/SYMBOLS.md`.
 2. Read `.memory/RESUME.md` if continuing previous work.
 3. Read `.memory/LESSONS.md`, `.memory/SACRED.md`, and `.memory/VERSIONS.md`.
-4. Read the specific TECH_DEBT.md entry. Understand the root cause, not just the symptom.
+4. Use `codebase-navigator` (MAP.md, SYMBOLS.md) to understand module relationships before modifying.
+5. Read the specific TECH_DEBT.md entry. Understand the root cause, not just the symptom.
    Read the source file(s) listed in the entry before planning anything.
 5. Create the branch:
    ```

@@ -16,7 +16,8 @@ description: When restructuring, renaming, or reorganising existing code without
 
 ## Phase 1: Characterize & Safety Net
 1. Read `.memory/RULES.md`, `.memory/MAP.md`, `.memory/SACRED.md`.
-2. Identify the refactor target: what code, what smell, what goal.
+2. Use `codebase-navigator` to understand code structure via MAP.md/SYMBOLS.md.
+3. Identify the refactor target: what code, what smell, what goal.
 3. Run the existing test suite. **Record the baseline** — all tests must pass before you begin.
    - If tests are failing before the refactor, stop. Fix them first or get explicit approval to proceed with known failures.
 4. Identify coverage gaps for the code being refactored.
@@ -39,8 +40,10 @@ description: When restructuring, renaming, or reorganising existing code without
 8. Present the plan and out-of-scope list to the user. **Wait for approval.**
 
 ## Phase 3: Execute (step-by-step)
-9. Execute one atomic step at a time.
-10. After each step: run tests. If any fail, fix before proceeding.
+9. Follow `developer` skill standards.
+   For large refactors spanning many files, consider `subagent-dispatch` per module.
+10. Execute one atomic step at a time.
+11. After each step: run tests. If any fail, fix before proceeding.
 11. If you discover a bug mid-refactor, note it and continue — do not fix it in this PR.
 12. If scope unexpectedly grows (a simple rename requires touching 30 files), stop and reassess with the user before continuing.
 

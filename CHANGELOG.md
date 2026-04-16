@@ -1,5 +1,28 @@
 # agentskel Changelog
 
+## v1.34 — 2026-04-15
+
+### Native-first rule delivery + deterministic enforcement hooks
+- **Architecture change:** Rules now live in each tool's native auto-load location
+  instead of behind an advisory instruction chain. Compliance baseline measured at
+  0% (CHANGELOG/TIME_LOG on Muslim-Pro-Android); this fixes the root cause.
+- **Claude Code:** New `.claude/rules/` directory with `core-behavior.md`,
+  `security.md`, `bootstrap.md` — auto-loaded natively, no instruction chain needed.
+  New `.claude/hooks/pre-commit-check.sh` blocks commits if CHANGELOG/TIME_LOG
+  not updated. Stop hook prompts task-completion verification. Templates in
+  `core/claude-rules/` and `core/claude-hooks/`.
+- **AGENTS.md:** Now self-contained — core-behavior and security rules inlined
+  instead of referencing `.agents/rules/`. Codex CLI reads this directly (32KB limit).
+- **Cursor/Windsurf/Copilot:** Condensed critical rules (~1.5KB) inlined in native
+  configs. Previously thin wrappers saying "read AGENTS.md". New `core/condensed-rules.md`.
+- **Skill wiring:** `codebase-navigator` added to 6 workflows (develop-feature,
+  debug-issue, implement-task, fix-tech-debt, hotfix, refactor-code). `subagent-dispatch`
+  added to 3 workflows. `systematic-debugger` added to debug-issue and hotfix.
+  `git-flow` added to develop-feature. `task-planner` added to brainstorm-feature.
+  core-behavior "Use your memory" now references codebase-navigator skill.
+- **task-planner:** Subagent Strategy section expanded with clear dispatch criteria.
+- Updated setup-skeleton (Steps 5b2, 5b3) and sync-skeleton (Step 4, migration 5h).
+
 ## v1.33 — 2026-04-12
 
 ### Fix: VERSION bump missing from skeleton-contribution-checklist

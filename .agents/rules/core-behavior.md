@@ -12,7 +12,7 @@ description: Core operating behavior for all agents in this repo.
   lead to unnecessary changes.
 - **Use your memory.** When `.memory/MAP.md` and `.memory/SYMBOLS.md`
   exist, consult them before searching the codebase. They index every
-  module, class, and function.
+  module, class, and function. See the `codebase-navigator` skill for guidance.
 - **Discuss, agree, then execute.** Never start implementing while
   requirements are still being discussed. Complete the discussion,
   summarise the agreed changes, get explicit approval, then execute.
