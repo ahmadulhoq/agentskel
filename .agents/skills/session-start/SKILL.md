@@ -31,25 +31,28 @@ until this procedure is complete.**
 
 ## Step 2 — Read memory files
 
-Read all of the following files. Do not skip any:
+### Read now (essential — do not skip):
 
 - [ ] `.memory/CONFIG.md` — repo identity, operational config, check dates
 - [ ] `.memory/RULES.md` — project-specific context and rules
-- [ ] `.memory/MAP.md` — module and architecture map
+- [ ] `.memory/MAP.md` — module and architecture map (read fully, including Critical Business Logic Flows)
 - [ ] `.memory/SYMBOLS.md` — symbol index (module list in split mode, full symbols in single-file mode)
-- [ ] `.memory/RESUME.md` — session state and persistent context
+- [ ] `.memory/RESUME.md` — read up to the `---` marker (Status, Last Completed Task, Next Task, Context Notes, Timestamp). Skip Cartography State and Previously Completed sections below the marker.
 - [ ] `.memory/LESSONS.md` — past mistakes to avoid
 - [ ] `.memory/SACRED.md` — behaviors that must never be changed
-- [ ] `.memory/VERSIONS.md` — toolchain and dependency versions
 - [ ] `.memory/DEPENDENCY_ALERTS.md` — open major/security alerts
-- [ ] `.memory/NEEDS_REVIEW.md` — ambiguous findings awaiting human classification
+
+### Check only (deferred — loaded by workflows when needed):
+
+- [ ] `.memory/NEEDS_REVIEW.md` — check line count (`wc -l`). If > 15 lines (has entries), state the count: "N items pending triage in NEEDS_REVIEW.md." Do not read the full content.
+- `.memory/VERSIONS.md` — **do not read at session start.** Loaded by `check-dependencies`, `develop-feature`, and `fix-tech-debt` when needed. Session-start only checks the `Last Dependency Check` timestamp in CONFIG.md (Step 5).
 
 ## Step 3 — Surface alerts
 
 - [ ] If `DEPENDENCY_ALERTS.md` has any OPEN entries, surface them to the user
       before starting any work.
-- [ ] If `NEEDS_REVIEW.md` has any entries, surface them to the user.
-      These are ambiguous findings awaiting human classification (SACRED or TECH_DEBT).
+- [ ] If `NEEDS_REVIEW.md` has entries (detected by line count in Step 2), tell the
+      user: "N items pending triage in NEEDS_REVIEW.md — classify as SACRED or TECH_DEBT."
 
 ## Step 4 — Check skeleton version
 

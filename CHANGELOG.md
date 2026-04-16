@@ -1,5 +1,18 @@
 # agentskel Changelog
 
+## v1.41 — 2026-04-17
+
+### Session-start context optimization
+- VERSIONS.md removed from session-start Step 2. Loaded by workflows that need it
+  (check-dependencies, develop-feature, fix-tech-debt). Session-start only checks
+  CONFIG.md timestamp. Saves 44-194 lines at startup.
+- RESUME.md partial read: session-start reads up to the `---` marker (Status, Last
+  Completed Task, Context Notes, Timestamp). Cartography State and Previously
+  Completed sections are below the marker — only loaded by cartographer.
+  RESUME.md template restructured with clear marker.
+- NEEDS_REVIEW.md: session-start checks line count only, surfaces "N items pending"
+  without reading full content. Full content stays in NEEDS_REVIEW.md for triage.
+
 ## v1.40 — 2026-04-17
 
 ### Stop hook precision + NEEDS_REVIEW triage escalation
