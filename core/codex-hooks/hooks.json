@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".codex/hooks/pre-commit-check.sh"
+          },
+          {
+            "type": "command",
+            "command": ".codex/hooks/pre-memory-push.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".codex/hooks/stop-verify.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

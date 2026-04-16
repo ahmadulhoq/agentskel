@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "hooks": {
+    "pre_run_command": [
+      {
+        "command": ".windsurf/hooks/pre-commit-check.sh",
+        "matcher": "git commit*"
+      },
+      {
+        "command": ".windsurf/hooks/pre-memory-push.sh",
+        "matcher": "git*push*ai-memory*"
+      }
+    ],
+    "stop": [
+      {
+        "command": ".windsurf/hooks/stop-verify.sh"
+      }
+    ]
+  }
+}

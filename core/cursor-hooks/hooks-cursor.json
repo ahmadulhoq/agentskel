@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "./hooks/session-start"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": ".cursor/hooks/pre-commit-check.sh",
+        "matcher": "shell(git commit*)"
+      },
+      {
+        "command": ".cursor/hooks/pre-memory-push.sh",
+        "matcher": "shell(git*push*ai-memory*)"
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/stop-verify.sh"
+      }
+    ]
+  }
+}

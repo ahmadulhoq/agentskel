@@ -234,20 +234,57 @@ If `.agents/rules/repo-rules.md` exists (project-specific rules), also copy it t
 
 ---
 
-## Step 5b3 — Install enforcement hooks (Claude Code)
+## Step 5b3 — Install enforcement hooks
 
-**Skip this step if `claude` is not in Supported Tools.**
+Enforcement hooks deterministically block commits that skip task-completion and
+auto-pull before ai-memory pushes. Install for each supported tool:
 
-Enforcement hooks deterministically block commits that skip task-completion.
-
+**Claude Code** (if `claude` in Supported Tools):
 ```bash
 mkdir -p .claude/hooks
 ```
-
 1. Copy `[SKELETON_PATH]/core/claude-hooks/pre-commit-check.sh` → `.claude/hooks/pre-commit-check.sh`
-2. `chmod +x .claude/hooks/pre-commit-check.sh`
-3. If `.claude/settings.json` does not exist, copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
-4. If `.claude/settings.json` already exists, merge the `hooks` section from the template into the existing file (do not overwrite other settings).
+2. Copy `[SKELETON_PATH]/core/claude-hooks/pre-memory-push.sh` → `.claude/hooks/pre-memory-push.sh`
+3. `chmod +x .claude/hooks/*.sh`
+4. If `.claude/settings.json` does not exist, copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
+5. If `.claude/settings.json` already exists, merge the `hooks` section from the template.
+
+**Cursor** (if `cursor` in Supported Tools):
+```bash
+mkdir -p .cursor/hooks
+```
+1. Copy `[SKELETON_PATH]/core/claude-hooks/pre-commit-check.sh` → `.cursor/hooks/pre-commit-check.sh`
+2. Copy `[SKELETON_PATH]/core/claude-hooks/pre-memory-push.sh` → `.cursor/hooks/pre-memory-push.sh`
+3. Copy `[SKELETON_PATH]/core/cursor-hooks/stop-verify.sh` → `.cursor/hooks/stop-verify.sh`
+4. `chmod +x .cursor/hooks/*.sh`
+5. Copy `[SKELETON_PATH]/core/cursor-hooks/hooks-cursor.json` → `.cursor/hooks/hooks-cursor.json`
+
+**Windsurf** (if `windsurf` in Supported Tools):
+```bash
+mkdir -p .windsurf/hooks
+```
+1. Copy the same 3 hook scripts to `.windsurf/hooks/`
+2. `chmod +x .windsurf/hooks/*.sh`
+3. Copy `[SKELETON_PATH]/core/windsurf-hooks/hooks.json` → `.windsurf/hooks.json`
+
+**Copilot** (if `copilot` in Supported Tools):
+```bash
+mkdir -p .github/hooks
+```
+1. Copy the same 3 hook scripts to `.github/hooks/`
+2. `chmod +x .github/hooks/*.sh`
+3. Copy `[SKELETON_PATH]/core/copilot-hooks/hooks.json` → `.github/hooks/hooks.json`
+
+**Codex** (if `codex` in Supported Tools):
+```bash
+mkdir -p .codex/hooks
+```
+1. Copy the same 3 hook scripts to `.codex/hooks/`
+2. `chmod +x .codex/hooks/*.sh`
+3. Copy `[SKELETON_PATH]/core/codex-hooks/hooks.json` → `.codex/hooks.json`
+
+The hook scripts (pre-commit-check.sh, pre-memory-push.sh, stop-verify.sh) are
+tool-agnostic bash scripts. Only the config format differs per tool.
 
 ---
 

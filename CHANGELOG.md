@@ -1,5 +1,18 @@
 # agentskel Changelog
 
+## v1.45 — 2026-04-17
+
+### Cross-tool enforcement hooks + GEMINI.md condensed rules
+- Enforcement hooks (pre-commit, pre-memory-push, stop-verify) now have templates
+  for all 5 tools: Claude Code, Cursor, Windsurf, Copilot, Codex. Hook scripts
+  are tool-agnostic bash; only the config format differs per tool.
+- New template directories: `core/cursor-hooks/`, `core/windsurf-hooks/`,
+  `core/copilot-hooks/`, `core/codex-hooks/`.
+- `setup-skeleton` Step 5b3 expanded to install hooks for all supported tools.
+- GEMINI.md template upgraded from thin wrapper to condensed rules inline — same
+  level as Cursor/Windsurf/Copilot. Previously only said "read AGENTS.md."
+- Shared `stop-verify.sh` script for tools that use command-based stop hooks.
+
 ## v1.44 — 2026-04-17
 
 ### Blueprint: .claude/rules/ native auto-load
