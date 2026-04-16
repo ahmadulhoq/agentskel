@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Before finishing: check if FILES were modified in this session (code, configs, workflows, skills — not just .memory/). If yes, verify .memory/CHANGELOG.md and .memory/TIME_LOG.md were updated. If no files were modified (pure discussion, analysis, or research), do NOT create CHANGELOG or TIME_LOG entries — those are for actual changes only."
+            "prompt": "Before finishing: check if APPLICATION code was modified in this session (bug fixes, features, refactors). If yes, verify .memory/CHANGELOG.md and .memory/TIME_LOG.md were updated. Do NOT require CHANGELOG/TIME_LOG for: skeleton syncs (sync-skeleton workflow), pure discussion/analysis, infrastructure chores, or .memory/-only changes. Those are not development tasks."
           }
         ]
       }

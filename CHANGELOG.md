@@ -1,5 +1,12 @@
 # agentskel Changelog
 
+## v1.43 — 2026-04-17
+
+### Stop hook: exempt skeleton syncs and infrastructure chores
+- Stop hook prompt now distinguishes application code changes (need CHANGELOG/TIME_LOG)
+  from skeleton syncs, infrastructure chores, discussion, and .memory/-only changes
+  (don't need them). Caught by Muslim-Pro-Android agent during v1.42 sync.
+
 ## v1.42 — 2026-04-17
 
 ### Subagent dispatch simplification
