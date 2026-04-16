@@ -8,6 +8,11 @@
             "type": "command",
             "if": "Bash(git commit*)",
             "command": ".claude/hooks/pre-commit-check.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git*push*ai-memory*)",
+            "command": ".claude/hooks/pre-memory-push.sh"
           }
         ]
       }

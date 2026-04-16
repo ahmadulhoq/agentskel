@@ -1,5 +1,14 @@
 # agentskel Changelog
 
+## v1.38 — 2026-04-16
+
+### Enforced auto-pull before ai-memory push
+- New `pre-memory-push.sh` hook — PreToolUse hook that auto-runs
+  `git -C .memory pull --rebase origin ai-memory` before any push to ai-memory.
+  Prevents non-fast-forward errors when multiple agents work on the same project.
+  The hook fires at the transport layer — agents cannot skip it.
+- Updated `settings.json` hook template with the new PreToolUse entry.
+
 ## v1.37 — 2026-04-16
 
 ### Documentation updates
