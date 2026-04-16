@@ -171,9 +171,9 @@ for this project's platform (and those should have their comment tags stripped).
 
 These changes go directly to the ai-memory branch — no PR required.
 
-```bash
-cd .memory
-```
+> **Important:** Use `git -C .memory` for all memory operations. Do NOT `cd .memory` —
+> the Bash tool persists working directory between calls, which causes subsequent
+> commands (e.g. `gh pr create`) to run from inside `.memory/` on the wrong branch.
 
 Apply any memory file template updates (e.g. new sections in `RULES.md`,
 updated `VERSIONS.md` schema). Then:
@@ -186,10 +186,9 @@ updated `VERSIONS.md` schema). Then:
 
 2. Commit and push:
 ```bash
-git add -A
-git commit -m "sync to skeleton v[CURRENT_VERSION]"
-git push origin ai-memory
-cd ..
+git -C .memory add -A
+git -C .memory commit -m "sync to skeleton v[CURRENT_VERSION]"
+git -C .memory push origin ai-memory
 ```
 
 ---
