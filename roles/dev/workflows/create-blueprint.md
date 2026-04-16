@@ -285,6 +285,27 @@ Read and follow the full [skill|workflow] at `[relative path to the source file]
 
 ---
 
+## Step 6b2 — Generate .claude/rules/ (Claude Code native auto-load)
+
+**Skip this step if `claude` is not in Supported Tools.**
+
+Copy the blueprint's trimmed `.agents/rules/` files to `.claude/rules/` so Claude
+Code auto-loads them natively — no instruction chain needed.
+
+```bash
+mkdir -p .claude/rules
+```
+
+Copy each file from `.agents/rules/`:
+- `.agents/rules/core-behavior.md` → `.claude/rules/core-behavior.md`
+- `.agents/rules/security-non-negotiables.md` → `.claude/rules/security.md`
+- `.agents/rules/repo-rules.md` → `.claude/rules/repo-rules.md`
+
+These are the same trimmed rules already created in Step 6 — just placed in the
+native auto-load location for Claude Code.
+
+---
+
 ## Step 6c — Set up .agent/ symlink and entry points
 
 ```bash

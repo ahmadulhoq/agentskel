@@ -1,5 +1,11 @@
 # agentskel Changelog
 
+## v1.44 — 2026-04-17
+
+### Blueprint: .claude/rules/ native auto-load
+- `create-blueprint.md` Step 6b2: copies trimmed `.agents/rules/` to `.claude/rules/`
+  for Claude Code native auto-load. Same rules, second location — no new templates.
+
 ## v1.43 — 2026-04-17
 
 ### Stop hook: exempt skeleton syncs and infrastructure chores
