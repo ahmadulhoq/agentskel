@@ -32,7 +32,8 @@ description: When the user wants to think through a feature idea, explore edge c
 5. **Wait for user answers.** Do not proceed until all questions are answered.
 
 ## Phase 3: Produce the Spec
-6. Write a concise technical spec:
+6. Once approved, use `task-planner` to decompose the spec before handing to `develop-feature`.
+7. Write a concise technical spec:
    - **Goal:** one sentence
    - **Inputs / Outputs:** types and shapes
    - **Happy path:** step-by-step

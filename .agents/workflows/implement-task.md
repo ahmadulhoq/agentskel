@@ -24,7 +24,9 @@ description: Generic wrapper for any ad-hoc implementation request that doesn't
 4. Understand the request fully. Ask clarifying questions if needed.
 
 ## Phase 1: Plan
-5. Write a plan (scale it to the task — one paragraph for small changes,
+5. Use `codebase-navigator` skill to find relevant code via MAP.md/SYMBOLS.md.
+   For multi-step tasks, consider `subagent-dispatch` for parallel execution.
+6. Write a plan (scale it to the task — one paragraph for small changes,
    full breakdown for complex ones). Include:
    - Files to modify
    - Approach and risks

@@ -24,13 +24,16 @@ description: Fast-path workflow for production bugs that cannot wait for the
    ```
    git checkout main && git pull && git checkout -b hotfix/TICKET-XXXX-kebab-description
    ```
-6. Reproduce the bug locally before writing any fix.
-7. Identify the root cause. Write a clear diagnosis — this goes in the PR body.
+6. Use `systematic-debugger` skill for structured diagnosis.
+   Use `codebase-navigator` to understand the affected module.
+7. Reproduce the bug locally before writing any fix.
+8. Identify the root cause. Write a clear diagnosis — this goes in the PR body.
 8. Present diagnosis and proposed fix to the tech lead. Get explicit approval.
 9. Record the task start time.
 
 ## Phase 2: Fix (Minimal Scope)
-10. Fix ONLY the reported bug. Do not refactor, clean up, or improve surrounding code.
+10. Follow `developer` skill standards for code quality.
+11. Fix ONLY the reported bug. Do not refactor, clean up, or improve surrounding code.
     Hotfixes must be as small as possible — every extra line is extra risk in production.
 11. Checkpoint to RESUME.md.
 

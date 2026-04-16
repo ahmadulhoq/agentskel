@@ -23,12 +23,39 @@ use `implement-task` (the default). Do not start coding without a workflow.
 
 ### Use Your Memory
 When `.memory/MAP.md` and `.memory/SYMBOLS.md` exist, use them to locate modules, classes,
-and functions. Do not grep or scan the codebase for things that are already indexed.
+and functions. See the `codebase-navigator` skill for guidance. Do not grep for things already indexed.
 
-## Rules (always active)
-Read and follow all rules in `.agents/rules/`.
-Read `.memory/RULES.md` for project-specific context and rules.
-Read `.memory/RESUME.md` to restore session state and context.
+## Core Behavior (always active)
+
+- **Never assume.** Verify before concluding. Read the actual file or code first.
+- **Discuss, agree, then execute.** Get explicit approval before implementing.
+- **Plan first.** Write a plan, present it, wait for approval. No exceptions.
+- **Verify before done.** Run tests, check logs, demonstrate correctness.
+- **Minimal impact.** Only touch what's necessary.
+- **No laziness.** Find root causes. No temporary fixes.
+- **Self-improvement.** After corrections, write a lesson in `.memory/LESSONS.md`.
+- **Respect sacred behaviors.** Never modify `.memory/SACRED.md` entries without human approval.
+- **If something goes sideways, STOP and re-plan.**
+- **No changes during discussion.** Wait for "go ahead" before editing files.
+- **No commits without an implementation instruction.**
+- **Complete the git flow once started.** Branch → implement → commit → PR.
+- **Sub-agents follow the same rules.**
+
+## Security — Non-Negotiable
+
+- Hardcoded credentials are strictly forbidden.
+- Never read, log, or output API keys, tokens, secrets, or credentials.
+- All inputs must be validated and sanitised before processing.
+- Never use eval, unsanitised shell calls, or command injection vectors.
+- Least privilege for file and process operations.
+- Only read/write files within this repository, the skeleton, and the blueprint.
+- Never modify signing configs, keystores, or secrets management files.
+- Never trust external input directly without validation.
+
+## Project Rules
+Read `.agents/rules/repo-rules.md` for project-specific rules.
+Read `.memory/RULES.md` for project-specific context.
+Read `.memory/RESUME.md` to restore session state.
 
 ## Skills
 | Skill | Description | Path |

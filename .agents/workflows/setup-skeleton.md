@@ -213,6 +213,44 @@ When skills or workflows are added/removed, re-running setup or sync regenerates
 
 ---
 
+## Step 5b2 — Generate .claude/rules/ (Claude Code native auto-load)
+
+**Skip this step if `claude` is not in Supported Tools.**
+
+Claude Code natively auto-loads all `.md` files in `.claude/rules/` — no instruction
+chain needed. Copy rules here so they are enforced even if the agent skips session-start.
+
+```bash
+mkdir -p .claude/rules
+```
+
+Copy from `[SKELETON_PATH]/core/claude-rules/`:
+1. `core-behavior.md` → `.claude/rules/core-behavior.md`
+2. `security.md` → `.claude/rules/security.md`
+3. `bootstrap.md` → `.claude/rules/bootstrap.md`
+
+If `.agents/rules/repo-rules.md` exists (project-specific rules), also copy it to
+`.claude/rules/repo-rules.md`.
+
+---
+
+## Step 5b3 — Install enforcement hooks (Claude Code)
+
+**Skip this step if `claude` is not in Supported Tools.**
+
+Enforcement hooks deterministically block commits that skip task-completion.
+
+```bash
+mkdir -p .claude/hooks
+```
+
+1. Copy `[SKELETON_PATH]/core/claude-hooks/pre-commit-check.sh` → `.claude/hooks/pre-commit-check.sh`
+2. `chmod +x .claude/hooks/pre-commit-check.sh`
+3. If `.claude/settings.json` does not exist, copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
+4. If `.claude/settings.json` already exists, merge the `hooks` section from the template into the existing file (do not overwrite other settings).
+
+---
+
 ## Step 5c — Set up .agent/ symlink (Antigravity)
 
 **Skip this step if `antigravity` is not in Supported Tools.**

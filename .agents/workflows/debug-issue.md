@@ -14,8 +14,10 @@ description: When the user reports a bug, an error, or unexpected behavior. Enfo
 2. Read the bug report / error message carefully. Identify what is observable vs. assumed.
 
 ## Phase 1: Reproduction & Hypothesis
-3. Reproduce the bug reliably. If you cannot reproduce it, state why and stop — do not proceed.
-4. State a falsifiable hypothesis:
+3. Use `systematic-debugger` skill for hypothesis-first analysis.
+   Use `codebase-navigator` to find relevant code via MAP.md/SYMBOLS.md.
+4. Reproduce the bug reliably. If you cannot reproduce it, state why and stop — do not proceed.
+5. State a falsifiable hypothesis:
    > "I believe the bug is caused by [X] because [evidence Y]."
 5. List at least 2 alternative hypotheses to rule out later.
 

@@ -111,9 +111,10 @@ this branch. The `.memory/` (ai-memory) branch is handled separately in Step 5.
 Apply all **Apply** and **Adapt** decisions:
 
 - Updated workflow templates: `.agents/workflows/`
-- Updated rule templates: `.agents/rules/`
+- Updated rule templates: `.agents/rules/` and `.claude/rules/` (if `claude` in Supported Tools)
 - Updated standard templates: `.agents/standards/`
 - Updated skill templates: `.agents/skills/`
+- Updated enforcement hooks: `.claude/hooks/` (if `claude` in Supported Tools)
 - Updated `AGENTS.md` template: project root `AGENTS.md` (regenerate skill/workflow catalogs from frontmatter — same logic as setup-skeleton Step 5d)
 - Updated `CLAUDE.md` template: project root `CLAUDE.md` (only if `claude` in Supported Tools)
 - Updated `GEMINI.md` template: project root `GEMINI.md` (only if `antigravity` in Supported Tools)
@@ -326,6 +327,45 @@ migration is required:
    - Note: full re-index takes multiple sessions for large codebases
 
 4. Commit `.memory/` changes (including `symbols/` if created) to ai-memory branch.
+
+---
+
+## Step 5h — Migration: v1.33 to v1.34 (native-first rule delivery + enforcement hooks)
+
+Skip this step if the project is already on skeleton v1.34+.
+
+If the project's recorded skeleton version is < 1.34, the following one-time
+migration is required:
+
+1. **Create `.claude/rules/` with native auto-load rules** (if `claude` in Supported Tools):
+   ```bash
+   mkdir -p .claude/rules
+   ```
+   Copy from `[SKELETON_PATH]/core/claude-rules/`:
+   - `core-behavior.md` → `.claude/rules/core-behavior.md`
+   - `security.md` → `.claude/rules/security.md`
+   - `bootstrap.md` → `.claude/rules/bootstrap.md`
+   If `.agents/rules/repo-rules.md` exists, copy to `.claude/rules/repo-rules.md`.
+
+2. **Install enforcement hooks** (if `claude` in Supported Tools):
+   ```bash
+   mkdir -p .claude/hooks
+   ```
+   Copy `[SKELETON_PATH]/core/claude-hooks/pre-commit-check.sh` → `.claude/hooks/`
+   Copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
+   (merge hooks section if settings.json already exists)
+
+3. **Regenerate AGENTS.md** from updated template — rules are now inline instead
+   of referenced via `.agents/rules/`.
+
+4. **Update native tool configs** with condensed rules inline:
+   - `.cursor/rules/agentskel.mdc` (if cursor in Supported Tools)
+   - `.windsurf/rules/agentskel.md` (if windsurf in Supported Tools)
+   - `.github/copilot-instructions.md` (if copilot in Supported Tools)
+
+5. **Update CLAUDE.md** from new template (slimmer — rules now in .claude/rules/).
+
+Include all files in the Step 6 commit.
 
 ---
 

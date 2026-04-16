@@ -24,14 +24,17 @@ description: When the user asks to implement a new feature end-to-end requiring
    ```
 
 ## Phase 1: Plan
-6. Use the `task-planner` skill to decompose the work. Write a plan with checkable items. Include:
+6. Use the `task-planner` skill to decompose the work.
+   Use `codebase-navigator` skill to find relevant code via MAP.md/SYMBOLS.md before planning.
+   Write a plan with checkable items. Include:
    - Files to create or modify
    - Dependencies and risks
    - Testing approach
    - Any SACRED.md entries that might be affected
    - **Estimated human effort** (how long a senior dev would take manually)
-7. Present the plan to the user. Wait for approval.
-8. Record the task start time.
+7. For large features with independent subtasks, use `subagent-dispatch` to parallelize implementation.
+8. Present the plan to the user. Wait for approval.
+9. Record the task start time.
 
 ## Phase 2: Implement
 9. Follow `developer` skill standards for all code.
@@ -53,7 +56,8 @@ description: When the user asks to implement a new feature end-to-end requiring
     before opening a PR.
 
 ## Phase 4: Document & Ship
-20. Update relevant documentation.
+20. Follow `git-flow` skill for commit and PR procedures.
+21. Update relevant documentation.
 21. Log the change in `.memory/CHANGELOG.md`.
 22. If this affects other platforms and a blueprint is configured
     (`Blueprint Path` in `.memory/CONFIG.md`), create a Knowledge Bus entry

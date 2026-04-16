@@ -45,3 +45,15 @@ When a task benefits from fresh context, parallel execution, or isolated scope,
 use the **`subagent-dispatch`** skill. It provides prompt templates for
 implementer, reviewer, and researcher subagents with explicit scope boundaries
 and result validation.
+
+**When to dispatch:**
+- Subtasks are independent and can proceed in parallel
+- Parallel execution provides meaningful time savings
+- Fresh context helps (no accumulated conversation noise)
+- Scope of each subtask is clear and self-contained
+
+**When NOT to dispatch:**
+- Iterative feedback from the user is needed between steps
+- The task is simpler to do directly in the current session
+- Subtasks need full conversation history or shared state
+- Scope is unclear or likely to shift during execution

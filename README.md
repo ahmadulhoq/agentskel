@@ -197,7 +197,7 @@ Then open your project and say:
 
 ## Current version
 
-**v1.30** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
+**v1.34** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## Contributing
 
