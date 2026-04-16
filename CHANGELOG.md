@@ -4,6 +4,17 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-16 — v1.36: fix sync-skeleton cd .memory directory bleed
+
+Step 5 used `cd .memory && git ... && cd ..`. Bash tool persists CWD between
+calls — if cd + push are in one call, the next call starts inside .memory/ on
+the ai-memory branch, causing `gh pr create` to open PRs from ai-memory instead
+of the project branch. Fixed by replacing all `cd .memory` / `cd ..` with
+`git -C .memory` throughout Step 5. Added explicit warning callout block.
+Files: roles/dev/workflows/sync-skeleton.md, .agents/workflows/sync-skeleton.md.
+Note: Bug 2 (pre-commit hook worktree detection) was already fixed in v1.35.
+Downstream projects need sync-skeleton run to receive both fixes.
+
 ## 2026-04-16 — v1.35: fix pre-commit hook worktree detection
 
 Bug: pre-commit-check.sh used `git branch --show-current` at project root, which always
