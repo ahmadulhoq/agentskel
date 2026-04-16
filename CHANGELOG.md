@@ -1,5 +1,18 @@
 # agentskel Changelog
 
+## v1.42 — 2026-04-17
+
+### Subagent dispatch simplification
+- Rewrote `subagent-dispatch` skill: parent passes plan steps to subagents instead
+  of making subagents rediscover the project. Three dispatch patterns: implementation
+  (pass plan steps), review (pass plan + SACRED/CONVENTIONS references), research
+  (pass question). No templates needed.
+- Deleted `prompts/` directory (implementer.md, reviewer.md, researcher.md) — verbose
+  7-section templates that nobody used. Replaced with inline examples in the skill.
+- Changed "consider subagent-dispatch" to "use subagent-dispatch" in implement-task
+  and refactor-code workflows.
+- Added mandatory review dispatch step to develop-feature Phase 4 (before PR).
+
 ## v1.41 — 2026-04-17
 
 ### Session-start context optimization

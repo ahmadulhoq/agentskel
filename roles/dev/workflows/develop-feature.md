@@ -56,7 +56,10 @@ description: When the user asks to implement a new feature end-to-end requiring
     before opening a PR.
 
 ## Phase 4: Document & Ship
-20. Follow `git-flow` skill for commit and PR procedures.
+20. Before committing, dispatch a review subagent via `subagent-dispatch`:
+    "Review changes against the plan. Read .memory/SACRED.md and .memory/CONVENTIONS.md.
+    Report issues." Address any findings before proceeding.
+21. Follow `git-flow` skill for commit and PR procedures.
 21. Update relevant documentation.
 21. Log the change in `.memory/CHANGELOG.md`.
 22. If this affects other platforms and a blueprint is configured

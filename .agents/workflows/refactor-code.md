@@ -41,7 +41,7 @@ description: When restructuring, renaming, or reorganising existing code without
 
 ## Phase 3: Execute (step-by-step)
 9. Follow `developer` skill standards.
-   For large refactors spanning many files, consider `subagent-dispatch` per module.
+   For large refactors with independent modules, use `subagent-dispatch` to parallelize per module.
 10. Execute one atomic step at a time.
 11. After each step: run tests. If any fail, fix before proceeding.
 11. If you discover a bug mid-refactor, note it and continue — do not fix it in this PR.

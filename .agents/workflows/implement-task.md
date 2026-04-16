@@ -25,7 +25,7 @@ description: Generic wrapper for any ad-hoc implementation request that doesn't
 
 ## Phase 1: Plan
 5. Use `codebase-navigator` skill to find relevant code via MAP.md/SYMBOLS.md.
-   For multi-step tasks, consider `subagent-dispatch` for parallel execution.
+   For multi-step tasks with independent steps, use `subagent-dispatch` to parallelize.
 6. Write a plan (scale it to the task — one paragraph for small changes,
    full breakdown for complex ones). Include:
    - Files to modify

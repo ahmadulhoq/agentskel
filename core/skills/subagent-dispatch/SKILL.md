@@ -7,86 +7,80 @@ description: When delegating work to a subagent — implementation, review, rese
 
 # Subagent Dispatch
 
-**Purpose:** Formalize how to delegate tasks to subagents with explicit context,
-scope boundaries, and result validation.
+**Principle:** The parent agent has full context (rules, memory, conventions). It
+creates the plan. Subagents execute plan steps — they don't rediscover the project.
 
 ---
 
-## Step 1 — Decide Whether to Dispatch
+## When to Dispatch
 
-Dispatch a subagent when any of these apply:
-
-| Signal | Why dispatch helps |
+| Signal | Why |
 |---|---|
-| Task is self-contained with clear inputs/outputs | Subagent works in focused context without main-session noise |
-| Main context window is getting large | Fresh subagent avoids attention decay on earlier instructions |
-| Multiple independent tasks can run in parallel | Subagents execute concurrently |
-| Task requires exploration that would pollute main context | Research results come back summarized, not raw |
-| Code review benefits from a fresh perspective | Reviewer hasn't seen the implementation reasoning |
+| Plan has independent steps that can run in parallel | Concurrent execution saves time |
+| Context window is getting large | Fresh subagent avoids attention decay |
+| Research would pollute main context with raw file reads | Subagent returns a summary |
+| Code review needs a fresh perspective | Reviewer hasn't seen implementation reasoning |
 
-**Do NOT dispatch when:** the task requires awareness of the full conversation history,
-or when the overhead of writing the prompt exceeds doing the work directly.
-
----
-
-## Step 2 — Select a Prompt Template
-
-Choose the appropriate template from `prompts/`:
-
-| Template | Use when |
-|---|---|
-| `implementer.md` | Subagent writes code — features, fixes, refactors |
-| `reviewer.md` | Subagent reviews code for quality, spec compliance, or bugs |
-| `researcher.md` | Subagent explores codebase, reads docs, investigates a question |
+**Do NOT dispatch when:** steps have sequential dependencies, or the task is simpler
+to do directly than to explain.
 
 ---
 
-## Step 3 — Fill the Template
+## How to Dispatch
 
-- [ ] Fill all template variables (marked with `[BRACKETS]`)
-- [ ] Set explicit scope boundaries: which files to read, modify, and NOT touch
-- [ ] Include relevant `.memory/` context — at minimum `CONVENTIONS.md` and `SACRED.md`
-- [ ] Define success criteria the subagent can self-verify against
-- [ ] Define the expected output format (diff, report, test results, summary)
+The parent creates the plan first (via task-planner or workflow Phase 1), then
+identifies which steps can run in parallel.
+
+### Implementation dispatch
+Pass the specific plan steps. The parent already checked rules, conventions, and
+sacred behaviors when creating the plan — the subagent doesn't need to re-read them.
+
+```
+"Execute steps 3-5 from the plan:
+ - Step 3: [exact instruction]
+ - Step 4: [exact instruction]
+ - Step 5: [exact instruction]
+ Files to modify: [list].
+ Do not commit or push."
+```
+
+### Review dispatch
+The reviewer needs to know what to check against. Include references to constraints.
+
+```
+"Review the changes made to [files].
+ Read .memory/SACRED.md — verify no sacred behaviors were modified.
+ Read .memory/CONVENTIONS.md — verify code follows project conventions.
+ Check against the plan: [paste or summarize the plan].
+ Report: issues found, verdict (approve/request changes)."
+```
+
+### Research dispatch
+Pass the question. No rules needed.
+
+```
+"How does [module X] connect to [module Y]? Read MAP.md for orientation.
+ Report: answer, evidence (file:line), relevant files."
+```
 
 ---
 
-## Step 4 — Launch and Validate
+## Validate Results
 
-- [ ] Launch the subagent with the filled prompt
 - [ ] Read the subagent's output
-- [ ] Verify it meets the success criteria
-- [ ] Check for side effects (unexpected file changes, dependency additions)
-- [ ] If validation fails, re-dispatch with corrected instructions — do not manually
-      fix the subagent's work unless the fix is trivial
+- [ ] Verify it meets the plan's success criteria
+- [ ] Check for side effects (unexpected file changes)
+- [ ] If validation fails, re-dispatch with corrected instructions
 
 ---
 
 ## Rules
 
-1. **Subagents do NOT run session-start.** They don't need full memory context —
-   the parent provides relevant context in the prompt.
-2. **Subagents DO follow core-behavior rules.** Include a reference to `.agents/rules/`
-   if the subagent will make decisions.
-3. **Subagents do NOT commit or push** unless the parent explicitly authorized
-   implementation in the prompt.
-4. **One task per subagent.** Never dispatch a subagent with multiple unrelated tasks.
-5. **Include enough context.** The subagent has no memory of the conversation. If it
-   needs to know about a constraint, put it in the prompt.
+1. **Subagents do NOT run session-start.** They execute plan steps, not session init.
+2. **Subagents do NOT commit or push.** The parent handles git.
+3. **One task per subagent.** Don't batch unrelated work.
+4. **Only dispatch independent steps.** Sequential dependencies stay with the parent.
 
 ---
 
-## Common Rationalizations
-
-| Rationalization | Why it's wrong | Do this instead |
-|---|---|---|
-| "I can do this myself faster" | Subagents preserve your context window. Future-you benefits from a cleaner main context. | Dispatch. |
-| "The task is too complex to explain in a prompt" | If you can't write the prompt, the task isn't well-defined enough. | Break it down further, then dispatch. |
-| "I'll review the code myself instead of dispatching a reviewer" | Self-review catches fewer issues than a fresh-context review. | Dispatch a reviewer. |
-| "Setting up the prompt template is overhead" | The template takes 2 minutes. Manual context management takes longer and is error-prone. | Use the template. |
-| "The subagent might get it wrong" | That's what Step 4 validation is for. A wrong result you catch is better than a polluted context window. | Dispatch, then validate. |
-
----
-
-**Gate:** Do not dispatch a subagent without filling a prompt template (Step 3)
-and defining success criteria.
+**No gate.** Dispatch is a judgment call based on task size and parallelism opportunity.
