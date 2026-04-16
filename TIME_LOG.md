@@ -22,7 +22,7 @@
 | v1.35 | Fix pre-commit hook worktree branch detection | 2026-04-16 | 0.25h | — | — | ~5 min | 2 (.claude/hooks/pre-commit-check.sh, core/claude-hooks/pre-commit-check.sh) | completed |
 | v1.36 | Fix sync-skeleton cd .memory directory bleed in Bash tool | 2026-04-16 | 0.25h | — | — | ~5 min | 2 (roles/dev/workflows/sync-skeleton.md, .agents/workflows/sync-skeleton.md) | completed |
 | v1.37 | INSTALL.md for issue #30 — manual install instructions for Cursor/Copilot/Windsurf/Codex | 2026-04-16 | 0.5h | — | — | ~10 min | 5 (INSTALL.md, CHANGELOG.md, README.md, MASTER_PLAN.md, VERSION) | completed |
-| v1.38 | Enforced auto-pull before ai-memory push — PreToolUse hook prevents non-fast-forward errors | 2026-04-16 | 0.25h | — | — | ~5 min | 6 (pre-memory-push.sh x2, settings.json x2, VERSION, CHANGELOG) + .memory/ | completed |
+| v1.38 | Enforced auto-pull before ai-memory push + operational audit — PreToolUse hook, 30+ gap audit across all workflows/skills/hooks | 2026-04-16 | 1h | — | — | ~20 min | 6 (pre-memory-push.sh x2, settings.json x2, VERSION, CHANGELOG) + .memory/ + audit findings | completed |
 
 <!-- Notes on estimates:
      - "Est. Human Hours" is the agent's estimate of how long a senior developer

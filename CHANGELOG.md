@@ -4,6 +4,15 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-16 — v1.38: enforced auto-pull before ai-memory push + operational audit
+
+New PreToolUse hook (pre-memory-push.sh) auto-runs git pull --rebase before any
+push to ai-memory. Comprehensive operational audit identified 30+ gaps across
+git operations, race conditions, hook logic, and error handling. Critical findings:
+pre-commit hook 1-hour window causes false positives on long sessions, hook doesn't
+distinguish development vs analysis tasks, pre-memory-push suppresses errors with
+|| true. These are queued for immediate fix.
+
 ## 2026-04-16 — v1.38: enforced auto-pull before ai-memory push
 
 New PreToolUse hook (pre-memory-push.sh) auto-runs git pull --rebase before any
