@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.38
+> Corresponds to: agentskel v1.39
 
 ---
 

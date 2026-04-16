@@ -1,5 +1,15 @@
 # agentskel Changelog
 
+## v1.39 — 2026-04-16
+
+### Hook hardening
+- Pre-commit hook: added VERSION/README/MASTER_PLAN version consistency check
+  for skeleton repos (Skeleton Path = .). Catches the version drift that was
+  missed in v1.34, v1.37, v1.38. Also widened session window from 1 hour to
+  8 hours to prevent false positives on long sessions.
+- Pre-memory-push hook: removed `|| true` error suppression. Pull failures now
+  block the push with a clear error message instead of silently proceeding.
+
 ## v1.38 — 2026-04-16
 
 ### Enforced auto-pull before ai-memory push

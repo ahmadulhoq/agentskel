@@ -27,21 +27,45 @@ fi
 ERRORS=""
 
 # Check if .memory/CHANGELOG.md was modified in this session
-# Look for recent ai-memory commits (within last hour)
+# Use --since with a wide window (8 hours) to cover long sessions
 if [ -d ".memory" ]; then
-    RECENT_CHANGELOG=$(cd .memory && git log --since="1 hour ago" --name-only --format="" 2>/dev/null | grep "CHANGELOG.md" || true)
+    RECENT_CHANGELOG=$(cd .memory && git log --since="8 hours ago" --name-only --format="" 2>/dev/null | grep "CHANGELOG.md" || true)
     if [ -z "$RECENT_CHANGELOG" ]; then
-        ERRORS="${ERRORS}CHANGELOG.md not updated in .memory/. "
+        ERRORS="${ERRORS}.memory/CHANGELOG.md not updated. "
     fi
 
-    RECENT_TIMELOG=$(cd .memory && git log --since="1 hour ago" --name-only --format="" 2>/dev/null | grep "TIME_LOG.md" || true)
+    RECENT_TIMELOG=$(cd .memory && git log --since="8 hours ago" --name-only --format="" 2>/dev/null | grep "TIME_LOG.md" || true)
     if [ -z "$RECENT_TIMELOG" ]; then
-        ERRORS="${ERRORS}TIME_LOG.md not updated in .memory/. "
+        ERRORS="${ERRORS}.memory/TIME_LOG.md not updated. "
+    fi
+fi
+
+# Skeleton-only checks: VERSION must match README and MASTER_PLAN
+# Only runs when Skeleton Path = . (this IS the skeleton repo)
+if [ -f ".memory/CONFIG.md" ] && grep -q 'Skeleton Path.*\.' .memory/CONFIG.md 2>/dev/null; then
+    if [ -f "VERSION" ]; then
+        SKEL_VERSION=$(cat VERSION | tr -d '[:space:]')
+
+        # Check README version marker
+        if [ -f "README.md" ]; then
+            README_VERSION=$(grep -oP 'v\K[0-9]+\.[0-9]+' README.md | head -1 || echo "")
+            if [ -n "$README_VERSION" ] && [ "$README_VERSION" != "$SKEL_VERSION" ]; then
+                ERRORS="${ERRORS}README.md version (v${README_VERSION}) != VERSION (${SKEL_VERSION}). "
+            fi
+        fi
+
+        # Check MASTER_PLAN version marker
+        if [ -f "MASTER_PLAN.md" ]; then
+            MP_VERSION=$(grep -oP 'Corresponds to: agentskel v\K[0-9]+\.[0-9]+' MASTER_PLAN.md || echo "")
+            if [ -n "$MP_VERSION" ] && [ "$MP_VERSION" != "$SKEL_VERSION" ]; then
+                ERRORS="${ERRORS}MASTER_PLAN.md version (v${MP_VERSION}) != VERSION (${SKEL_VERSION}). "
+            fi
+        fi
     fi
 fi
 
 if [ -n "$ERRORS" ]; then
-    echo "${ERRORS}Run task-completion before committing." >&2
+    echo "${ERRORS}Fix before committing." >&2
     exit 2
 fi
 

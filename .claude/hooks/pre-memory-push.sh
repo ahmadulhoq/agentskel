@@ -16,8 +16,15 @@ if ! echo "$COMMAND" | grep -q 'push.*ai-memory'; then
 fi
 
 # Auto-pull with rebase before the push proceeds
+# Skip if there are uncommitted changes (the command chain will commit first)
 if [ -d ".memory" ]; then
-    git -C .memory pull --rebase origin ai-memory 2>/dev/null || true
+    DIRTY=$(git -C .memory status --porcelain 2>/dev/null || echo "")
+    if [ -z "$DIRTY" ]; then
+        PULL_OUTPUT=$(git -C .memory pull --rebase origin ai-memory 2>&1) || {
+            echo "Pre-push pull failed: ${PULL_OUTPUT}. Resolve conflicts in .memory/ before pushing." >&2
+            exit 2
+        }
+    fi
 fi
 
 # Allow the push to proceed
