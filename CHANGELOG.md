@@ -4,6 +4,15 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-16 — v1.35: fix pre-commit hook worktree detection
+
+Bug: pre-commit-check.sh used `git branch --show-current` at project root, which always
+returns `main` — so `.memory/` commits (ai-memory branch) were never skipped by the guard.
+Fix: three-pronged detection — check project root branch, check `.memory` worktree branch
+via `git -C .memory branch --show-current`, and grep commit command string for `.memory`.
+Files: .claude/hooks/pre-commit-check.sh, core/claude-hooks/pre-commit-check.sh.
+Also corrected CONFIG.md Skeleton Version 1.33 → 1.34 (was stale from previous session).
+
 ## 2026-04-12 — v1.31: refactor-code + CSO fixes + session-start mandate
 
 Added refactor-code workflow (4-phase safe restructure with test safety net gate).

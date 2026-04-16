@@ -19,6 +19,7 @@
 | v1.31a | refactor-code workflow + CSO fixes (systematic-debugger, domain-expert, task-planner wired) | 2026-04-12 | 1h | — | — | ~20 min | 9 (.agents/workflows/refactor-code.md, roles/dev/workflows/refactor-code.md, .claude/skills/refactor-code.md, AGENTS.md, CHANGELOG.md, 4x description fixes across skills + stubs) | completed |
 | v1.31b | Session-start mandate fix — tool config files + templates | 2026-04-12 | 0.5h | — | — | ~10 min | 10 (core/CLAUDE.md.template, core/GEMINI.md.template, core/cursor-rule.mdc.template, core/copilot-instructions.md.template, core/windsurf-rule.md.template + installed copies: CLAUDE.md, GEMINI.md, .cursor/rules/agentskel.mdc, .github/copilot-instructions.md, .windsurf/rules/agentskel.md) | completed |
 | v1.34 | Native-first rule delivery + enforcement hooks — .claude/rules/ auto-load, AGENTS.md inline, condensed configs, pre-commit hook, skill wiring in 7 workflows, task-planner expansion | 2026-04-15 | 4h | — | — | ~45 min | 45 (10 new files + 35 modified across core/, roles/, .agents/, .claude/, AGENTS.md, tool configs, setup-skeleton, sync-skeleton) + .memory/ on ai-memory | completed |
+| v1.35 | Fix pre-commit hook worktree branch detection | 2026-04-16 | 0.25h | — | — | ~5 min | 2 (.claude/hooks/pre-commit-check.sh, core/claude-hooks/pre-commit-check.sh) | completed |
 
 <!-- Notes on estimates:
      - "Est. Human Hours" is the agent's estimate of how long a senior developer
