@@ -10,8 +10,9 @@ INPUT=$(cat)
 # Extract the command being run
 COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))" 2>/dev/null || echo "")
 
-# Only act on pushes to ai-memory
-if ! echo "$COMMAND" | grep -q 'push.*ai-memory'; then
+# EXIT EARLY if this is NOT a push to ai-memory.
+# Explicit check since the "if" pattern in settings.json is unreliable.
+if ! echo "$COMMAND" | grep -qE 'git[[:space:]].*push.*ai-memory'; then
     exit 0
 fi
 

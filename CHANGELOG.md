@@ -1,5 +1,18 @@
 # agentskel Changelog
 
+## v1.46 — 2026-04-17
+
+### Fix: pre-commit hook false positives + wall-clock dependency
+- Pre-commit hook now explicitly checks command is `git commit` (not `git log`,
+  `git status`, etc.). Previously the settings.json `if` pattern was unreliable
+  and the hook fired on any bash command.
+- Removed `--since="8 hours ago"` wall-clock check. Replaced with last-commit
+  check: if CHANGELOG/TIME_LOG were modified in the last ai-memory commit OR
+  are currently dirty, the check passes. Works across day boundaries.
+- Pre-memory-push hook: same explicit command check.
+- Replaced GNU-only `grep -oP` with portable `grep -oE` (macOS default grep
+  doesn't support `-P`).
+
 ## v1.45 — 2026-04-17
 
 ### Cross-tool enforcement hooks + GEMINI.md condensed rules
