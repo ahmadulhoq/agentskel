@@ -100,7 +100,7 @@ Key principles (always active):
     and add an entry to `CHANGELOG.md`.
 - **Every change to any skeleton file** (template, workflow, standard, rule, skill)
   — whether made by a project agent or directly — **must**:
-  1. Bump `VERSION` (MINOR for additions, MAJOR for breaking changes)
+  1. Bump `VERSION` using semver (X.Y.Z): PATCH for fixes, MINOR for new features, MAJOR for breaking changes
   2. Add an entry to `CHANGELOG.md`
   3. Update the `## Current version` line in the skeleton's `README.md` to match the new VERSION
   4. If the change affects structure, architecture, or install/sync paths —

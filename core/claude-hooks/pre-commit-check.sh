@@ -60,15 +60,16 @@ if [ -f ".memory/CONFIG.md" ] && grep -q 'Skeleton Path.*\.' .memory/CONFIG.md 2
     if [ -f "VERSION" ]; then
         SKEL_VERSION=$(cat VERSION | tr -d '[:space:]')
 
+        # Match X.Y.Z or X.Y format
         if [ -f "README.md" ]; then
-            README_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+' README.md | head -1 | sed 's/^v//' || echo "")
+            README_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+(\.[0-9]+)?' README.md | head -1 | sed 's/^v//' || echo "")
             if [ -n "$README_VERSION" ] && [ "$README_VERSION" != "$SKEL_VERSION" ]; then
                 ERRORS="${ERRORS}README.md version (v${README_VERSION}) != VERSION (${SKEL_VERSION}). "
             fi
         fi
 
         if [ -f "MASTER_PLAN.md" ]; then
-            MP_VERSION=$(grep -oE 'Corresponds to: agentskel v[0-9]+\.[0-9]+' MASTER_PLAN.md | sed 's/^Corresponds to: agentskel v//' || echo "")
+            MP_VERSION=$(grep -oE 'Corresponds to: agentskel v[0-9]+\.[0-9]+(\.[0-9]+)?' MASTER_PLAN.md | sed 's/^Corresponds to: agentskel v//' || echo "")
             if [ -n "$MP_VERSION" ] && [ "$MP_VERSION" != "$SKEL_VERSION" ]; then
                 ERRORS="${ERRORS}MASTER_PLAN.md version (v${MP_VERSION}) != VERSION (${SKEL_VERSION}). "
             fi

@@ -1,5 +1,17 @@
 # agentskel Changelog
 
+## v1.47.0 — 2026-04-17
+
+### Semver three-part versioning
+- Moved to X.Y.Z format: MAJOR for breaking changes, MINOR for new features,
+  PATCH for fixes. Previously everything was a MINOR bump — v1.39, v1.43, v1.46
+  should have been PATCH releases.
+- Pre-commit hook regex updated to match both X.Y and X.Y.Z formats during
+  transition.
+- `skeleton-contribution-checklist.md` and `core-behavior.md` bump rules
+  distinguish MAJOR/MINOR/PATCH with examples.
+- Going forward: every change must be classified before bumping VERSION.
+
 ## v1.46 — 2026-04-17
 
 ### Fix: pre-commit hook false positives + wall-clock dependency

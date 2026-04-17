@@ -7,8 +7,17 @@ Skip this entire file for downstream projects.
 
 ## VERSION + Config
 
-- [ ] Bump `VERSION` (MINOR for new features/fixes, MAJOR for breaking changes).
-- [ ] Update `Skeleton Version` in `.memory/CONFIG.md` to match the new `VERSION`.
+Use semver (MAJOR.MINOR.PATCH):
+- **MAJOR** — breaking changes that require downstream migration (renamed skills,
+  restructured directories, changed workflow contracts). Example: 1.x → 2.0.0.
+- **MINOR** — new features, new workflows/skills, architectural improvements that
+  don't break existing use. Example: 1.46 → 1.47.0.
+- **PATCH** — bug fixes, hook corrections, doc fixes, tweaks that don't change
+  behavior. Example: 1.47.0 → 1.47.1.
+
+- [ ] Classify the change as MAJOR / MINOR / PATCH.
+- [ ] Bump `VERSION` accordingly (three-part format: X.Y.Z).
+- [ ] Update `Skeleton Version` in `.memory/CONFIG.md` to match.
 - **Every skeleton file change requires a version bump — no exceptions.**
 
 ## README
@@ -19,10 +28,12 @@ Skip this entire file for downstream projects.
 
 ## Migration Step
 
-- [ ] If this task bumped `VERSION` with a **breaking change** (MAJOR version) →
-      ensure a corresponding migration step exists in `sync-skeleton.md`.
-- [ ] The migration step must include exact commands and file changes for downstream adoption.
-- **Mandatory for breaking changes. Without it, downstream syncs will fail.**
+- [ ] If this was a **MAJOR** bump (breaking change) → add a migration step in
+      `sync-skeleton.md` with exact commands and file changes for downstream adoption.
+- [ ] If this was a **MINOR** bump that adds new files/directories → add a migration
+      step if downstream projects need to create those files.
+- [ ] **PATCH** bumps don't require migration steps — they fix existing behavior.
+- **MAJOR bumps: mandatory migration step.** Without it, downstream syncs will fail.
 
 ## MASTER_PLAN
 
