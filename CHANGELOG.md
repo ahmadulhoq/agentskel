@@ -4,6 +4,15 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-17 — v1.46: pre-commit hook fixes (false positives + wall-clock)
+
+Hook now explicitly checks command is `git commit` (not `git log`, `git status`).
+Removed `--since="8 hours ago"` wall-clock dependency — replaced with last-commit
+or dirty-files check (works across day boundaries). Replaced GNU-only grep -oP
+with portable grep -oE for macOS compatibility.
+Files: core/claude-hooks/pre-commit-check.sh, core/claude-hooks/pre-memory-push.sh,
+.claude/hooks/ copies. Reported by downstream Muslim-Pro-Android agent.
+
 ## 2026-04-17 — v1.45: cross-tool enforcement hooks + GEMINI.md condensed rules
 
 Enforcement hooks (pre-commit, pre-push, stop) now have templates for all 5 tools.
