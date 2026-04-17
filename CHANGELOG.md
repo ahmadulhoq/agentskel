@@ -4,6 +4,15 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-17 — v1.47.0: semver three-part versioning
+
+Moved VERSION to X.Y.Z format. Updated skeleton-contribution-checklist and
+core-behavior to classify MAJOR/MINOR/PATCH. Pre-commit hook regex handles both
+X.Y and X.Y.Z during transition. Going forward every change is classified.
+Files: core/skills/task-completion/skeleton-contribution-checklist.md,
+core/rules/core-behavior.md, core/claude-hooks/pre-commit-check.sh,
+.agents/ copies, VERSION, README, MASTER_PLAN.
+
 ## 2026-04-17 — v1.46: pre-commit hook fixes (false positives + wall-clock)
 
 Hook now explicitly checks command is `git commit` (not `git log`, `git status`).
