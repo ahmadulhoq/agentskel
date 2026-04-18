@@ -4,6 +4,15 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-18 — v1.48.0: workspace dispatcher install mode
+
+New install mode for workspaces with multiple independent projects. Workspace
+root becomes a thin routing dispatcher; each subdir retains its own independent
+install. 8 new templates in core/workspace-templates/, 4 new workflows
+(setup-workspace, add/remove/sync-workspace-*), setup-skeleton Step 0 + 9b,
+session-start hook workspace detection, README Install modes section,
+MASTER_PLAN principle #13. Monorepo explicitly not supported.
+
 ## 2026-04-17 — v1.47.0: semver three-part versioning
 
 Moved VERSION to X.Y.Z format. Updated skeleton-contribution-checklist and
