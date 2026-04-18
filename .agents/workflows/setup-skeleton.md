@@ -12,6 +12,31 @@ description: When setting up agentskel on a project for the first time. Run once
 
 ---
 
+## Step 0 — Identify install mode
+
+Before gathering inputs, ask the user what install mode applies:
+
+- **A) Single-project** — This repo is a single platform. Install at root (default).
+- **B) Workspace platform** — This is one platform inside a workspace. A workspace
+  dispatcher exists at the parent directory (`../.agentskel-workspace.yml`). Install
+  here as a platform subdir.
+- **C) Workspace dispatcher** — Set up workspace dispatcher at root (no project
+  code here, just routing to subdirs). **Use `setup-workspace` workflow instead,
+  not this one.** Redirect the user.
+
+**Auto-detect hints:**
+- If parent directory has `.agentskel-workspace.yml` → suggest B.
+- If CWD has no git repo (or CWD is not a project root) and has subdirs with git repos → suggest C.
+- Otherwise default to A.
+
+**If user picks C:** Stop this workflow. Tell user to run `setup-workspace` workflow
+at this directory.
+
+**If user picks A or B:** Continue to Step 1. For mode B, also collect the workspace
+root path (typically `..`) — this will be used in Step 9 to update the workspace config.
+
+---
+
 ## Step 1 — Gather required information
 
 Ask the user for the following. Do not proceed until all are confirmed.
@@ -521,6 +546,28 @@ gh pr create \
 ```
 
 **Do NOT merge the PR yourself.** The team should review the installed rules and workflows before they land on `[DEFAULT_BRANCH]`.
+
+---
+
+## Step 9b — Register with workspace (mode B only)
+
+**Skip this step if install mode is A (single-project).**
+
+If install mode B (workspace platform):
+1. `cd` to the workspace root (parent directory or user-specified path from Step 0).
+2. Read `.agentskel-workspace.yml`.
+3. Add the new platform entry to `platforms` list:
+   ```yaml
+   - name: [SUBDIR_NAME]
+     path: ./[SUBDIR_NAME]
+     setup_complete: true
+   ```
+4. Regenerate workspace root `AGENTS.md` from
+   `[SKELETON_PATH]/core/workspace-templates/AGENTS.md.template` with updated
+   platforms list.
+5. Commit the workspace config + AGENTS.md changes separately (workspace root
+   may be its own git repo or not — handle both cases).
+6. `cd` back to the platform subdir.
 
 ---
 

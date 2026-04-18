@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.47.0
+> Corresponds to: agentskel v1.48.1
 
 ---
 
@@ -543,6 +543,7 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 10. **Plugin-based distribution**: agentskel can be installed as a plugin/extension for Claude Code (`.claude-plugin/`), Cursor (`.cursor-plugin/`), and Gemini CLI (`gemini-extension.json`). A session-start hook (`hooks/session-start`) auto-detects project state and injects bootstrap context. The plugin is the skeleton — `$CLAUDE_PLUGIN_ROOT` resolves to the agentskel repo, eliminating the need for a separate clone. The hook is additive: projects with CLAUDE.md continue to work without the plugin.
 11. **Deterministic enforcement via hooks**: Critical artifacts (CHANGELOG, TIME_LOG) are enforced by PreToolUse hooks that block commits without them. PreToolUse hooks also auto-pull before ai-memory pushes. Stop hooks verify task-completion before session end. These are 100% enforcement — the agent cannot bypass them.
 12. **Plan-passing for subagents**: Parent agent creates the plan with full project context, then passes specific plan steps to subagents. Subagents don't rediscover the project — they execute. Review subagents get SACRED/CONVENTIONS references. Research subagents get only the question.
+13. **Workspace dispatcher install mode**: Multiple independent projects under one parent folder each have their own agentskel install. Workspace root has a thin dispatcher (AGENTS.md + native tool configs) that routes tasks to platform subdirs — no `.memory/`, no `.agents/`, no enforcement hooks at workspace root. The `.agentskel-workspace.yml` config tracks platforms. Enforcement stays per-subdir. Monorepo patterns (single git repo, multiple projects) are explicitly not supported — use workspace pattern instead.
 
 ### 6.3 Entry Points by Tool
 

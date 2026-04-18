@@ -1,0 +1,9 @@
+# [WORKSPACE_NAME] Workspace — Claude Code Instructions
+
+This is a workspace dispatcher. Read AGENTS.md to identify which platform the
+task belongs to, then work within that subdir.
+
+Claude Code specifics:
+- Workspace-level rules in `.claude/rules/` (routing only — no enforcement).
+- Each subdir has its own `.claude/rules/`, `.claude/hooks/`, `.claude/skills/`.
+- When cd'ing into a subdir, Claude Code will pick up that subdir's native configs.

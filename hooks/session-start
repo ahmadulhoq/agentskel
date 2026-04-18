@@ -9,7 +9,31 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # --- Detect project state and build context ---
 context=""
 
-if [ -d ".memory" ] && [ -d ".agents" ]; then
+if [ -f ".agentskel-workspace.yml" ]; then
+    # Workspace dispatcher — route to platform subdirs
+    context="You are at a workspace root (dispatcher mode)."
+    context="${context}\n\nThis folder is a coordinator for multiple independent projects. Each subdirectory has its own agentskel installation."
+    context="${context}\n\nMANDATORY: Before any task, read AGENTS.md at this workspace root to identify which platform the task belongs to. Then cd into that subdir and read the subdir's AGENTS.md for full rules."
+    context="${context}\n\nNever create .memory/ or .agents/ here. Never commit application code here. This is routing only."
+
+elif [ -f "../.agentskel-workspace.yml" ] && [ -d ".memory" ] && [ -d ".agents" ]; then
+    # Platform subdir inside a workspace — full project setup + workspace-aware
+    context="You are in a platform subdir of a workspace."
+    context="${context}\n\nMANDATORY: Read and follow AGENTS.md in this directory. Do NOT respond until you have completed the session-start procedure."
+    context="${context}\n\nRemember: this is one platform in a larger workspace. Do not touch sibling subdirs' files."
+
+    # Check for blueprint
+    if [ -f ".memory/CONFIG.md" ]; then
+        bp_line=$(grep -E '^\| *Blueprint Path' .memory/CONFIG.md 2>/dev/null || true)
+        if [ -n "${bp_line}" ]; then
+            bp_value=$(echo "${bp_line}" | sed 's/.*| *Blueprint Path *| *\([^|]*\).*/\1/' | xargs)
+            if [ -n "${bp_value}" ]; then
+                context="${context}\n\nThis project has a blueprint configured at ${bp_value}. The session-start procedure will check it."
+            fi
+        fi
+    fi
+
+elif [ -d ".memory" ] && [ -d ".agents" ]; then
     # Full setup — project has agentskel with memory mounted
     context="You are in a project with agentskel installed."
     context="${context}\n\nMANDATORY: Read and follow AGENTS.md in the project root. It contains your rules, skills, workflows, and memory references. Do NOT respond to any user request until you have completed the session-start procedure described there."
@@ -40,9 +64,11 @@ elif [ -f "AGENTS.md" ]; then
 
 else
     # No setup — offer to set up
-    context="This project does not have agentskel set up."
-    context="${context}\n\nagentskel provides persistent memory, rules, skills, and workflows for AI coding agents. To set up this project, say:"
-    context="${context}\n\n  \"Set up agentskel on this project.\""
+    context="This folder does not have agentskel set up."
+    context="${context}\n\nagentskel provides persistent memory, rules, skills, and workflows for AI coding agents. Install modes:"
+    context="${context}\n- A) Single-project — one platform at root. Say: 'Set up agentskel on this project.'"
+    context="${context}\n- B) Workspace dispatcher — multiple projects in subdirs. Say: 'Set up agentskel as a workspace.'"
+    context="${context}\n- C) Blueprint — shared domain knowledge for multi-project teams. Say: 'Create a blueprint here.'"
     context="${context}\n\nThe agentskel skeleton is available at: ${PLUGIN_ROOT}"
     context="${context}\n\nUntil setup is complete, follow these core principles:"
     context="${context}\n- Plan before coding. Present the plan and wait for approval."

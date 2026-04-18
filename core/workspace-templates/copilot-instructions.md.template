@@ -1,0 +1,17 @@
+# [WORKSPACE_NAME] Workspace — Copilot Instructions
+
+This is a workspace with multiple independent projects. Each subdirectory has
+its own agentskel installation.
+
+## Before any task
+1. Identify which platform the task belongs to (named platform, mentioned files, or ask).
+2. `cd` into that subdir.
+3. Read `<subdir>/AGENTS.md` for that platform's full rules, skills, and workflows.
+4. Execute within that subdir.
+
+## Never
+- Mix rules across platforms.
+- Commit to multiple subdirs in one commit.
+- Create files at workspace root unless updating the dispatcher.
+
+For workspace-level details, read `AGENTS.md`.

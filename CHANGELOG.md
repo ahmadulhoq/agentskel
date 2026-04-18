@@ -1,5 +1,41 @@
 # agentskel Changelog
 
+## v1.48.1 — 2026-04-18
+
+### README simplification + install modes doc
+- Simplified README for first-time users: removed framework jargon
+  (`.memory/`, `.agents/`, `AGENTS.md`, "worktree", "dispatcher") from
+  early sections. Getting started now has 3 plain-language questions.
+- New `docs/INSTALL-MODES.md` with ASCII diagrams showing the shape of each
+  setup (single project, workspace, blueprint) — no filesystem details that
+  confuse new users.
+- Detailed install mode content moved out of README into the separate doc.
+
+## v1.48.0 — 2026-04-18
+
+### Workspace dispatcher install mode (Pattern 2)
+- New install mode for workspaces with multiple independent projects under one
+  parent folder (e.g. `workspace/backend/`, `workspace/flutter/`, each its own
+  git repo). Workspace root gets a thin routing dispatcher; each subdir retains
+  its own independent agentskel install.
+- **New templates** in `core/workspace-templates/`: AGENTS.md, CLAUDE.md, GEMINI.md,
+  cursor-rule.mdc, copilot-instructions.md, windsurf-rule.md, claude-rules/routing.md,
+  workspace-config.yml (8 files).
+- **New workflows:** `setup-workspace`, `add-workspace-platform`,
+  `remove-workspace-platform`, `sync-workspace-dispatcher`.
+- **Updated `setup-skeleton`** — new Step 0 asks install mode (single / workspace
+  platform / workspace dispatcher). Step 9b registers with parent workspace config
+  when install mode is "workspace platform".
+- **Updated `hooks/session-start`** — detects `.agentskel-workspace.yml` at CWD
+  or parent. 6 detection states now including workspace dispatcher and platform-in-workspace.
+- **README** — new "Install modes" section documenting 4 supported patterns.
+- **MASTER_PLAN** — new design principle #13 (workspace dispatcher install mode).
+- **AGENTS.md catalog** — 4 new workflows listed.
+- Enforcement hooks stay per-subdir. Workspace root has no `.memory/`, no `.agents/`,
+  no hooks — only routing.
+- Monorepo patterns (single git repo with multiple projects) explicitly NOT supported —
+  workspace pattern covers the same use case with cleaner boundaries.
+
 ## v1.47.0 — 2026-04-17
 
 ### Semver three-part versioning

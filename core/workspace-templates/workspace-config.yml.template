@@ -1,0 +1,22 @@
+# Workspace config — managed by setup-workspace, add-workspace-platform,
+# remove-workspace-platform, sync-workspace-dispatcher workflows.
+# Do not edit manually — the workflows maintain this file.
+
+workspace_name: [WORKSPACE_NAME]
+skeleton_version: [SKELETON_VERSION]
+
+# Platforms in this workspace. Each entry is a subdir with its own agentskel install.
+platforms: []
+# Example:
+# platforms:
+#   - name: backend
+#     path: ./backend
+#     setup_complete: true
+#   - name: flutter
+#     path: ./flutter
+#     setup_complete: true
+
+# Optional: blueprint shared by platforms in this workspace.
+# Each platform still tracks its own blueprint_path in its .memory/CONFIG.md.
+# This field is informational only.
+blueprint_path:
