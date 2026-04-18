@@ -1,5 +1,16 @@
 # agentskel Changelog
 
+## v1.48.1 — 2026-04-18
+
+### README simplification + install modes doc
+- Simplified README for first-time users: removed framework jargon
+  (`.memory/`, `.agents/`, `AGENTS.md`, "worktree", "dispatcher") from
+  early sections. Getting started now has 3 plain-language questions.
+- New `docs/INSTALL-MODES.md` with ASCII diagrams showing the shape of each
+  setup (single project, workspace, blueprint) — no filesystem details that
+  confuse new users.
+- Detailed install mode content moved out of README into the separate doc.
+
 ## v1.48.0 — 2026-04-18
 
 ### Workspace dispatcher install mode (Pattern 2)
