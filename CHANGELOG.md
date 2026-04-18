@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-18 — v1.48.1: README simplification + INSTALL-MODES doc
+
+Simplified README for first-time users: removed framework jargon from
+early sections, kept Getting started to 3 plain-language questions.
+New docs/INSTALL-MODES.md with ASCII diagrams showing shape (not
+filesystem) of each setup. Detailed content moved out of README.
+
 ## 2026-04-18 — v1.48.0: workspace dispatcher install mode
 
 New install mode for workspaces with multiple independent projects. Workspace

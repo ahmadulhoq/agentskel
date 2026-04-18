@@ -26,6 +26,7 @@
 | v1.39 | Hook hardening — version consistency check in pre-commit, 8h session window, pull error reporting | 2026-04-16 | 0.5h | — | — | ~10 min | 8 (pre-commit-check.sh x2, pre-memory-push.sh x2, VERSION, CHANGELOG, README, MASTER_PLAN) + .memory/ | completed |
 | session | Full session: v1.34→v1.47.0 + compliance audit + context optimization + cross-tool enforcement + hook fixes + semver — 13 releases, 70+ files | 2026-04-15→17 | 14h | — | — | ~6h | 70+ files across 13 releases | completed |
 | v1.48.0 | Workspace dispatcher install mode — 8 new templates, 4 new workflows, setup-skeleton mode question, session-start workspace detection, README Install modes, MASTER_PLAN principle #13 | 2026-04-18 | 3h | — | — | ~45 min | 22 (8 templates + 4 workflow sources + 4 .agents/ copies + setup-skeleton + session-start hook + README + MASTER_PLAN + AGENTS.md + VERSION + CHANGELOG) + .memory/ on ai-memory | completed |
+| v1.48.1 | README simplification + INSTALL-MODES doc — remove jargon from README, new docs/INSTALL-MODES.md with ASCII diagrams (shape not filesystem), detailed content out of README | 2026-04-18 | 1h | — | — | ~20 min | 5 (README.md + docs/INSTALL-MODES.md + VERSION + CHANGELOG.md + MASTER_PLAN.md) + .memory/ on ai-memory | completed |
 
 <!-- Notes on estimates:
      - "Est. Human Hours" is the agent's estimate of how long a senior developer
