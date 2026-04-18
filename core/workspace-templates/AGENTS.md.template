@@ -1,0 +1,32 @@
+# [WORKSPACE_NAME] Workspace — Agent Instructions
+
+This is a workspace with multiple independent projects. Each subdirectory is its
+own git repo with its own agentskel installation.
+
+## Platforms in this workspace
+[PLATFORMS_LIST]
+
+## Routing
+Before any task, identify which platform the task belongs to:
+1. If the user names a platform (e.g. "backend", "flutter") → use that.
+2. If files are mentioned, check which subdir contains them.
+3. If ambiguous, ASK the user.
+
+Then:
+- `cd` into that subdir
+- Read `<subdir>/AGENTS.md` for that platform's rules, skills, and workflows
+- Run the platform's session-start skill
+- Execute the task within that subdir
+
+## Never
+- Mix rules across platforms (each platform has its own conventions).
+- Commit to multiple subdirs in one commit (each is a separate git repo).
+- Create files at the workspace root unless updating this dispatcher itself.
+
+## Adding a platform
+Run: `Add [subdir] as a new platform` — the agent will run setup-skeleton in
+that subdir and update this dispatcher.
+
+## Workspace config
+- `.agentskel-workspace.yml` — tracks workspace name, skeleton version, platforms, blueprint path
+- Managed by `setup-workspace`, `add-workspace-platform`, `remove-workspace-platform` workflows

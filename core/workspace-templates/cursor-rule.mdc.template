@@ -1,0 +1,20 @@
+---
+description: "Workspace dispatcher — route tasks to platform subdirs in [WORKSPACE_NAME]"
+alwaysApply: true
+---
+
+# Workspace Routing
+
+This is a workspace with multiple platforms. Read `AGENTS.md` at the workspace
+root to identify platforms.
+
+## Before any task
+1. Identify which platform the task belongs to (named platform, mentioned files, or ask).
+2. `cd` into that subdir.
+3. Read `<subdir>/AGENTS.md` for that platform's full rules.
+4. Execute within that subdir.
+
+## Never
+- Mix rules across platforms.
+- Commit to multiple subdirs in one commit.
+- Create files at workspace root unless updating the dispatcher.

@@ -1,0 +1,8 @@
+# [WORKSPACE_NAME] Workspace — Antigravity Instructions
+
+This is a workspace dispatcher. Read AGENTS.md to identify which platform the
+task belongs to, then work within that subdir.
+
+Antigravity specifics:
+- Each subdir has its own `.agent/rules/` and `.agent/skills/` symlinks.
+- Workspace root has no agent memory — route to the appropriate platform subdir.

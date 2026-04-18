@@ -96,6 +96,10 @@ Read `.memory/RESUME.md` to restore session state.
 | sync-skeleton | When skeleton version in CONFIG.md is behind the current agentskel VERSION. Run by tech lead to apply upstream skeleton improvements to a project. Changes go through a PR — never directly to the default branch. | `.agents/workflows/sync-skeleton.md` |
 | sync-versions | When actual project dependency versions may have drifted from VERSIONS.md. Run after dependency upgrades or when VERSIONS.md looks stale. | `.agents/workflows/sync-versions.md` |
 | update-conventions | When project coding conventions may have drifted from actual practice, or Last Conventions Check in CONFIG.md is overdue (90-day cadence). Also run when adopting a new library or framework that needs convention coverage. | `.agents/workflows/update-conventions.md` |
+| setup-workspace | When setting up agentskel as a workspace dispatcher — multiple independent projects under one parent folder, each with its own git repo. Run once at the workspace root. | `.agents/workflows/setup-workspace.md` |
+| add-workspace-platform | When adding a new platform (subdir with its own git repo) to an existing workspace dispatcher. Runs setup-skeleton in the subdir and updates the workspace config. | `.agents/workflows/add-workspace-platform.md` |
+| remove-workspace-platform | When removing a platform from the workspace dispatcher. Does NOT delete the subdir — only unregisters it. | `.agents/workflows/remove-workspace-platform.md` |
+| sync-workspace-dispatcher | When workspace dispatcher templates have changed in a newer skeleton version. Regenerates dispatcher files at the workspace root. | `.agents/workflows/sync-workspace-dispatcher.md` |
 
 ## Memory
 Persistent project memory lives in `.memory/`. The `session-start` procedure reads all

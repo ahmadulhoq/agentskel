@@ -171,6 +171,46 @@ The agent walks through each change (Apply / Adapt / Skip) and opens a PR.
 
 ---
 
+## Install modes
+
+agentskel supports four install patterns. Pick the one that matches your project layout.
+
+### 1. Single-project (most common)
+One project per repo. Install at the repo root. Everything — memory, rules, hooks,
+workflows — lives inside the project.
+
+### 2. Workspace dispatcher (new in v1.48)
+Multiple independent projects under one parent folder, each with its own git repo.
+Install agentskel at the workspace root as a routing dispatcher. Each subdir has
+its own independent agentskel install.
+
+```
+workspace/                    ← dispatcher (routes tasks to subdirs)
+  AGENTS.md
+  .agentskel-workspace.yml
+  backend/                    ← own git repo, own agentskel install
+  flutter/                    ← own git repo, own agentskel install
+  blueprint/                  ← optional, shared domain knowledge
+```
+
+Say: *"Set up agentskel as a workspace."* → runs `setup-workspace` workflow.
+
+Work from the workspace root — the agent identifies which platform each task belongs
+to and routes into that subdir automatically.
+
+### 3. Multi-repo + blueprint
+Separate git repos per platform + one blueprint repo sibling to them. Each project
+references the blueprint via `Blueprint Path` in its CONFIG.md.
+
+### 4. Single-project + blueprint (later)
+Start with single-project, add a blueprint when you have multiple projects that
+need shared domain knowledge.
+
+**Not supported:** Monorepo (single git repo, multiple projects). Use Pattern 2
+(workspace dispatcher) instead — it covers the same use case with cleaner boundaries.
+
+---
+
 ## Blueprints (optional)
 
 For teams with multiple projects sharing business logic (iOS + Android +
@@ -197,7 +237,7 @@ Then open your project and say:
 
 ## Current version
 
-**v1.47.0** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
+**v1.48.0** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## Contributing
 
