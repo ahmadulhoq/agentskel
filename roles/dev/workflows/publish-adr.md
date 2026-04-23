@@ -96,5 +96,4 @@ If the user provided related Jira tickets in Step 1:
 
 ## Final Step — Task Completion Checklist
 
-Before responding to the user or starting the next task, run the Task Completion Checklist
-from `core-behavior.md`. This is not optional.
+This workflow produces an external side effect (a Confluence ADR page) that the task-completion applicability gate cannot detect from `git status`. Invoke `task-completion` explicitly — its Step 0 exception for workflow-invoked runs applies. Run every step (CHANGELOG, TIME_LOG, RESUME, memory commit) before responding to the user.

@@ -1,7 +1,6 @@
 ---
 name: janitor
-description: When Knowledge Bus entries are older than 30 days, or memory files have
-  accumulated stale content. Run monthly or when bus/ is cluttered.
+description: When Knowledge Bus entries are older than 30 days, or memory files have accumulated stale content. Run monthly or when bus/ is cluttered.
 ---
 
 # Janitor Workflow

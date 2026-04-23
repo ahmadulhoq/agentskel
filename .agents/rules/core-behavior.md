@@ -45,9 +45,14 @@ description: Core operating behavior for all agents in this repo.
 
 ## Task Completion
 
-After completing any development task, execute the **`task-completion`** skill.
-It handles CHANGELOG, TIME_LOG, SYMBOLS/MAP, Knowledge Bus, RESUME, and memory commits.
-This is mandatory — not optional.
+After completing a task that modified any file **outside `.memory/`** — source code, docs, tests, config, hooks, workflows, rules, templates — execute the **`task-completion`** skill before responding. It handles CHANGELOG, TIME_LOG, SYMBOLS/MAP, Knowledge Bus, RESUME, and memory commits.
+
+**Do NOT run task-completion for:**
+- Pure discussion, analysis, or read-only investigation (no files modified)
+- Memory-only work (only `.memory/` files changed — memory maintenance is not a development task)
+- Skeleton sync runs (the sync workflow handles its own memory updates)
+
+Workflows that produce external side effects with no local file changes (e.g. `publish-adr`, `publish-postmortem` writing to Confluence) must invoke `task-completion` explicitly as their final step — the mandate above can't detect those.
 
 
 ## Git and File Discipline
@@ -77,8 +82,7 @@ This is mandatory — not optional.
 At the start of every session, execute the **`session-start`** skill. It handles
 memory detection, file reading, version checks, and git state verification.
 
-After completing any development task, execute the **`task-completion`** skill. It
-handles CHANGELOG, TIME_LOG, SYMBOLS/MAP, RESUME, and memory commits.
+After completing any task that modified files outside `.memory/`, execute the **`task-completion`** skill. It handles CHANGELOG, TIME_LOG, SYMBOLS/MAP, RESUME, and memory commits. Skip for pure discussion, memory-only maintenance, or skeleton syncs — see the Task Completion section above.
 
 **Session reload triggers** — re-execute `session-start` (full procedure) after
 `sync-skeleton` completes, after `setup-skeleton` completes, or before any workflow

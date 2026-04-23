@@ -1,8 +1,6 @@
 ---
 name: skill-authoring
-description: When creating a new skill or workflow, or improving an existing skill's
-  effectiveness. Use when the user asks to add a capability, write a new workflow,
-  or when a skill isn't triggering or being followed reliably.
+description: When creating a new skill or workflow, or improving an existing skill's effectiveness. Use when the user asks to add a capability, write a new workflow, or when a skill isn't triggering or being followed reliably.
 ---
 
 # Skill Authoring Guide
@@ -40,6 +38,7 @@ skills to situations by scanning descriptions.
 2. Use the language a user would use in their request
 3. Start with "When..." or include "Use when..."
 4. Include the scenario, not the mechanism
+5. **Keep the description on a single line.** Multi-line YAML folded scalars (where the description spans two or more lines with continuation indent) break `.claude/skills/` stub generation and `AGENTS.md` catalog regeneration — both read the frontmatter line-by-line, so only the first line survives. A pre-commit hook enforces this on staged skill/workflow files.
 
 | Bad (summary) | Good (triggering condition) |
 |---|---|

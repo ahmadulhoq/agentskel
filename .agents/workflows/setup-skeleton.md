@@ -1,7 +1,6 @@
 ---
 name: setup-skeleton
-description: When setting up agentskel on a project for the first time. Run once per
-  project to install memory, rules, skills, workflows, entry points, and standards.
+description: When setting up agentskel on a project for the first time. Run once per project to install memory, rules, skills, workflows, entry points, and standards.
 ---
 
 # Setup Skeleton Workflow

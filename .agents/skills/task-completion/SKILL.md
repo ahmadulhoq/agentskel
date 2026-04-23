@@ -1,8 +1,6 @@
 ---
 name: task-completion
-description: Post-task checklist for documentation, time logging, and memory updates.
-  Must be executed immediately after completing any development task — before
-  responding to the user or starting the next task.
+description: Post-task checklist for CHANGELOG, TIME_LOG, SYMBOLS/MAP, RESUME, and memory commits. Execute after completing a task that modified files outside `.memory/`. Do NOT run for pure discussion, memory-only maintenance, or skeleton syncs.
 ---
 
 # Task Completion Checklist
@@ -10,6 +8,12 @@ description: Post-task checklist for documentation, time logging, and memory upd
 **A task is NOT complete until every applicable item below is done.
 Execute this immediately after the last implementation step — before responding
 to the user or starting anything else.**
+
+## Step 0 — Applicability Gate
+
+- [ ] Run `git status --porcelain` in the repo root.
+- [ ] If the only changed paths are inside `.memory/`, or there are no changes at all → **STOP**. This is not a development task (pure discussion, read-only analysis, memory-only maintenance). Do not run the steps below. Respond to the user directly.
+- [ ] **Exception:** if a workflow invoked this skill explicitly (e.g. `publish-adr` or `publish-postmortem` after a Confluence publish with no local file changes) — proceed through every step regardless. The workflow knows it did real work.
 
 ## Step 1 — CHANGELOG
 

@@ -1,7 +1,6 @@
 ---
 name: code-reviewer
-description: When reviewing a PR, auditing code quality, or validating changes
-  against the project's standards and sacred behaviors.
+description: When reviewing a PR, auditing code quality, or validating changes against the project's standards and sacred behaviors.
 ---
 
 # Code Reviewer Standards

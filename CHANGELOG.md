@@ -1,5 +1,33 @@
 # agentskel Changelog
 
+## v1.49.3 — 2026-04-23
+
+### Fix: skill stubs truncated in downstream + task-completion over-triggers on discussion
+- **Truncation fix:** collapsed 37 multi-line YAML `description:` fields in
+  `core/skills/`, `roles/dev/skills/`, and `roles/dev/workflows/` to single lines.
+  Multi-line folded scalars broke `.claude/skills/` stub generation and the
+  `AGENTS.md` catalog regeneration — both read frontmatter line-by-line, so
+  only the first line survived. Every downstream install had skills whose
+  descriptions cut off mid-sentence, defeating Claude's skill discovery.
+- **Prevention:** `pre-commit-check.sh` now blocks any staged skill or workflow
+  file containing a multi-line description. `skill-authoring` Step 2 documents
+  the constraint.
+- **Over-trigger fix:** rewrote the task-completion mandate in
+  `core/rules/core-behavior.md` + `core/claude-rules/core-behavior.md` with a
+  precise file-based trigger ("files outside `.memory/`") and explicit
+  non-triggers (pure discussion, memory-only maintenance, skeleton syncs).
+  `task-completion` SKILL gains a Step 0 Applicability Gate that runs
+  `git status` and stops when nothing relevant changed. `publish-adr` and
+  `publish-postmortem` — which produce external Confluence effects invisible
+  to the gate — now explicitly bypass it.
+- **Sync-skeleton:** new Step 4c refreshes Claude stubs + enforcement hooks on
+  every sync (previously sync never regenerated stubs or updated hook scripts,
+  so downstream projects kept stale artifacts after any skeleton upgrade).
+  Includes orphan-stub detection. Step gated on `claude` in Supported Tools.
+- Gemini-only installs don't get the pre-commit lint (no `core/gemini-hooks/`
+  exists today). The markdown rules still apply; deterministic enforcement
+  would need a separate hook directory — out of scope for this PATCH.
+
 ## v1.49.2 — 2026-04-23
 
 ### Fix: pre-memory-push hook blocked first push during setup

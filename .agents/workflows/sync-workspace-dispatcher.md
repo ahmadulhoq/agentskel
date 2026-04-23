@@ -1,8 +1,6 @@
 ---
 name: sync-workspace-dispatcher
-description: When workspace dispatcher templates have changed in a newer skeleton
-  version. Regenerates dispatcher files at the workspace root while preserving the
-  workspace name, platforms list, and blueprint path from config.
+description: When workspace dispatcher templates have changed in a newer skeleton version. Regenerates dispatcher files at the workspace root while preserving the workspace name, platforms list, and blueprint path from config.
 ---
 
 # Sync Workspace Dispatcher

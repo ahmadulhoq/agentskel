@@ -1,8 +1,6 @@
 ---
 name: sync-skeleton
-description: When skeleton version in CONFIG.md is behind the current agentskel VERSION.
-  Run by tech lead to apply upstream skeleton improvements to a project. Changes go
-  through a PR — never directly to the default branch.
+description: When skeleton version in CONFIG.md is behind the current agentskel VERSION. Run by tech lead to apply upstream skeleton improvements to a project. Changes go through a PR — never directly to the default branch.
 ---
 
 # Sync Skeleton
@@ -164,6 +162,34 @@ contain `<!-- PLATFORM: X -->` markers.
 **Gate:** Do not proceed to Step 5 until all non-platform sections are removed.
 Verify by searching for `<!-- PLATFORM:` — the only remaining markers should be
 for this project's platform (and those should have their comment tags stripped).
+
+---
+
+### Step 4c — Refresh Claude Code stubs and enforcement hooks
+
+**Skip entirely if `claude` is not in Supported Tools.**
+
+After updating `.agents/` sources in Step 4, refresh the derived artifacts so they reflect the new source content. Setup-skeleton generates these on first install; sync must refresh them, or downstream projects keep stale stubs and hooks.
+
+**Refresh `.claude/skills/` stubs** (same logic as setup-skeleton Step 5b):
+
+1. For each `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`, regenerate `.claude/skills/[name].md` with the current frontmatter `description` (single line — multi-line descriptions are blocked by the pre-commit lint, so `grep -m1 '^description:' <file>` is reliable).
+2. **Orphan detection:** list existing `.claude/skills/*.md` whose corresponding source was renamed or removed in Step 4. Delete each orphan and report it to the user.
+3. Report the net change: N stubs regenerated, M stubs added, K orphans deleted.
+
+**Refresh enforcement hooks** — for each tool in Supported Tools, re-copy the latest scripts from `[SKELETON_PATH]/core/*-hooks/`:
+
+| Tool | Destination | Scripts |
+|---|---|---|
+| `claude` | `.claude/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh` |
+| `cursor` | `.cursor/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh`, `stop-verify.sh` |
+| `windsurf` | `.windsurf/hooks/` | same three |
+| `copilot` | `.github/hooks/` | same three |
+| `codex` | `.codex/hooks/` | same three |
+
+Run `chmod +x` on each copied script. Do not overwrite the per-tool settings/hooks JSON (`.claude/settings.json`, `.cursor/hooks/hooks-cursor.json`, etc.) — the user may have merged project-specific entries. If the skeleton's settings template has new fields not in the project copy, merge only the new fields.
+
+**Gate:** Do not proceed to Step 5 until stubs reflect current sources and hook scripts match `[SKELETON_PATH]/core/*-hooks/` byte-for-byte (run `diff` to verify).
 
 ---
 

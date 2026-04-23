@@ -77,6 +77,36 @@ if [ -f ".memory/CONFIG.md" ] && grep -q 'Skeleton Path.*\.' .memory/CONFIG.md 2
     fi
 fi
 
+# Lint: staged skill/workflow files must use single-line YAML descriptions.
+# Multi-line descriptions break .claude/skills/ stub generation and AGENTS.md
+# catalog regeneration (both read the frontmatter line-by-line).
+STAGED=$(git diff --cached --name-only 2>/dev/null || true)
+if [ -n "$STAGED" ]; then
+    BAD=$(echo "$STAGED" | python3 - <<'PY' 2>/dev/null || true
+import sys, re, os
+pattern = re.compile(r'^description:.*\n[ \t]+\S', re.MULTILINE)
+bad = []
+for line in sys.stdin.read().splitlines():
+    line = line.strip()
+    if not line.endswith('.md'):
+        continue
+    if not (line.endswith('/SKILL.md') or '/workflows/' in line):
+        continue
+    if not os.path.isfile(line):
+        continue
+    with open(line) as f:
+        text = f.read()
+    if pattern.search(text):
+        bad.append(line)
+if bad:
+    print("; ".join(bad))
+PY
+)
+    if [ -n "$BAD" ]; then
+        ERRORS="${ERRORS}Multi-line YAML description in: ${BAD}. Collapse to a single line (required for stub + catalog generation). "
+    fi
+fi
+
 if [ -n "$ERRORS" ]; then
     echo "${ERRORS}Fix before committing." >&2
     exit 2

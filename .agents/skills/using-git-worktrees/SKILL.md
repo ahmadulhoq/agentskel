@@ -1,8 +1,6 @@
 ---
 name: using-git-worktrees
-description: When running long feature implementations, parallel branch work, or build/test
-  scripts that must not interfere with the user's active working directory. Creates isolated
-  execution environments via git worktrees in sibling directories.
+description: When running long feature implementations, parallel branch work, or build/test scripts that must not interfere with the user's active working directory. Creates isolated execution environments via git worktrees in sibling directories.
 ---
 
 # Using Git Worktrees Skill

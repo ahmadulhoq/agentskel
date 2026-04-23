@@ -1,7 +1,6 @@
 ---
 name: hotfix
-description: Fast-path workflow for production bugs that cannot wait for the
-  normal release cycle. Requires explicit tech lead sign-off before branching.
+description: Fast-path workflow for production bugs that cannot wait for the normal release cycle. Requires explicit tech lead sign-off before branching.
 ---
 
 # Hotfix Workflow

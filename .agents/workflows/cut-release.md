@@ -1,7 +1,6 @@
 ---
 name: cut-release
-description: When the team is ready to ship a new version — version bumps, changelog
-  finalization, dependency snapshots, and CI release trigger.
+description: When the team is ready to ship a new version — version bumps, changelog finalization, dependency snapshots, and CI release trigger.
 ---
 
 # Workflow: cut-release

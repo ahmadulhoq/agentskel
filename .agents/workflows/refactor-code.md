@@ -1,8 +1,6 @@
 ---
 name: refactor-code
-description: When restructuring, renaming, or reorganising existing code without
-  changing its external behavior. Use instead of develop-feature when no new
-  functionality is being added.
+description: When restructuring, renaming, or reorganising existing code without changing its external behavior. Use instead of develop-feature when no new functionality is being added.
 ---
 
 # Refactor Code Workflow
