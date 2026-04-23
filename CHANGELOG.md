@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-21 — v1.49.1: README + MASTER_PLAN updates for v1.49.0
+
+Added "Connect to the tools your team already uses" section to README so new
+users discover the Atlassian integration. Added design principle #14
+(three-layer knowledge model) to MASTER_PLAN. No code/workflow changes —
+documentation catch-up for v1.49.0.
+
 ## 2026-04-21 — v1.49.0: Atlassian integration + team coordination
 
 Added 3-layer knowledge model (.memory/, Jira, Confluence) with MCP-based
