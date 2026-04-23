@@ -1,7 +1,6 @@
 ---
 name: check-dependencies
-description: When dependency versions need auditing, Last Dependency Check in CONFIG.md
-  is overdue (14-day cadence), or before starting security-sensitive work.
+description: When dependency versions need auditing, Last Dependency Check in CONFIG.md is overdue (14-day cadence), or before starting security-sensitive work.
 ---
 
 # Workflow: check-dependencies

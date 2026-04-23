@@ -1,7 +1,6 @@
 ---
 name: fix-tech-debt
-description: Systematic resolution of catalogued tech debt items from TECH_DEBT.md.
-  Use when assigned a specific debt ID (AP-XXX, BUG-XXX, SI-XXX, etc.).
+description: Systematic resolution of catalogued tech debt items from TECH_DEBT.md. Use when assigned a specific debt ID (AP-XXX, BUG-XXX, SI-XXX, etc.).
 ---
 
 # Tech Debt Fix Workflow

@@ -1,8 +1,6 @@
 ---
 name: subagent-dispatch
-description: When delegating work to a subagent — implementation, review, research,
-  or exploration. Use when a task benefits from a fresh context window, parallel
-  execution, or isolated scope.
+description: When delegating work to a subagent — implementation, review, research, or exploration. Use when a task benefits from a fresh context window, parallel execution, or isolated scope.
 ---
 
 # Subagent Dispatch

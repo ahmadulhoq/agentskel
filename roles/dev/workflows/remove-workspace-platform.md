@@ -1,7 +1,6 @@
 ---
 name: remove-workspace-platform
-description: When removing a platform from the workspace dispatcher. Does NOT delete
-  the subdir or its agentskel install — only unregisters it from workspace config and AGENTS.md.
+description: When removing a platform from the workspace dispatcher. Does NOT delete the subdir or its agentskel install — only unregisters it from workspace config and AGENTS.md.
 ---
 
 # Remove Workspace Platform

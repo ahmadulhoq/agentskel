@@ -1,7 +1,6 @@
 ---
 name: codebase-navigator
-description: When searching for code, tracing a bug, or understanding how modules
-  connect. Use before grepping blindly — consult the index first.
+description: When searching for code, tracing a bug, or understanding how modules connect. Use before grepping blindly — consult the index first.
 ---
 
 # Codebase Navigator

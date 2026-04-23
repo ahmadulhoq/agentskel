@@ -19,9 +19,14 @@ description: Core operating behavior — always active.
 
 ## Task Completion — MANDATORY
 
-After completing any development task, execute the **`task-completion`** skill.
-It handles CHANGELOG, TIME_LOG, SYMBOLS/MAP, RESUME, and memory commits.
-This is not optional. Do not respond to the user before completing it.
+After completing a task that modified any file **outside `.memory/`** — source code, docs, tests, config, hooks, workflows, rules, templates — execute the **`task-completion`** skill before responding. It handles CHANGELOG, TIME_LOG, SYMBOLS/MAP, RESUME, and memory commits.
+
+**Do NOT run task-completion for:**
+- Pure discussion, analysis, or read-only investigation (no files modified)
+- Memory-only work (only `.memory/` files changed — memory maintenance is not a development task)
+- Skeleton sync runs (the sync workflow handles its own memory updates)
+
+Workflows that produce external side effects with no local file changes (e.g. `publish-adr`, `publish-postmortem` writing to Confluence) must invoke `task-completion` explicitly as their final step — the mandate above can't detect those.
 
 ## Git and File Discipline
 - **No changes during discussion.** Wait for "go ahead", "do it", or "implement this".
@@ -36,7 +41,7 @@ This is not optional. Do not respond to the user before completing it.
 
 ## Memory Protocol
 - Execute `session-start` at the beginning of every session.
-- Execute `task-completion` after every development task.
+- Execute `task-completion` after any task that modified files outside `.memory/` (see Task Completion above). Skip for pure discussion, memory-only maintenance, or skeleton syncs.
 - Commit `.memory/` after each task. RESUME.md is local-only.
 
 ## Dependency Boundaries
