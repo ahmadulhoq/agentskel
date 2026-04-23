@@ -16,15 +16,22 @@ if ! echo "$COMMAND" | grep -qE 'git[[:space:]].*push.*ai-memory'; then
     exit 0
 fi
 
-# Auto-pull with rebase before the push proceeds
-# Skip if there are uncommitted changes (the command chain will commit first)
+# Auto-pull with rebase before the push proceeds.
+# Skip if:
+# - .memory/ doesn't exist (not a worktree — nothing to pull into)
+# - uncommitted changes (the command chain will commit first)
+# - remote ai-memory doesn't exist yet (first push during setup, nothing to pull)
 if [ -d ".memory" ]; then
     DIRTY=$(git -C .memory status --porcelain 2>/dev/null || echo "")
     if [ -z "$DIRTY" ]; then
-        PULL_OUTPUT=$(git -C .memory pull --rebase origin ai-memory 2>&1) || {
-            echo "Pre-push pull failed: ${PULL_OUTPUT}. Resolve conflicts in .memory/ before pushing." >&2
-            exit 2
-        }
+        # Check if remote ai-memory branch exists before attempting pull
+        REMOTE_EXISTS=$(git -C .memory ls-remote --heads origin ai-memory 2>/dev/null || echo "")
+        if [ -n "$REMOTE_EXISTS" ]; then
+            PULL_OUTPUT=$(git -C .memory pull --rebase origin ai-memory 2>&1) || {
+                echo "Pre-push pull failed: ${PULL_OUTPUT}. Resolve conflicts in .memory/ before pushing." >&2
+                exit 2
+            }
+        fi
     fi
 fi
 
