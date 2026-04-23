@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-23 — v1.49.2: Fix pre-memory-push hook blocking first downstream push
+
+Downstream setup failed because `pre-memory-push.sh` tried to rebase pull from
+`origin/ai-memory` before the remote branch existed. Added a `ls-remote` check
+to skip the pull when the remote branch is absent. Self-synced to
+`.claude/hooks/pre-memory-push.sh`.
+
 ## 2026-04-21 — v1.49.1: README + MASTER_PLAN updates for v1.49.0
 
 Added "Connect to the tools your team already uses" section to README so new
