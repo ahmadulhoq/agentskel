@@ -1,5 +1,14 @@
 # agentskel Changelog
 
+## v1.49.2 — 2026-04-23
+
+### Fix: pre-memory-push hook blocked first push during setup
+- `pre-memory-push.sh` now checks if the remote `ai-memory` branch exists
+  before attempting a rebase pull. During initial downstream setup the remote
+  branch doesn't exist yet, so the pull failed with a non-fast-forward error
+  and blocked the first push. The hook now skips the pull when the remote
+  branch is absent (nothing to pull into).
+
 ## v1.49.1 — 2026-04-21
 
 ### Docs: surface Atlassian integration to new users
