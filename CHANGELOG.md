@@ -4,6 +4,16 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-21 — v1.49.0: Atlassian integration + team coordination
+
+Added 3-layer knowledge model (.memory/, Jira, Confluence) with MCP-based
+integration. 2 new memory templates (TEAM.md, JIRA_WORKFLOW.md), 2 new skills
+(atlassian-integration, knowledge-routing), 10 new workflows (5 team +
+2 Jira + 3 Confluence), integration hooks into 6 existing workflows. All
+additions opt-in per integration; GitHub and Atlassian MCP both optional.
+New docs: ATLASSIAN-SETUP.md, TEAM-COORDINATION.md. Templates generic (no
+company-specific content).
+
 ## 2026-04-18 — v1.48.1: README simplification + INSTALL-MODES doc
 
 Simplified README for first-time users: removed framework jargon from
