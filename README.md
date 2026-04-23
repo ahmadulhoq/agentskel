@@ -126,7 +126,7 @@ Then in your project, say: *"Run the setup-skeleton workflow. The skeleton is at
 
 ## Current version
 
-**v1.48.1** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
+**v1.49.0** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## Contributing
 

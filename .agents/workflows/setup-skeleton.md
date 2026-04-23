@@ -585,6 +585,13 @@ Report to the user:
 
 **Next step:** Run the **`cartographer`** workflow to build the agent's memory of the codebase.
 
+**Next steps (optional Atlassian integration):**
+- Run `setup-team` to capture the team roster (~7-15 questions, uses GitHub if available)
+- Run `setup-jira` if your team uses Jira (~8-10 questions, introspects project via Atlassian MCP)
+- Run `setup-confluence` to enable publishing ADRs, postmortems, specs to Confluence (~6-8 questions)
+
+See `docs/TEAM-COORDINATION.md` for how the three layers (memory, Jira, Confluence) work together, and `docs/ATLASSIAN-SETUP.md` for per-tool MCP setup.
+
 **For other developers:** After the setup PR is merged, any developer can start agentic
 development by running `./scripts/install-agent.sh` after cloning the repo.
 

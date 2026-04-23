@@ -23,6 +23,10 @@ description: When the user asks to implement a new feature end-to-end requiring
    git checkout development && git pull && git checkout -b <branch-name>
    ```
 
+## Phase 0: Ticket Routing
+If this task originated from a Jira ticket (user mentioned a ticket key like `PROJ-1234`),
+use the `implement-from-ticket` workflow instead. If not from a ticket, continue.
+
 ## Phase 1: Plan
 6. Use the `task-planner` skill to decompose the work.
    Use `codebase-navigator` skill to find relevant code via MAP.md/SYMBOLS.md before planning.
@@ -74,6 +78,13 @@ description: When the user asks to implement a new feature end-to-end requiring
     - PR title: `[TICKET-XXXX] short description` or `[DEBT-ID] short description`
     - PR body: what changed, why, how to test, risk level
     - **Do NOT merge** — a human reviewer must approve
+26b. **Atlassian integration (conditional).** If `.memory/JIRA_WORKFLOW.md` exists and
+     the task referenced a ticket:
+     - Use `atlassian-integration` skill to transition the ticket per JIRA_WORKFLOW.md
+       ('PR opened' event, if auto-apply is yes).
+     - Add comment on ticket with PR URL.
+     - After merge (separate invocation): transition per 'PR merged' event, reassign
+       to QA owner from TEAM.md if handoff rule says so.
 27. Set RESUME.md Status to IDLE.
 
 ---
