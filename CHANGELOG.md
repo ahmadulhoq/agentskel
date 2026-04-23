@@ -1,5 +1,14 @@
 # agentskel Changelog
 
+## v1.49.1 — 2026-04-21
+
+### Docs: surface Atlassian integration to new users
+- README gains "Connect to the tools your team already uses" section after
+  Getting started, pointing to setup-team / setup-jira / setup-confluence with
+  links to ATLASSIAN-SETUP.md and TEAM-COORDINATION.md. Previously new users had
+  no way to discover these features from the README.
+- MASTER_PLAN gains design principle #14 (three-layer knowledge model).
+
 ## v1.49.0 — 2026-04-21
 
 ### Atlassian integration + team/workflow coordination

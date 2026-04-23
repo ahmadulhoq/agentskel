@@ -59,6 +59,23 @@ Not sure which fits? See [docs/INSTALL-MODES.md](docs/INSTALL-MODES.md).
 
 ---
 
+## Connect to the tools your team already uses (optional)
+
+After setup, connect your team's Jira, Confluence, and GitHub so the agent participates in your work processes:
+
+**Capture the team roster:**
+> *"Set up the team."*
+
+**Enable ticket-based workflows (read tickets, update status, reassign to QA):**
+> *"Set up Jira."*
+
+**Enable publishing ADRs, postmortems, and specs to Confluence:**
+> *"Set up Confluence."*
+
+Each setup is independent — use any subset. Requires the Atlassian MCP connected in your AI tool. See [docs/ATLASSIAN-SETUP.md](docs/ATLASSIAN-SETUP.md) for connection details and [docs/TEAM-COORDINATION.md](docs/TEAM-COORDINATION.md) for how the three layers (memory, Jira, Confluence) work together.
+
+---
+
 ## Joining an existing project
 
 If your teammate already set up agentskel, clone the project and run:
@@ -126,7 +143,7 @@ Then in your project, say: *"Run the setup-skeleton workflow. The skeleton is at
 
 ## Current version
 
-**v1.49.0** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
+**v1.49.1** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## Contributing
 

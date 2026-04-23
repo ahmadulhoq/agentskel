@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.49.0
+> Corresponds to: agentskel v1.49.1
 
 ---
 
@@ -544,6 +544,7 @@ This means **principles** (short, always-on) belong in rules, but **procedures**
 11. **Deterministic enforcement via hooks**: Critical artifacts (CHANGELOG, TIME_LOG) are enforced by PreToolUse hooks that block commits without them. PreToolUse hooks also auto-pull before ai-memory pushes. Stop hooks verify task-completion before session end. These are 100% enforcement — the agent cannot bypass them.
 12. **Plan-passing for subagents**: Parent agent creates the plan with full project context, then passes specific plan steps to subagents. Subagents don't rediscover the project — they execute. Review subagents get SACRED/CONVENTIONS references. Research subagents get only the question.
 13. **Workspace dispatcher install mode**: Multiple independent projects under one parent folder each have their own agentskel install. Workspace root has a thin dispatcher (AGENTS.md + native tool configs) that routes tasks to platform subdirs — no `.memory/`, no `.agents/`, no enforcement hooks at workspace root. The `.agentskel-workspace.yml` config tracks platforms. Enforcement stays per-subdir. Monorepo patterns (single git repo, multiple projects) are explicitly not supported — use workspace pattern instead.
+14. **Three-layer knowledge model (Atlassian integration)**: Teams own knowledge in three places — `.memory/` (agent operational state: MAP, SYMBOLS, LESSONS, TEAM), Confluence (canonical human-authored: specs, ADRs, runbooks, post-mortems), and Jira (tracked work with lifecycle). agentskel connects all three. The agent routes knowledge to the right layer per `knowledge-routing` skill: operational → `.memory/`, team-canonical → Confluence, tracked work → Jira. Integration is MCP-based (Rovo cloud or sooperset self-hosted) — agentskel adds team context (`.memory/TEAM.md`, `.memory/JIRA_WORKFLOW.md`) that MCP tools alone don't provide. Opt-in per integration; workflows degrade gracefully when a layer isn't configured.
 
 ### 6.3 Entry Points by Tool
 
