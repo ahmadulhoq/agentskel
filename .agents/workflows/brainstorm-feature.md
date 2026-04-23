@@ -42,6 +42,18 @@ description: When the user wants to think through a feature idea, explore edge c
    - **SACRED entries affected:** list or "none"
 7. Present the spec. Ask: "Should I pass this to `develop-feature`?"
 
+8. **Atlassian integration (conditional).** If `.memory/CONFIG.md` has
+   `Confluence Specs Parent` set:
+   - Ask user: "Publish this spec to Confluence? (y/n)"
+   - If yes, use `atlassian-integration` skill to `createConfluencePage`:
+     - Space: CONFIG.md Confluence Space Key
+     - Parent: CONFIG.md Confluence Specs Parent
+     - Title: from the spec's title
+     - Body: the spec markdown
+   - Return the Confluence URL to the user.
+   - If user plans to hand this off to `develop-feature`, include the Confluence URL
+     in context.
+
 ---
 
 **Gate:** Do not write code or an implementation plan at any point during this workflow.

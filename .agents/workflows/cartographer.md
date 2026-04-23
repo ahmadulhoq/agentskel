@@ -101,6 +101,16 @@ modules already marked complete. Record the current HEAD commit SHA in
       - High-confidence tech debt → TECH_DEBT.md
       - High-confidence sacred behaviour → SACRED.md
       - Ambiguous / low-confidence → NEEDS_REVIEW.md (user will classify)
+
+      **Atlassian integration (conditional).** If `.memory/JIRA_WORKFLOW.md` exists:
+      - For each high-severity tech debt finding added to TECH_DEBT.md this session,
+        ask user: "Create Jira ticket for [finding]? (y/n)".
+      - On approval, use `atlassian-integration` skill to call `createJiraIssue` with:
+        - Project: CONFIG.md Jira Project Key
+        - Required fields per JIRA_WORKFLOW.md
+        - Label: `tech-debt`
+        - Link back to the TECH_DEBT.md entry in description
+      - Update TECH_DEBT.md row with the ticket key in a 'Ticket' column.
    e. Update `.memory/RESUME.md`: mark this module complete, update
       the pending module list, and note the count of findings.
    f. **Pause. State how many NEEDS_REVIEW items were found for this

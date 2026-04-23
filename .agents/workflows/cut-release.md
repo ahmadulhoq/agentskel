@@ -89,6 +89,17 @@ Wait for CI to complete and confirm the release PR was opened.
 
 ---
 
+## Step 1b — Transition Jira Tickets (conditional)
+
+If `.memory/JIRA_WORKFLOW.md` exists and Jira integration is configured:
+- Collect all ticket keys from commits in this release (parse commit messages for
+  `[PROJ-NNNN]` patterns).
+- For each ticket, use `atlassian-integration` skill to transition to the 'fully done'
+  status per JIRA_WORKFLOW.md.
+- Add a comment on each: `Released in version [VERSION]`.
+
+---
+
 ## Step 2 — Generate Release Notes
 
 Collect all changes since the last release tag:
@@ -100,6 +111,14 @@ Collect all changes since the last release tag:
 5. Edit the release PR body to include the release notes.
 
 **Release notes go in the PR body only — do not commit them to any file.**
+
+### Step 2b — Publish to Confluence (conditional)
+
+If `.memory/CONFIG.md` has `Confluence Space Key` and user wants release notes published:
+- Use `atlassian-integration` skill.
+- Create a Confluence page under the appropriate parent (or release notes parent if configured).
+- Title: `[APP_NAME] Release [VERSION]`.
+- Body: markdown from the release notes section of the PR.
 
 ---
 

@@ -1,5 +1,47 @@
 # agentskel Changelog
 
+## v1.49.1 — 2026-04-21
+
+### Docs: surface Atlassian integration to new users
+- README gains "Connect to the tools your team already uses" section after
+  Getting started, pointing to setup-team / setup-jira / setup-confluence with
+  links to ATLASSIAN-SETUP.md and TEAM-COORDINATION.md. Previously new users had
+  no way to discover these features from the README.
+- MASTER_PLAN gains design principle #14 (three-layer knowledge model).
+
+## v1.49.0 — 2026-04-21
+
+### Atlassian integration + team/workflow coordination
+- Adds team roster, Jira workflow config, and Confluence doc routing so agents
+  participate in the team's existing work processes (not just write code).
+- New memory templates: `TEAM.md` (roster + ownership + escalation),
+  `JIRA_WORKFLOW.md` (status transitions + handoff rules). CONFIG.md extended
+  with Atlassian integration section (Jira site, project key, Confluence
+  space, parent pages).
+- New skills: `atlassian-integration` (correct MCP tool usage, blocks 4 known
+  failure modes including Confluence 5KB truncation), `knowledge-routing`
+  (decides whether knowledge belongs in `.memory/`, Confluence, or Jira).
+- New team workflows: `setup-team`, `add-team-member`, `remove-team-member`,
+  `update-team-member`, `sync-team-from-github`. Uses `gh` CLI when available
+  to auto-populate; manual fallback otherwise.
+- New Jira workflows: `setup-jira` (introspects project via MCP for statuses
+  and required fields), `implement-from-ticket` (ticket → code → PR → status
+  transition → QA handoff).
+- New Confluence workflows: `setup-confluence`, `publish-adr` (MADR format),
+  `publish-postmortem` (with optional Jira action items).
+- Existing workflow integrations (all conditional on relevant setup):
+  `develop-feature` Phase 0 routes ticket-driven work, Phase 4 transitions
+  tickets on PR open/merge; `cut-release` transitions tickets to done and
+  publishes release notes to Confluence; `cartographer` offers Jira tickets
+  for high-severity tech debt; `brainstorm-feature` offers Confluence spec
+  publish; `debug-issue` comments on originating tickets.
+- `setup-skeleton` Step 10 now suggests optional Atlassian next steps.
+- New docs: `docs/ATLASSIAN-SETUP.md` (per-tool MCP setup for Cloud and DC),
+  `docs/TEAM-COORDINATION.md` (three-layer knowledge model + decision table).
+- All templates generic — no company/project-specific content. GitHub and
+  Atlassian MCP both optional; workflows degrade gracefully when either is
+  unavailable.
+
 ## v1.48.1 — 2026-04-18
 
 ### README simplification + install modes doc

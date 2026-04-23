@@ -16,6 +16,9 @@ description: When the user reports a bug, an error, or unexpected behavior. Enfo
 ## Phase 1: Reproduction & Hypothesis
 3. Use `systematic-debugger` skill for hypothesis-first analysis.
    Use `codebase-navigator` to find relevant code via MAP.md/SYMBOLS.md.
+   **Atlassian integration (conditional).** If the debug was triggered from a Jira
+   ticket (user referenced a ticket key), use `atlassian-integration` skill to read
+   the ticket for context.
 4. Reproduce the bug reliably. If you cannot reproduce it, state why and stop — do not proceed.
 5. State a falsifiable hypothesis:
    > "I believe the bug is caused by [X] because [evidence Y]."
@@ -44,6 +47,10 @@ description: When the user reports a bug, an error, or unexpected behavior. Enfo
 13. Run the full test suite — no regressions allowed.
 14. Update `.memory/LESSONS.md` with root cause and a prevention rule.
 15. Follow `git-flow` to commit and open a PR.
+16. **Atlassian integration (conditional).** If a ticket triggered this debug:
+    - Add comment on the ticket with findings: root cause + fix summary + PR link.
+    - If fix is a hotfix or significant production issue: ask user
+      "Write a postmortem? (y/n)" — if yes, invoke `publish-postmortem` workflow.
 
 ---
 

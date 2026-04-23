@@ -68,6 +68,8 @@ Read `.memory/RESUME.md` to restore session state.
 | session-start | Session initialization procedure. Checks memory mount, reads all required memory files, validates skeleton version, checks dependency freshness, and surfaces alerts. Must be executed at the start of every session before any other work. | `.agents/skills/session-start/SKILL.md` |
 | skill-authoring | When creating a new skill or workflow, or improving an existing skill's effectiveness. Use when the user asks to add a capability, write a new workflow, or when a skill isn't triggering or being followed reliably. | `.agents/skills/skill-authoring/SKILL.md` |
 | subagent-dispatch | When delegating work to a subagent — implementation, review, research, or exploration. Use when a task benefits from a fresh context window, parallel execution, or isolated scope. | `.agents/skills/subagent-dispatch/SKILL.md` |
+| atlassian-integration | When reading or writing to Jira tickets or Confluence pages via MCP tools. Use before any Jira transition, ticket creation, or Confluence page update to avoid common failure modes. | `.agents/skills/atlassian-integration/SKILL.md` |
+| knowledge-routing | When deciding where to store a piece of knowledge (memory files vs Confluence vs Jira). Use when about to document something, capture a lesson, create a ticket, or publish a decision. | `.agents/skills/knowledge-routing/SKILL.md` |
 | systematic-debugger | When applying debugging techniques during any investigation — root cause tracing, bisect, defense-in-depth. Enforces hypothesis-first analysis and prohibits guess-and-check changes. Use standalone or inside the debug-issue workflow. | `.agents/skills/systematic-debugger/SKILL.md` |
 | task-completion | Post-task checklist for documentation, time logging, and memory updates. Must be executed immediately after completing any development task — before responding to the user or starting the next task. | `.agents/skills/task-completion/SKILL.md` |
 | task-planner | When decomposing a feature or spec into implementable subtasks, estimating scope, or orchestrating multi-step work across subagents. | `.agents/skills/task-planner/SKILL.md` |
@@ -100,6 +102,16 @@ Read `.memory/RESUME.md` to restore session state.
 | add-workspace-platform | When adding a new platform (subdir with its own git repo) to an existing workspace dispatcher. Runs setup-skeleton in the subdir and updates the workspace config. | `.agents/workflows/add-workspace-platform.md` |
 | remove-workspace-platform | When removing a platform from the workspace dispatcher. Does NOT delete the subdir — only unregisters it. | `.agents/workflows/remove-workspace-platform.md` |
 | sync-workspace-dispatcher | When workspace dispatcher templates have changed in a newer skeleton version. Regenerates dispatcher files at the workspace root. | `.agents/workflows/sync-workspace-dispatcher.md` |
+| setup-team | When bootstrapping the team roster. Run once per project to populate .memory/TEAM.md with members, roles, ownership, and escalation contacts. | `.agents/workflows/setup-team.md` |
+| add-team-member | When a new developer joins the team. Adds one member to .memory/TEAM.md with roles and module assignments. | `.agents/workflows/add-team-member.md` |
+| remove-team-member | When a developer leaves the team. Marks inactive in .memory/TEAM.md (preserves history) and reassigns their ownership. | `.agents/workflows/remove-team-member.md` |
+| update-team-member | When a team member's role, ownership, or contact info changes. Updates .memory/TEAM.md without full re-setup. | `.agents/workflows/update-team-member.md` |
+| sync-team-from-github | When team membership may have drifted from .memory/TEAM.md. Diffs against GitHub team membership and reconciles. | `.agents/workflows/sync-team-from-github.md` |
+| setup-jira | When the team uses Jira and wants ticket-based workflows. Introspects the Jira project via Atlassian MCP to populate .memory/JIRA_WORKFLOW.md. | `.agents/workflows/setup-jira.md` |
+| implement-from-ticket | When implementing a feature or fix that originated from a Jira ticket. Reads the ticket, plans, implements, opens PR, and handles status transitions and QA handoff. | `.agents/workflows/implement-from-ticket.md` |
+| setup-confluence | When the team uses Confluence for canonical knowledge (specs, ADRs, runbooks, postmortems). Registers space and parent pages in CONFIG.md. | `.agents/workflows/setup-confluence.md` |
+| publish-adr | When documenting an architectural decision. Writes an MADR-format ADR to Confluence and cross-links from LESSONS.md. | `.agents/workflows/publish-adr.md` |
+| publish-postmortem | After a production incident is resolved. Writes a postmortem to Confluence and optionally creates Jira action items. | `.agents/workflows/publish-postmortem.md` |
 
 ## Memory
 Persistent project memory lives in `.memory/`. The `session-start` procedure reads all
