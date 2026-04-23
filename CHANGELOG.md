@@ -4,6 +4,19 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-23 — v1.49.3: Fix skill stub truncation + task-completion over-trigger
+
+Two root-cause bugs: (1) multi-line YAML descriptions in 37 source files were
+getting truncated by stub/catalog regeneration, so downstream `.claude/skills/`
+stubs had cut-off descriptions and Claude couldn't discover skills like
+codebase-navigator. (2) task-completion mandate said "any development task",
+firing on pure discussion. Fixed both at source — collapsed descriptions,
+added pre-commit lint to prevent recurrence, rewrote mandate with precise
+file-based trigger, added Step 0 Applicability Gate to the skill, made
+publish-adr/publish-postmortem explicitly bypass the gate for their external
+Confluence effects. Sync-skeleton gained Step 4c to refresh Claude stubs and
+enforcement hooks (previously never regenerated after setup).
+
 ## 2026-04-23 — v1.49.2: Fix pre-memory-push hook blocking first downstream push
 
 Downstream setup failed because `pre-memory-push.sh` tried to rebase pull from
