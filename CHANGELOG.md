@@ -4,6 +4,17 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-04-24 — v1.50.0: Static validator + CI
+
+Added `scripts/validate.py` with five deterministic checks (frontmatter shape,
+single-line descriptions, version consistency, stub parity, changelog
+presence) and `.github/workflows/validate.yml` to run them on every push and
+PR. Validates 244 items on the clean v1.50.0 repo. CONTRIBUTING.md gains a
+Validation section and the validator step in the PR checklist. Exactly
+catches v1.49.3's stub-truncation class of bug before landing. Not a
+replacement for installation integration tests or behavioral compliance —
+those are future tiers.
+
 ## 2026-04-23 — v1.49.3: Fix skill stub truncation + task-completion over-trigger
 
 Two root-cause bugs: (1) multi-line YAML descriptions in 37 source files were
