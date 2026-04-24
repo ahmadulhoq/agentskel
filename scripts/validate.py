@@ -22,11 +22,9 @@ Usage:
 from __future__ import annotations
 
 import glob
-import os
 import re
 import sys
 from pathlib import Path
-from typing import Iterable
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -107,13 +105,6 @@ def check_single_line_descriptions() -> Result:
     return r
 
 
-def _read_version_token(path: Path, regex: str) -> str | None:
-    if not path.exists():
-        return None
-    m = re.search(regex, _read(path))
-    return m.group(1) if m else None
-
-
 def check_version_consistency() -> Result:
     r = Result("version consistency")
     version_path = REPO / "VERSION"
@@ -125,18 +116,26 @@ def check_version_consistency() -> Result:
         r.bad(f"VERSION '{canon}' is not semver X.Y.Z")
         return r
 
+    # (rel path, regex, required). .memory/ files live on an orphan branch and
+    # are not present in a plain `main` checkout (e.g. in CI). Skip missing
+    # optional files — they're validated in local dev where .memory/ is mounted.
     checks = [
-        ("README.md", r"\*\*v(\d+\.\d+\.\d+)\*\* — see"),
-        ("MASTER_PLAN.md", r"Corresponds to: agentskel v(\d+\.\d+\.\d+)"),
-        (".memory/CONFIG.md", r"Skeleton Version\s*\|\s*(\d+\.\d+\.\d+)"),
+        ("README.md", r"\*\*v(\d+\.\d+\.\d+)\*\* — see", True),
+        ("MASTER_PLAN.md", r"Corresponds to: agentskel v(\d+\.\d+\.\d+)", True),
+        (".memory/CONFIG.md", r"Skeleton Version\s*\|\s*(\d+\.\d+\.\d+)", False),
     ]
-    for rel, pat in checks:
-        token = _read_version_token(REPO / rel, pat)
-        if token is None:
+    for rel, pat, required in checks:
+        path = REPO / rel
+        if not path.exists():
+            if required:
+                r.bad(f"{rel}: required file missing")
+            continue  # optional missing file: no pass, no fail
+        m = re.search(pat, _read(path))
+        if not m:
             r.bad(f"{rel}: version marker not found (pattern {pat!r})")
             continue
-        if token != canon:
-            r.bad(f"{rel}: version {token} != VERSION {canon}")
+        if m.group(1) != canon:
+            r.bad(f"{rel}: version {m.group(1)} != VERSION {canon}")
             continue
         r.ok()
     return r
