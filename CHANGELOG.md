@@ -4,19 +4,24 @@
 
 ### Static validator + CI
 - New `scripts/validate.py` — deterministic checks that run in seconds and
-  prove the skeleton's shape before shipping. Five checks: frontmatter shape
+  prove the skeleton's shape before shipping. Six checks: frontmatter shape
   (every skill/workflow has `description:`), single-line descriptions (no
   multi-line folding), version consistency (VERSION matches README,
   MASTER_PLAN, `.memory/CONFIG.md`), stub parity (`.claude/skills/*.md` match
-  sources — no drift, orphans, or missing), and CHANGELOG current-version
-  presence.
+  `.agents/` sources — no drift, orphans, or missing), AGENTS.md catalog
+  parity (the Skills/Workflows tables feed every non-Claude tool and are
+  regenerated from frontmatter — same drift risk), and CHANGELOG
+  current-version presence.
 - New `.github/workflows/validate.yml` — runs the validator on every push and
   PR. Green local run == green CI run.
 - `CONTRIBUTING.md` documents the validator in a new section and adds it to
   the PR checklist.
-- Catches exactly the class of bug that caused v1.49.3's stub truncation. Not
-  a replacement for behavioral testing (agent compliance) or installation
+- Catches exactly the class of bug that caused v1.49.3's stub truncation and
+  the parallel AGENTS.md catalog drift noted on downstream installs. Not a
+  replacement for behavioral testing (agent compliance) or installation
   integration tests — those are separate future tiers.
+- AGENTS.md catalog rows regenerated from current sources as part of this
+  release (had drifted from v1.49.3 description rewrites).
 
 ## v1.49.3 — 2026-04-23
 

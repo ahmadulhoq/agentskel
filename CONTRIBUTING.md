@@ -91,12 +91,13 @@ Domain-specific skills, API contracts, business logic, cross-platform specs. Don
 
 ## Validation
 
-Run `python3 scripts/validate.py` before opening a PR. It runs five deterministic checks:
+Run `python3 scripts/validate.py` before opening a PR. It runs six deterministic checks:
 
 - **frontmatter shape** — every SKILL.md and workflow has valid YAML with `description:` (and `name:` on skills)
 - **single-line descriptions** — descriptions don't fold across YAML lines (required for stub and catalog generation)
 - **version consistency** — VERSION matches README, MASTER_PLAN, and `.memory/CONFIG.md`
-- **stub parity** — `.claude/skills/*.md` stubs reflect current `.agents/` sources (no orphans, no missing, no description drift)
+- **stub parity** (Claude-specific) — `.claude/skills/*.md` stubs reflect current `.agents/` sources (no orphans, no missing, no description drift)
+- **AGENTS.md catalog parity** (universal) — the Skills/Workflows tables in `AGENTS.md` reflect current `.agents/` sources. Feeds every non-Claude tool (Cursor, Copilot, Windsurf, Codex, Gemini).
 - **changelog entry** — `CHANGELOG.md` has a section for the current VERSION
 
 CI runs the same validator on every push and PR. A green local run should mean a green CI run.

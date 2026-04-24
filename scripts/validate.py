@@ -205,6 +205,81 @@ def check_stub_parity() -> Result:
     return r
 
 
+def check_agents_catalog_parity() -> Result:
+    """AGENTS.md Skills/Workflows tables reflect current .agents/ source descriptions.
+
+    The catalog feeds every non-Claude tool (Cursor, Copilot, Windsurf, Codex,
+    Gemini) and is regenerated from frontmatter during setup/sync. Same drift
+    risk as `.claude/skills/` stubs — this check is the non-Claude equivalent.
+    """
+    r = Result("AGENTS.md catalog parity")
+    agents_md = REPO / "AGENTS.md"
+    if not agents_md.exists():
+        r.bad("AGENTS.md missing")
+        return r
+
+    text = _read(agents_md)
+
+    # Extract Skills section
+    sk_m = re.search(r"^## Skills\n(.*?)(?=^## )", text, re.MULTILINE | re.DOTALL)
+    wf_m = re.search(r"^## Workflows\n(.*?)(?=^## )", text, re.MULTILINE | re.DOTALL)
+    if not sk_m:
+        r.bad("AGENTS.md: `## Skills` section not found")
+        return r
+    if not wf_m:
+        r.bad("AGENTS.md: `## Workflows` section not found")
+        return r
+
+    row_re = re.compile(r"^\|\s*([^|\s][^|]*?)\s*\|\s*(.*?)\s*\|\s*`([^`]+)`\s*\|\s*$", re.MULTILINE)
+
+    def parse_rows(section_text: str) -> dict[str, tuple[str, str]]:
+        # skip header + separator rows
+        rows: dict[str, tuple[str, str]] = {}
+        for m in row_re.finditer(section_text):
+            name = m.group(1).strip()
+            if name in ("Skill", "Workflow") or set(name) <= {"-"}:
+                continue
+            rows[name] = (m.group(2).strip(), m.group(3).strip())
+        return rows
+
+    cat_skills = parse_rows(sk_m.group(1))
+    cat_workflows = parse_rows(wf_m.group(1))
+
+    def expected_entries(pattern: str, kind: str) -> dict[str, tuple[str, str]]:
+        out: dict[str, tuple[str, str]] = {}
+        for p in sorted(glob.glob(str(REPO / pattern))):
+            path = Path(p)
+            name = path.parent.name if kind == "skill" else path.stem
+            m = DESC_LINE_RE.search(_read(path))
+            if not m:
+                continue
+            out[name] = (m.group(1).strip(), str(path.relative_to(REPO)))
+        return out
+
+    exp_skills = expected_entries(".agents/skills/*/SKILL.md", "skill")
+    exp_workflows = expected_entries(".agents/workflows/*.md", "workflow")
+
+    def compare(label: str, expected: dict[str, tuple[str, str]], actual: dict[str, tuple[str, str]]) -> None:
+        for name, (desc, path) in expected.items():
+            if name not in actual:
+                r.bad(f"AGENTS.md {label}: missing row for `{name}` (source exists at {path})")
+                continue
+            a_desc, a_path = actual[name]
+            if a_desc != desc:
+                r.bad(f"AGENTS.md {label} `{name}`: description drift from source")
+                continue
+            if a_path != path:
+                r.bad(f"AGENTS.md {label} `{name}`: path `{a_path}` != source path `{path}`")
+                continue
+            r.ok()
+        for name in sorted(set(actual) - set(expected)):
+            r.bad(f"AGENTS.md {label}: orphan row for `{name}` (no source in .agents/)")
+
+    compare("Skills", exp_skills, cat_skills)
+    compare("Workflows", exp_workflows, cat_workflows)
+    return r
+
+
 def check_changelog_has_version() -> Result:
     r = Result("changelog has current version entry")
     version_path = REPO / "VERSION"
@@ -226,6 +301,7 @@ CHECKS = [
     check_single_line_descriptions,
     check_version_consistency,
     check_stub_parity,
+    check_agents_catalog_parity,
     check_changelog_has_version,
 ]
 
