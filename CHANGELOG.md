@@ -1,5 +1,23 @@
 # agentskel Changelog
 
+## v1.50.0 — 2026-04-24
+
+### Static validator + CI
+- New `scripts/validate.py` — deterministic checks that run in seconds and
+  prove the skeleton's shape before shipping. Five checks: frontmatter shape
+  (every skill/workflow has `description:`), single-line descriptions (no
+  multi-line folding), version consistency (VERSION matches README,
+  MASTER_PLAN, `.memory/CONFIG.md`), stub parity (`.claude/skills/*.md` match
+  sources — no drift, orphans, or missing), and CHANGELOG current-version
+  presence.
+- New `.github/workflows/validate.yml` — runs the validator on every push and
+  PR. Green local run == green CI run.
+- `CONTRIBUTING.md` documents the validator in a new section and adds it to
+  the PR checklist.
+- Catches exactly the class of bug that caused v1.49.3's stub truncation. Not
+  a replacement for behavioral testing (agent compliance) or installation
+  integration tests — those are separate future tiers.
+
 ## v1.49.3 — 2026-04-23
 
 ### Fix: skill stubs truncated in downstream + task-completion over-triggers on discussion
