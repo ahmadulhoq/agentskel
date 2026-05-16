@@ -1,11 +1,21 @@
 # agentskel Changelog
 
+## v1.55.3 — 2026-05-17
+
+- Remove Stop hook `"type": "prompt"` from `settings.json` (core + installed). Root
+  cause of infinite loop: prompt-type Stop hook injects a message → Claude responds
+  → triggers Stop again → repeats forever. Pre-commit hook already enforces
+  CHANGELOG/TIME_LOG at commit time — Stop hook was redundant and broken.
+- Fix v1.55.2 missing `affected: task-completion` in both CHANGELOG files.
+
 ## v1.55.2 — 2026-05-17
 
 Fix: add precision rule to `affected:` checklist — only include a workflow/skill
 name if its file was directly modified, not merely mentioned in prose.
 Caught by dogfooding the triage feature (v1.55.1 removed the false positive;
 this hardens the rule to prevent recurrence).
+
+affected: task-completion
 
 ## v1.55.1 — 2026-05-17
 

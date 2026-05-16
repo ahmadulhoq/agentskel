@@ -17,15 +17,6 @@
         ]
       }
     ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "Before finishing: check if APPLICATION code was modified in this session (bug fixes, features, refactors). If yes, verify .memory/CHANGELOG.md and .memory/TIME_LOG.md were updated. Do NOT require CHANGELOG/TIME_LOG for: skeleton syncs (sync-skeleton workflow), pure discussion/analysis, infrastructure chores, or .memory/-only changes. Those are not development tasks."
-          }
-        ]
-      }
-    ]
+    "Stop": []
   }
 }
