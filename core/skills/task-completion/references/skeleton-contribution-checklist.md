@@ -20,6 +20,18 @@ Use semver (MAJOR.MINOR.PATCH):
 - [ ] Update `Skeleton Version` in `.memory/CONFIG.md` to match.
 - **Every skeleton file change requires a version bump — no exceptions.**
 
+## CHANGELOG `affected:` line
+
+- [ ] If this change touches any workflow or skill file, append an `affected:` line
+      at the end of the CHANGELOG entry (both `CHANGELOG.md` and `.memory/CHANGELOG.md`):
+      ```
+      affected: workflow-name, skill-name, ...
+      ```
+      List only the workflow/skill **names** (kebab-case, no paths). Omit the line
+      entirely if no workflow or skill files were changed.
+- This field is machine-read by `sync-skeleton` to notify downstream projects which
+  workflows/skills were updated.
+
 ## README
 
 - [ ] If this task changed something **already mentioned** in `README.md`

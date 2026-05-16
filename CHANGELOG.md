@@ -1,5 +1,29 @@
 # agentskel Changelog
 
+## v1.55.0 — 2026-05-17
+
+### Post-sync workflow/skill triage via `affected:` field
+
+Downstream projects now learn which workflows and skills were updated after
+a skeleton sync, and agents re-read any that are currently active.
+
+- **`affected:` field in CHANGELOG:** skeleton CHANGELOG entries that touch any
+  workflow or skill file must now include `affected: name, name, ...` at the end
+  of the entry. Machine-read by sync-skeleton; omitted for non-workflow/skill changes.
+- **skeleton-contribution-checklist:** new `CHANGELOG affected: line` section
+  documents the rule and the machine-read contract.
+- **task-completion SKILL.md Step 1:** inline reminder to write `affected:` for
+  skeleton repo changes.
+- **sync-skeleton Step 4d:** after applying files, collects all `affected:` values
+  from applied CHANGELOG entries and writes `SYNC PENDING TRIAGE: [names]` to
+  RESUME.md Session Notes.
+- **sync-skeleton Final Step:** post-sync triage — checks each name against active
+  session state; re-reads active workflows/skills with new version, surfaces
+  non-active ones to user, then clears the triage entry.
+- **Backfilled:** `affected:` added to v1.54.2 CHANGELOG entry retroactively.
+
+affected: sync-skeleton, task-completion, skill-authoring
+
 ## v1.54.2 — 2026-05-17
 
 ### Workflow plan gate strengthening
@@ -16,6 +40,8 @@ for explicit approval — the existing gate text ("wait for approval") was too v
   Isolation) and Phase 4 (Fix). Previously had no gate — agent could go straight from
   root cause confirmation to writing code.
 - 10 files changed (5 source workflows in `roles/dev/workflows/` + 5 `.agents/` copies).
+
+affected: develop-feature, implement-task, fix-tech-debt, refactor-code, debug-issue
 
 ## v1.54.1 — 2026-05-16
 

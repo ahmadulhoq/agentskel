@@ -193,6 +193,27 @@ Run `chmod +x` on each copied script. Do not overwrite the per-tool settings/hoo
 
 ---
 
+### Step 4d — Record updated workflows and skills for post-sync triage
+
+From the CHANGELOG entries identified in Step 1, collect all `affected:` line values
+across every **applied** entry (skip Skipped entries). These name the workflows and
+skills that were updated in this sync.
+
+Write a single entry to `.memory/RESUME.md` Session Notes:
+```
+SYNC PENDING TRIAGE: develop-feature, debug-issue, task-completion, ...
+```
+
+If no `affected:` lines were found in any applied entry, write:
+```
+SYNC PENDING TRIAGE: none
+```
+
+Do not clear or act on this entry yet — it is resolved in the Final Step after
+all other sync work is complete.
+
+---
+
 ## Step 5 — Update Agent Memory (ai-memory branch)
 
 These changes go directly to the ai-memory branch — no PR required.
@@ -543,3 +564,20 @@ At minimum:
 - Write **TIME_LOG.md** entry (if this was an implementation task)
 - Write **CHANGELOG entry** (if any files changed)
 - Update **SYMBOLS.md / MAP.md** (if structure changed)
+
+### Post-Sync Workflow/Skill Triage
+
+After task-completion, triage the pending list:
+
+1. Read `SYNC PENDING TRIAGE:` from `.memory/RESUME.md` Session Notes.
+2. If the value is `none` or the entry is absent — skip.
+3. For each workflow/skill name in the list:
+   - Check if it appears in RESUME.md `In-Progress` or Session Notes as currently active.
+   - **If active:** re-read `.agents/workflows/[name].md` or
+     `.agents/skills/[name]/SKILL.md`. Tell the user:
+     > "[name] was updated in this sync and is currently active. Continuing with
+     > the new version from [phase/step where session left off]."
+   - **If not active:** add to the surface list.
+4. Tell the user:
+   > "Updated in this sync — re-read on next invocation: [list of non-active names]."
+5. Remove the `SYNC PENDING TRIAGE:` line from Session Notes.

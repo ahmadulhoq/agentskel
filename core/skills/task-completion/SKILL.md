@@ -19,6 +19,10 @@ to the user or starting anything else.**
 ## Step 1 — CHANGELOG
 
 - [ ] Add an entry to `.memory/CHANGELOG.md` describing what changed and why.
+- [ ] **Skeleton repos only:** if the change touches any workflow or skill file,
+      append `affected: name, name, ...` at the end of the entry (both
+      `CHANGELOG.md` and `.memory/CHANGELOG.md`). Omit if no workflow/skill changed.
+      See `references/skeleton-contribution-checklist.md` for the full rule.
 - Skip only if zero files were modified (e.g. pure analysis tasks).
 
 ## Step 2 — SYMBOLS / MAP
