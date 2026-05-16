@@ -14,11 +14,19 @@ skeleton-contribution-checklist + task-completion SKILL Step 1 document the rule
 Backfilled affected: into v1.54.2 entry.
 affected: sync-skeleton, task-completion
 
+## 2026-05-17 — v1.55.3: Remove broken Stop hook + fix v1.55.2 affected: gap
+
+Stop hook type:prompt caused infinite loop (response triggers Stop again).
+Pre-commit hook already enforces CHANGELOG/TIME_LOG — Stop hook redundant.
+Removed from core/claude-hooks/settings.json + .claude/settings.json.
+Also added missing affected: task-completion to v1.55.2 CHANGELOG entries.
+
 ## 2026-05-17 — v1.55.2: Precision rule for affected: field
 
 Add precision rule to skeleton-contribution-checklist: only include a
 name if its file was directly modified, not merely mentioned in prose.
 Caught by dogfooding the triage feature.
+affected: task-completion
 
 ## 2026-05-17 — v1.55.1: Fix skill-authoring false positive in v1.55.0 affected: line
 
