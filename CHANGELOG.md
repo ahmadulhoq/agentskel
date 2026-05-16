@@ -1,5 +1,18 @@
 # agentskel Changelog
 
+## v1.55.4 — 2026-05-17
+
+Replace broken Stop hook with deterministic shell script.
+
+- `core/claude-hooks/stop-verify.sh` (new): checks for uncommitted project
+  or `.memory/` changes before the agent finishes. Exits 0 (allow) or 2
+  (block with message). No conversational response — no loop.
+- `settings.json` (core + installed): Stop hook changed from `"type": "prompt"`
+  (caused infinite loop) to `"type": "command"` pointing to `stop-verify.sh`.
+- `sync-skeleton` must install `stop-verify.sh` to `.claude/hooks/` on sync
+  (Step 4c hook refresh already handles this).
+- Added LESSONS.md entry 006: plan-first applies even to urgent-seeming bugs.
+
 ## v1.55.3 — 2026-05-17
 
 - Remove Stop hook `"type": "prompt"` from `settings.json` (core + installed). Root

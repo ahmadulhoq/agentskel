@@ -17,6 +17,15 @@
         ]
       }
     ],
-    "Stop": []
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/stop-verify.sh"
+          }
+        ]
+      }
+    ]
   }
 }
