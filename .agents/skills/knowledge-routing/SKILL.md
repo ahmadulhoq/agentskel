@@ -1,5 +1,6 @@
 ---
 name: knowledge-routing
+license: MIT
 description: When deciding where to store a piece of knowledge (memory files vs Confluence vs Jira). Use when about to document something, capture a lesson, create a ticket, or publish a decision.
 ---
 

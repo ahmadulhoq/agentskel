@@ -1,5 +1,6 @@
 ---
 name: task-completion
+license: MIT
 description: Post-task checklist for CHANGELOG, TIME_LOG, SYMBOLS/MAP, RESUME, and memory commits. Execute after completing a task that modified files outside `.memory/`. Do NOT run for pure discussion, memory-only maintenance, or skeleton syncs.
 ---
 
@@ -60,8 +61,7 @@ to the user or starting anything else.**
 ## Step 5 — Skeleton Contribution (skeleton repos only)
 
 - [ ] If `Skeleton Path` in `.memory/CONFIG.md` is `.` (this IS the skeleton repo),
-      read and execute `skeleton-contribution-checklist.md` (in the same directory
-      as this skill).
+      read and execute `references/skeleton-contribution-checklist.md`.
 - Skip entirely for downstream projects (Skeleton Path ≠ `.`).
 
 ## Step 6 — RESUME.md and BACKLOG.md

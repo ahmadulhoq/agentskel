@@ -1,5 +1,7 @@
 ---
 name: skill-authoring
+license: MIT
+compatibility: Designed for Claude Code. Skill body references .claude/skills/ stub format and .claude/ directory structure.
 description: When creating a new skill or workflow, or improving an existing skill's effectiveness. Use when the user asks to add a capability, write a new workflow, or when a skill isn't triggering or being followed reliably.
 ---
 
@@ -15,10 +17,16 @@ Every skill is a `SKILL.md` file with this structure:
 
 ```yaml
 ---
-name: kebab-case-name
-description: CSO-optimized triggering description (see Step 2)
+name: kebab-case-name          # required; must match directory name
+license: MIT                   # optional; license name or bundled file ref
+compatibility: Designed for X  # optional; only if skill has specific env needs
+description: CSO-optimized triggering description (see Step 2)  # required
 ---
 ```
+
+Required fields: `name`, `description`. Optional standard fields (agentskills.io):
+`license` (add for any distributed/public skill), `compatibility` (add only when
+the skill body depends on a specific tool — e.g. references `.claude/` paths).
 
 Body conventions:
 - **Numbered steps** with checkboxes (`- [ ]`) for trackable progress

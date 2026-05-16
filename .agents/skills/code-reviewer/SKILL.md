@@ -1,5 +1,6 @@
 ---
 name: code-reviewer
+license: MIT
 description: When reviewing a PR, auditing code quality, or validating changes against the project's standards and sacred behaviors.
 ---
 

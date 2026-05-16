@@ -1,5 +1,6 @@
 ---
 name: test-driven-development
+license: MIT
 description: When implementing logic changes during develop-feature or implement-task. Use the Red-Green-Refactor cycle to write a failing test before any production code.
 ---
 

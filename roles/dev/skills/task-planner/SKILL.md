@@ -1,5 +1,6 @@
 ---
 name: task-planner
+license: MIT
 description: When decomposing a feature or spec into implementable subtasks, estimating scope, or orchestrating multi-step work across subagents.
 ---
 

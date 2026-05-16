@@ -1,5 +1,24 @@
 # agentskel Changelog
 
+## v1.54.1 — 2026-05-16
+
+### agentskills.io standard compliance — Gaps 1, 2, 4: license, compatibility, references/
+
+- **Gap 1 (license):** Added `license: MIT` to all 17 source + 17 `.agents/` SKILL.md
+  files (34 total). Matches repo root LICENSE.
+- **Gap 2 (compatibility):** Added `compatibility: Designed for Claude Code.` to
+  `skill-authoring` only — the one skill whose body explicitly references `.claude/`
+  paths. Other skills omitted per spec guidance (include only if skill has specific
+  env requirements).
+- **Gap 4 (references/):** Moved `task-completion/skeleton-contribution-checklist.md`
+  to `task-completion/references/skeleton-contribution-checklist.md` (both core/ and
+  .agents/ copies). Updated reference path in SKILL.md body. Follows agentskills.io
+  convention for supporting documentation.
+- **skill-authoring Step 1:** Updated frontmatter template to document `license` and
+  `compatibility` optional fields with usage guidance.
+- **Gap 5 (skills-ref CI):** Closed as N/A — official tool is marked "demonstration
+  only, not production." agentskel's `validate.py` serves as the compliance check.
+
 ## v1.54.0 — 2026-05-16
 
 ### agentskills.io standard compliance — Gap 3: multi-line YAML description support

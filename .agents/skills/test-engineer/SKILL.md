@@ -1,5 +1,6 @@
 ---
 name: test-engineer
+license: MIT
 description: When designing test strategy, analysing coverage, or writing tests outside the TDD cycle. Also use when working with CI pipelines or validating changes end-to-end.
 ---
 

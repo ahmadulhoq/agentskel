@@ -1,5 +1,6 @@
 ---
 name: using-git-worktrees
+license: MIT
 description: When running long feature implementations, parallel branch work, or build/test scripts that must not interfere with the user's active working directory. Creates isolated execution environments via git worktrees in sibling directories.
 ---
 
