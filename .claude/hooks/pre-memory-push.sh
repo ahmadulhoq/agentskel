@@ -27,10 +27,18 @@ if [ -d ".memory" ]; then
         # Check if remote ai-memory branch exists before attempting pull
         REMOTE_EXISTS=$(git -C .memory ls-remote --heads origin ai-memory 2>/dev/null || echo "")
         if [ -n "$REMOTE_EXISTS" ]; then
-            PULL_OUTPUT=$(git -C .memory pull --rebase origin ai-memory 2>&1) || {
-                echo "Pre-push pull failed: ${PULL_OUTPUT}. Resolve conflicts in .memory/ before pushing." >&2
-                exit 2
-            }
+            # Skip pull if remote tip is already an ancestor (already merged/rebased in).
+            REMOTE_TIP=$(git -C .memory rev-parse origin/ai-memory 2>/dev/null || echo "")
+            ALREADY_INTEGRATED=""
+            if [ -n "$REMOTE_TIP" ]; then
+                git -C .memory merge-base --is-ancestor "$REMOTE_TIP" HEAD 2>/dev/null && ALREADY_INTEGRATED=1 || true
+            fi
+            if [ -z "$ALREADY_INTEGRATED" ]; then
+                PULL_OUTPUT=$(git -C .memory pull --rebase origin ai-memory 2>&1) || {
+                    echo "Pre-push pull failed: ${PULL_OUTPUT}. Resolve conflicts in .memory/ before pushing." >&2
+                    exit 2
+                }
+            fi
         fi
     fi
 fi

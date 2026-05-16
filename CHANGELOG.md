@@ -1,5 +1,16 @@
 # agentskel Changelog
 
+## v1.50.1 — 2026-05-09
+
+### Fix pre-memory-push hook: skip rebase-pull when remote already integrated
+
+`pre-memory-push.sh` ran `pull --rebase origin ai-memory` unconditionally before
+every push. When the local branch had already merged remote (via `git merge`),
+the rebase would conflict on old commits that the merge had already resolved.
+Fix: check `merge-base --is-ancestor` first — if `origin/ai-memory` is already
+an ancestor of HEAD, skip the pull. Updated in both `.claude/hooks/` and
+`core/claude-hooks/` (template).
+
 ## v1.50.0 — 2026-04-24
 
 ### Static validator + CI
