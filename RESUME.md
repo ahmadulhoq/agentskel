@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.50.2: Fix setup-skeleton Step 9 — add git checkout [DEFAULT_BRANCH] after PR push. Main worktree was left on setup branch causing fatal errors on branch deletion and ai-memory worktree checkout downstream.
+- v1.51.0: Shared BACKLOG.md — new core/memory/BACKLOG.md template, session-start line-count check, task-completion Step 6 split (6a RESUME + 6b BACKLOG), setup-skeleton creates on install, sync-skeleton Step 5i migration for existing projects.
 
 ## Previously Completed
 - v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.

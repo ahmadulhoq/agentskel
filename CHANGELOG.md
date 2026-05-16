@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-09 — v1.51.0: Shared BACKLOG.md — persistent task queue
+
+New core/memory/BACKLOG.md (P0/P1/P2 table + Done). session-start line-count
+check. task-completion Step 6 split (6a RESUME + 6b BACKLOG sync). setup-skeleton
+creates on install + fixes cd .memory pattern. sync-skeleton Step 5i migration.
+11 files changed.
+
 ## 2026-05-09 — v1.50.2: Fix setup-skeleton Step 9: checkout default branch after PR push
 
 Main worktree stayed on chore/setup-skeleton after workflow ended — caused
