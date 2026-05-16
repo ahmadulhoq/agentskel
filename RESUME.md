@@ -23,7 +23,7 @@ IDLE
 - (none)
 
 ## Session Notes
-- SYNC PENDING TRIAGE: develop-feature, implement-task, fix-tech-debt, refactor-code, debug-issue, sync-skeleton, task-completion
+- (none)
 
 ## Context Notes (Persistent)
 - agentskel is the skeleton repo itself — Skeleton Path = `.` in CONFIG.md
