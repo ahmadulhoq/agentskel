@@ -603,15 +603,6 @@ development by running `./scripts/install-agent.sh` after cloning the repo.
 
 ---
 
-## Step 11 — Session Reload
-
-After setup is complete, re-execute the **`session-start`** skill (full procedure,
-Steps 1–8) including a re-read of all `.agents/rules/` files. The agent just
-installed everything — it must now internalize the full setup before continuing
-any other work (e.g. the cartographer workflow).
-
----
-
 ## Notes
 
 - Never modify application code during this workflow.
@@ -620,13 +611,19 @@ any other work (e.g. the cartographer workflow).
 
 ---
 
-## Final Step — Task Completion Checklist
+## Final Step — Task Completion + Session Reload
 
-Before responding to the user or starting the next task, run the Task Completion Checklist
-from `core-behavior.md`. This is not optional.
+**1. Run task-completion** — update CHANGELOG, TIME_LOG, RESUME, and commit memory.
 
 At minimum:
 - Update **RESUME.md** with task outcome
-- Write **TIME_LOG.md** entry (if this was an implementation task)
-- Write **CHANGELOG entry** (if any files changed)
+- Write **TIME_LOG.md** entry
+- Write **CHANGELOG entry**
 - Update **SYMBOLS.md / MAP.md** (if structure changed)
+
+**2. Run session-start immediately after** — full procedure, Steps 1–8, including
+re-reading all `.agents/rules/` files. The agent just installed everything and must
+internalize the full setup before continuing any other work (e.g. the cartographer).
+
+**Do not skip step 2.** Without it the agent operates on stale context — it does not
+yet know the installed rules, memory structure, or skeleton version.

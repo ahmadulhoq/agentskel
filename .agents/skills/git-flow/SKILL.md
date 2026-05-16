@@ -54,6 +54,30 @@ When implementation is complete:
 - When implementation is authorised, execute the full flow end-to-end
   (branch → implement → commit → PR) without pausing for additional approval.
 
+## Post-Merge Cleanup
+
+When the user notifies the agent that a PR has been merged:
+
+- [ ] Confirm the branch name (check RESUME.md Next Task or current `git branch`
+      output — never guess).
+- [ ] Switch to default branch and pull:
+  ```bash
+  git checkout [DEFAULT_BRANCH]
+  git pull origin [DEFAULT_BRANCH]
+  ```
+- [ ] Delete the local branch (safe delete — refuses if not fully merged):
+  ```bash
+  git branch -d <branch-name>
+  ```
+  If `-d` fails, report it to the user — do not force-delete with `-D` without
+  explicit instruction.
+- [ ] Prune stale remote-tracking refs:
+  ```bash
+  git remote prune origin
+  ```
+- [ ] Update RESUME.md: clear Next Task if it matches the merged branch, set
+      Status to IDLE (or pull next P0 from BACKLOG.md if present).
+
 ## Git Worktrees (for long or parallel runs)
 
 For long feature runs or parallel branch work, use an isolated worktree instead of

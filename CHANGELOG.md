@@ -1,5 +1,16 @@
 # agentskel Changelog
 
+## v1.53.1 — 2026-05-09
+
+### Fix session-start not triggered post-setup; add post-merge branch cleanup
+
+- `setup-skeleton` — removed separate Step 11 (easy to skip; agents stopped at
+  "Final Step" label). Merged session-start reload into Final Step as mandatory
+  step 2, immediately after task-completion. Added explicit "Do not skip" gate.
+- `git-flow` — new Post-Merge Cleanup section: confirm branch, checkout default,
+  pull, `git branch -d` (safe — refuses if unmerged), `git remote prune origin`,
+  update RESUME.md. `-D` force-delete explicitly blocked without user instruction.
+
 ## v1.53.0 — 2026-05-09
 
 ### discussion-continuity skill — formal discussion lifecycle
