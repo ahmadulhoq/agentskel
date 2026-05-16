@@ -27,11 +27,11 @@ Update to `active` once the cartographer workflow finishes.
 | Field | Value |
 |-------|-------|
 | Default Branch | main |
-| Skeleton Version | 1.37 |
+| Skeleton Version | 1.50.0 |
 | Skeleton Path | . |
 | Blueprint Path | |
 | Last Blueprint Sync | |
-| Last Dependency Check | 2026-04-11T19:01Z |
+| Last Dependency Check | 2026-05-09T00:00Z |
 | Last Conventions Check | YYYY-MM-DDTHH:MMZ |
 | Supported Tools | claude, antigravity, cursor, copilot, windsurf |
 | Last Skeleton Check | 2026-04-11T19:01Z |
