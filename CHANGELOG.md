@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-09 — v1.50.2: Fix setup-skeleton Step 9: checkout default branch after PR push
+
+Main worktree stayed on chore/setup-skeleton after workflow ended — caused
+fatal errors on branch deletion and ai-memory worktree checkout downstream.
+Added git checkout [DEFAULT_BRANCH] after gh pr create in Step 9.
+Files: roles/dev/workflows/setup-skeleton.md, .agents/workflows/setup-skeleton.md.
+
 ## 2026-05-09 — v1.50.1: Fix pre-memory-push hook rebase-pull on already-integrated remote
 
 Hook ran pull --rebase unconditionally. After a merge commit, the rebase

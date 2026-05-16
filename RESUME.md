@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.50.1: Fix pre-memory-push hook — skip rebase-pull when remote already integrated (merge-base --is-ancestor guard). CONFIG.md Skeleton Version synced to 1.50.0, Last Dependency Check updated to 2026-05-09. Conventions check still never run — remind user.
+- v1.50.2: Fix setup-skeleton Step 9 — add git checkout [DEFAULT_BRANCH] after PR push. Main worktree was left on setup branch causing fatal errors on branch deletion and ai-memory worktree checkout downstream.
 
 ## Previously Completed
 - v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.
