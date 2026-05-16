@@ -4,6 +4,15 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-16 — v1.54.0: agentskills.io Gap 3 — multi-line YAML description support
+
+validate.py: _extract_description() handles folded/block YAML scalars;
+check_single_line_descriptions → check_description_length (≤1024 chars per spec).
+Pre-commit hooks updated to match. skill-authoring Step 2 Rule 5 + stub format note
+updated. sync-skeleton Step 4c updated to YAML-aware extraction. Also fixed
+pre-existing: discussion-continuity missing from AGENTS.md; README/MASTER_PLAN at v1.50.0.
+12 files changed.
+
 ## 2026-05-09 — v1.53.1: Fix session-start post-setup + post-merge branch cleanup
 
 setup-skeleton: Step 11 folded into Final Step (was skippable). git-flow:

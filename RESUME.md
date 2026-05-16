@@ -4,9 +4,10 @@
 IDLE
 
 ## Last Completed Task
-- v1.53.1: Fix session-start not triggered post-setup (folded into Final Step). Add post-merge cleanup to git-flow (branch -d, remote prune, RESUME update).
+- v1.54.0: agentskills.io Gap 3 — multi-line YAML description support. validate.py _extract_description(), 1024-char limit, pre-commit hook, skill-authoring, sync-skeleton Step 4c. Also fixed AGENTS.md missing discussion-continuity + version drift.
 
 ## Previously Completed
+- v1.53.1: Fix session-start not triggered post-setup (folded into Final Step). Add post-merge cleanup to git-flow (branch -d, remote prune, RESUME update).
 - v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.
 - v1.34: Native-first rule delivery + deterministic enforcement hooks. .claude/rules/ auto-load, AGENTS.md inline, condensed configs, pre-commit hook, 10 skill-wiring gaps fixed. PR #31 merged.
 - v1.31: refactor-code workflow (4-phase safe restructure). CSO description fixes (systematic-debugger, domain-expert, task-planner wired into develop-feature). Session-start mandate added directly to all tool config files and templates (CLAUDE.md, GEMINI.md, Cursor, Copilot, Windsurf) — was only in AGENTS.md which tools read lazily. sync-skeleton propagates fix to downstream projects.
