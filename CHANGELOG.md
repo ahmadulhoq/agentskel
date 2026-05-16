@@ -4,6 +4,16 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-17 — v1.55.0: Post-sync workflow/skill triage via affected: field
+
+CHANGELOG entries now include `affected: name, name, ...` for changes touching
+workflows/skills. sync-skeleton Step 4d collects these from applied entries,
+writes SYNC PENDING TRIAGE to RESUME Session Notes. Final Step triages: re-reads
+active workflows/skills, surfaces non-active to user, clears entry.
+skeleton-contribution-checklist + task-completion SKILL Step 1 document the rule.
+Backfilled affected: into v1.54.2 entry.
+affected: sync-skeleton, task-completion, skill-authoring
+
 ## 2026-05-17 — v1.54.2: Workflow plan gate strengthening
 
 Closes "concerns ≠ plan" rationalization loophole. Agents were listing
@@ -12,6 +22,7 @@ implement-task, fix-tech-debt, refactor-code: plan step strengthened with
 explicit definition (approach + files + decisions). debug-issue: added
 missing approval gate (step 10b) before Phase 4 — previously had none.
 10 files changed.
+affected: develop-feature, implement-task, fix-tech-debt, refactor-code, debug-issue
 
 ## 2026-05-16 — v1.54.1: agentskills.io Gaps 1, 2, 4 — license, compatibility, references/
 

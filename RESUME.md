@@ -4,9 +4,13 @@
 IDLE
 
 ## Last Completed Task
-- v1.54.1: agentskills.io Gaps 1+2+4 — license: MIT (all SKILL.md), compatibility (skill-authoring), task-completion/references/, skill-authoring guide updated. Gap 5 N/A.
+- v1.55.0: Post-sync workflow/skill triage via affected: field. CHANGELOG entries for skeleton now include affected: names. sync-skeleton Step 4d + Final Step triage. task-completion + checklist updated.
 
 ## Previously Completed
+- v1.54.2: Workflow plan gate strengthening. "Concerns ≠ plan" definition added to develop-feature, implement-task, fix-tech-debt, refactor-code. Missing approval gate added to debug-issue before Phase 4. 10 workflow files changed.
+
+## Previously Completed
+- v1.54.1: agentskills.io Gaps 1+2+4 — license: MIT (all SKILL.md), compatibility (skill-authoring), task-completion/references/, skill-authoring guide updated. Gap 5 N/A.
 - v1.54.0: agentskills.io Gap 3 — multi-line YAML description support. validate.py _extract_description(), 1024-char limit, pre-commit hook, skill-authoring, sync-skeleton Step 4c.
 
 ## Previously Completed
