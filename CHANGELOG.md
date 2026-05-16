@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-09 — v1.53.0: discussion-continuity skill + task-completion Step 6c
+
+New skill: PAUSE saves topic/agreed/open/gate to Session Notes before switching.
+RESUME retrieves on return or "where were we." task-completion Step 6c
+hard-enforces resume after every workflow. Gate field prevents treating return
+phrase as implementation approval.
+
 ## 2026-05-09 — v1.52.0: Session Notes, task capture routing, backlog grooming
 
 RESUME.md Session Notes section (within-session todos). core-behavior.md

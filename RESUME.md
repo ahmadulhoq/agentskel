@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.52.0: Session Notes in RESUME.md, Task Capture routing rule in core-behavior.md, backlog grooming in janitor Step 3. BACKLOG design iteration complete.
+- v1.53.0: discussion-continuity skill (PAUSE/RESUME operations) + task-completion Step 6c hard-enforcement. Discussions now have a formal lifecycle via Session Notes.
 
 ## Previously Completed
 - v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.
