@@ -29,6 +29,9 @@ Use semver (MAJOR.MINOR.PATCH):
       ```
       List only the workflow/skill **names** (kebab-case, no paths). Omit the line
       entirely if no workflow or skill files were changed.
+      **Precision rule:** only include a name if that workflow/skill's file was
+      directly modified in this change — do not include names merely mentioned
+      in prose, descriptions, or as context.
 - This field is machine-read by `sync-skeleton` to notify downstream projects which
   workflows/skills were updated.
 
