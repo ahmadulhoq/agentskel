@@ -20,6 +20,11 @@
 - **Pattern:** Rules in always-on files get forgotten under compaction. Checklists are the enforcement mechanism — if a rule isn't in the checklist, it won't be followed.
 - **Rule:** After any skeleton change, VERSION bump is the first step of skeleton-contribution-checklist (now enforced). If you notice a version hasn't been bumped after a commit, bump it immediately and note the sequence error in CHANGELOG.
 
+## Lesson 005 — 2026-05-09
+- **Mistake:** Implemented BACKLOG.md feature after user said "ok backlog now" — without re-presenting the plan or getting explicit approval.
+- **Pattern:** A topic redirect ("let's go back to X") after a prior gate ("want to proceed or adjust?") was misread as implementation approval. Long prior discussion made the intent feel obvious, so confirmation was skipped.
+- **Rule:** A gate stays open until explicitly cleared with GO/proceed/implement. A topic redirect (coming back after doing something else) is NOT approval — re-surface the plan and wait. "Confirm even when you think the intent is obvious" means especially when it feels obvious.
+
 ## Lesson 003 — 2026-03-27
 - **Mistake:** Launched 3 explore agents to scan the entire codebase for static analysis references, when MAP.md already listed which files use platform markers and SYMBOLS.md had exact paths for every skill, workflow, and standard.
 - **Pattern:** Defaulting to broad codebase search instead of consulting cartographed memory first. The whole point of cartography is to avoid re-scanning.
