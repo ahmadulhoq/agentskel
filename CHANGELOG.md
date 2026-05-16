@@ -1,5 +1,16 @@
 # agentskel Changelog
 
+## v1.51.1 — 2026-05-09
+
+### BACKLOG.md: Jira ticket linking column
+
+Added `Jira Ticket` column to BACKLOG.md template. When Jira is configured,
+agent prompts for ticket key on new entries — blank means local-only intention
+not yet planned in Jira. Makes planned vs unplanned items visible at a glance
+without creating a second source of truth.
+Files: core/memory/BACKLOG.md, core/skills/task-completion/SKILL.md,
+.agents/skills/task-completion/SKILL.md.
+
 ## v1.51.0 — 2026-05-09
 
 ### Shared BACKLOG.md — persistent task queue across sessions

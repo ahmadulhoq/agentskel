@@ -78,6 +78,10 @@ to the user or starting anything else.**
       Cap Done at 5 entries — drop the oldest if needed.
 - [ ] If `RESUME.md` Next Task is now empty and BACKLOG.md has P0 or P1 items,
       pull the highest-priority item into `RESUME.md` Next Task.
+- [ ] When adding a new item to BACKLOG.md: if Jira is configured
+      (`jira` in Supported Tools in CONFIG.md), prompt the user for the Jira ticket key
+      and populate the `Jira Ticket` column. Leave blank if no ticket exists — this
+      marks the item as a local intention not yet planned in Jira.
 - Skip if BACKLOG.md does not exist (pre-v1.51.0 project — remind user to run sync-skeleton).
 
 ## Step 7 — Memory commit
