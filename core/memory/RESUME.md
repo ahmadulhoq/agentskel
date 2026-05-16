@@ -9,6 +9,9 @@ IDLE
 ## Next Task
 - No pending tasks. Ready for new assignment.
 
+## Session Notes
+- _(Within-session parking lot. Agent adds items here when told "add to todo" or "remind me." Cleared by agent when addressed. Unresolved items carry to the next session.)_
+
 ## Context Notes (Persistent)
 - _(Agent adds persistent context here across sessions)_
 

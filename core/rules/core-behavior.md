@@ -43,6 +43,17 @@ description: Core operating behavior for all agents in this repo.
   via NEEDS_REVIEW.md.
 - **If something goes sideways, STOP and re-plan.** Don't keep pushing.
 
+## Task Capture
+
+When the user says to note or save something, route it to the right place:
+
+- **"add to todo" / "remind me" / "note this"** → `.memory/RESUME.md` Session Notes (this conversation)
+- **"add to backlog" / "do this later" / "park this"** → `.memory/BACKLOG.md` (P2 by default; P0/P1 if priority is stated)
+- **Multiple "do next session" items** → BACKLOG.md P0; `RESUME Next Task` holds the top P0 only
+- **Ambiguous** → confirm before adding: "Session note (this conversation) or backlog (future session)?"
+
+Session Notes are cleared when addressed. BACKLOG items persist until moved to Done.
+
 ## Task Completion
 
 After completing a task that modified any file **outside `.memory/`** — source code, docs, tests, config, hooks, workflows, rules, templates — execute the **`task-completion`** skill before responding. It handles CHANGELOG, TIME_LOG, SYMBOLS/MAP, Knowledge Bus, RESUME, and memory commits.

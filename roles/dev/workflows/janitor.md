@@ -33,7 +33,22 @@ This step is informational — flag items to the user, do not delete anything.
 
 ---
 
-## Step 3 — Review NEEDS_REVIEW.md (per repo)
+## Step 3 — Backlog Grooming (per repo)
+
+1. If `.memory/BACKLOG.md` does not exist → skip this step.
+2. Read `.memory/BACKLOG.md`.
+3. Flag stale items (non-blocking — present findings, do not modify without user confirmation):
+   - **P0 items older than 14 days** → "Still critical? Consider demoting to P1 or resolving."
+   - **P1 items older than 30 days** → "Still this sprint? Consider demoting to P2."
+   - **P2 items older than 60 days** → "Still relevant? Consider dropping or promoting."
+4. Present summary: "N items need grooming (oldest: [date]). Review now or skip?"
+   User can skip — this is informational, not a gate.
+5. If user wants to groom: update priorities or remove items as directed, then
+   save changes to `.memory/BACKLOG.md`.
+
+---
+
+## Step 4 — Review NEEDS_REVIEW.md (per repo)
 
 1. Read `.memory/NEEDS_REVIEW.md` in the active project repo.
 2. If any items are older than 14 days and still unresolved, surface them to the user for classification.
@@ -41,15 +56,13 @@ This step is informational — flag items to the user, do not delete anything.
 
 ---
 
-## Step 4 — Commit
+## Step 5 — Commit
 
-Commit all changes to the blueprint repo. Since the project agent is working on blueprint files via `[BLUEPRINT_PATH]`, commit from within that directory:
-```
-cd [BLUEPRINT_PATH]
-git add bus/
-git commit -m "janitor: archive bus entries for YYYY-MM"
-git push origin [DEFAULT_BRANCH]
-cd -
+Commit all changes to the blueprint repo:
+```bash
+git -C [BLUEPRINT_PATH] add bus/
+git -C [BLUEPRINT_PATH] commit -m "janitor: archive bus entries for YYYY-MM"
+git -C [BLUEPRINT_PATH] push origin [DEFAULT_BRANCH]
 ```
 
 ---

@@ -1,5 +1,23 @@
 # agentskel Changelog
 
+## v1.52.0 — 2026-05-09
+
+### Session Notes, task capture routing, and backlog grooming
+
+Three related improvements to the task/backlog model:
+
+- `core/memory/RESUME.md` — new `Session Notes` section between Next Task
+  and Context Notes. Within-session parking lot for "add to todo" items.
+  Unresolved notes carry to next session; agent clears when addressed.
+- `core/rules/core-behavior.md` — new `Task Capture` section maps natural
+  language to correct file: "add to todo" → Session Notes, "add to backlog"
+  → BACKLOG.md, ambiguous → agent confirms. Also clarifies: Next Task = top
+  P0 pointer only; multiple next-session items go to BACKLOG.md P0.
+- `roles/dev/workflows/janitor.md` — new Step 3 Backlog Grooming: flags P0
+  items older than 14 days, P1 older than 30 days, P2 older than 60 days.
+  Non-blocking — user can skip. Also fixes `cd [BLUEPRINT_PATH]` → `git -C`
+  in commit step (same Bash CWD bleed fix as sync-skeleton/setup-skeleton).
+
 ## v1.51.1 — 2026-05-09
 
 ### BACKLOG.md: Jira ticket linking column
