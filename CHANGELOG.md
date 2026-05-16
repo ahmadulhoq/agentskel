@@ -12,7 +12,11 @@ writes SYNC PENDING TRIAGE to RESUME Session Notes. Final Step triages: re-reads
 active workflows/skills, surfaces non-active to user, clears entry.
 skeleton-contribution-checklist + task-completion SKILL Step 1 document the rule.
 Backfilled affected: into v1.54.2 entry.
-affected: sync-skeleton, task-completion, skill-authoring
+affected: sync-skeleton, task-completion
+
+## 2026-05-17 — v1.55.1: Fix skill-authoring false positive in v1.55.0 affected: line
+
+Removed skill-authoring from v1.55.0 affected: — no skill-authoring files changed.
 
 ## 2026-05-17 — v1.54.2: Workflow plan gate strengthening
 
