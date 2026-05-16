@@ -1,5 +1,23 @@
 # agentskel Changelog
 
+## v1.51.0 — 2026-05-09
+
+### Shared BACKLOG.md — persistent task queue across sessions
+
+New memory file `BACKLOG.md` gives agents a durable, session-spanning task
+queue. Items survive context resets; the agent pulls the next P0/P1 into
+RESUME.md Next Task at each task-completion.
+
+- `core/memory/BACKLOG.md` — new template (P0/P1/P2 table + Done section,
+  ID format BL-NNN, Done capped at 5 entries)
+- `session-start` Step 2 — line-count check, surfaces count if > 15 lines
+- `task-completion` Step 6 — split into 6a (RESUME) + 6b (BACKLOG sync:
+  mark done, pull next P0/P1 into RESUME Next Task)
+- `setup-skeleton` Step 4 — creates BACKLOG.md during install; also fixes
+  remaining `cd .memory / cd ..` pattern (replaced with `git -C .memory`)
+- `sync-skeleton` Step 5i — migration for existing projects (create
+  BACKLOG.md if absent, skeleton v1.50.2 → v1.51.0)
+
 ## v1.50.2 — 2026-05-09
 
 ### Fix setup-skeleton Step 9: return to default branch after PR push

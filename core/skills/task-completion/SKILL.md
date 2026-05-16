@@ -64,13 +64,21 @@ to the user or starting anything else.**
       as this skill).
 - Skip entirely for downstream projects (Skeleton Path ≠ `.`).
 
-## Step 6 — RESUME.md
+## Step 6 — RESUME.md and BACKLOG.md
 
+### 6a — RESUME.md
 - [ ] Update `.memory/RESUME.md` with:
   - Task outcome (what was done)
   - Current status
   - Any follow-up work needed
 - [ ] If no more tasks are pending, set Status to IDLE.
+
+### 6b — BACKLOG.md (if `.memory/BACKLOG.md` exists)
+- [ ] If this task was tracked in BACKLOG.md, move its row to the Done section.
+      Cap Done at 5 entries — drop the oldest if needed.
+- [ ] If `RESUME.md` Next Task is now empty and BACKLOG.md has P0 or P1 items,
+      pull the highest-priority item into `RESUME.md` Next Task.
+- Skip if BACKLOG.md does not exist (pre-v1.51.0 project — remind user to run sync-skeleton).
 
 ## Step 7 — Memory commit
 

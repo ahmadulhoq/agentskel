@@ -43,6 +43,7 @@ until this procedure is complete.**
 ### Check only (deferred — loaded by workflows when needed):
 
 - [ ] `.memory/NEEDS_REVIEW.md` — check line count (`wc -l`). If > 15 lines (has entries), state the count: "N items pending triage in NEEDS_REVIEW.md." Do not read the full content.
+- [ ] `.memory/BACKLOG.md` — check line count (`wc -l`). If > 15 lines (has entries), state: "N lines in BACKLOG.md — items pending. Review before starting work." Do not read the full content.
 - `.memory/VERSIONS.md` — **do not read at session start.** Loaded by `check-dependencies`, `develop-feature`, and `fix-tech-debt` when needed. Session-start only checks the `Last Dependency Check` timestamp in CONFIG.md (Step 5).
 
 ## Step 3 — Surface alerts

@@ -134,14 +134,13 @@ Read each template from `[SKELETON_PATH]/core/memory/` and create the correspond
 - `TIME_LOG.md` — fill placeholders; leave rows blank
 - `DEPENDENCY_ALERTS.md` — create with empty Active Alerts section
 - `DEPENDENCY_HISTORY.md` — create with header comment only; first entry will be added at first release
+- `BACKLOG.md` — fill `[APP_NAME]`; leave item rows empty
 
 Commit all memory files to the ai-memory branch:
 ```bash
-cd .memory
-git add -A
-git commit -m "setup-skeleton: initialise memory files"
-git push origin ai-memory
-cd ..
+git -C .memory add -A
+git -C .memory commit -m "setup-skeleton: initialise memory files"
+git -C .memory push origin ai-memory
 ```
 
 ---

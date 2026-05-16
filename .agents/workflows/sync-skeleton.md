@@ -394,6 +394,19 @@ Include all files in the Step 6 commit.
 
 ---
 
+## Step 5i — Migration: v1.50.2 to v1.51.0 (BACKLOG.md)
+
+Skip this step if the project is already on skeleton v1.51.0+.
+
+If `.memory/BACKLOG.md` does not exist:
+
+1. Copy `[SKELETON_PATH]/core/memory/BACKLOG.md` to `.memory/BACKLOG.md`.
+2. Replace `[APP_NAME]` with the project name from `.memory/CONFIG.md`.
+3. Leave all item rows empty — the agent will populate on first use.
+4. Include in the Step 5 memory commit.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new
