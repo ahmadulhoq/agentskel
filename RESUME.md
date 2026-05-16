@@ -14,6 +14,9 @@ IDLE
 ## Next Task
 - (none)
 
+## Session Notes
+- (none)
+
 ## Context Notes (Persistent)
 - agentskel is the skeleton repo itself — Skeleton Path = `.` in CONFIG.md
 - `.agents/` contains copies (not symlinks) of core/ and roles/dev/ files, synced via sync-skeleton
