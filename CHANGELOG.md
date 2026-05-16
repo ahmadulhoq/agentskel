@@ -1,5 +1,24 @@
 # agentskel Changelog
 
+## v1.53.0 — 2026-05-09
+
+### discussion-continuity skill — formal discussion lifecycle
+
+Discussions had no formal lifecycle; context was lost when interrupted by
+workflows. This ships two coordinated pieces:
+
+- New `core/skills/discussion-continuity/SKILL.md` — PAUSE operation saves
+  topic/agreed/open/gate to Session Notes before switching tasks; RESUME
+  operation retrieves and re-presents on return or on explicit user request
+  ("where were we", "present the discussion"). Gate field prevents treating
+  return phrase as implementation approval.
+- `task-completion` Step 6c — hard-enforcement safety net: after every
+  workflow, checks Session Notes for `DISCUSSION PAUSED:` entries and
+  invokes discussion-continuity (Operation B) if found. Fires even when
+  agent missed the PAUSE step.
+- `.claude/skills/discussion-continuity.md` — Claude Code stub for
+  CSO auto-discovery.
+
 ## v1.52.0 — 2026-05-09
 
 ### Session Notes, task capture routing, and backlog grooming

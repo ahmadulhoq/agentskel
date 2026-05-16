@@ -84,6 +84,14 @@ to the user or starting anything else.**
       marks the item as a local intention not yet planned in Jira.
 - Skip if BACKLOG.md does not exist (pre-v1.51.0 project — remind user to run sync-skeleton).
 
+### 6c — Discussion resume check
+- [ ] Read `.memory/RESUME.md` Session Notes.
+- [ ] If any `DISCUSSION PAUSED:` entries exist → invoke the `discussion-continuity`
+      skill (Operation B) to resurface the discussion before ending this response.
+      Re-ask the open gate question explicitly. Do NOT skip this — a paused
+      discussion means the user is waiting for a continuation, not a task summary.
+- Skip if Session Notes has no `DISCUSSION PAUSED:` entries.
+
 ## Step 7 — Memory commit
 
 - [ ] Commit all `.memory/` changes to the ai-memory branch:
