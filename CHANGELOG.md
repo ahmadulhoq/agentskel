@@ -4,6 +4,15 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-17 — v1.54.2: Workflow plan gate strengthening
+
+Closes "concerns ≠ plan" rationalization loophole. Agents were listing
+concerns then proceeding without explicit approval. develop-feature,
+implement-task, fix-tech-debt, refactor-code: plan step strengthened with
+explicit definition (approach + files + decisions). debug-issue: added
+missing approval gate (step 10b) before Phase 4 — previously had none.
+10 files changed.
+
 ## 2026-05-16 — v1.54.1: agentskills.io Gaps 1, 2, 4 — license, compatibility, references/
 
 license: MIT added to all 34 SKILL.md files. compatibility added to skill-authoring
