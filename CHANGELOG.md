@@ -1,5 +1,15 @@
 # agentskel Changelog
 
+## v1.50.2 — 2026-05-09
+
+### Fix setup-skeleton Step 9: return to default branch after PR push
+
+After `git push origin chore/setup-skeleton` the main worktree stayed on the
+setup branch. Attempting to delete that branch (after merging the PR) or
+checkout `ai-memory` (already a worktree) both fail with fatal errors. Added
+`git checkout [DEFAULT_BRANCH]` immediately after the PR creation step.
+Files: roles/dev/workflows/setup-skeleton.md, .agents/workflows/setup-skeleton.md.
+
 ## v1.50.1 — 2026-05-09
 
 ### Fix pre-memory-push hook: skip rebase-pull when remote already integrated

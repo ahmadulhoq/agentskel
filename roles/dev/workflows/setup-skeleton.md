@@ -546,6 +546,14 @@ gh pr create \
 
 **Do NOT merge the PR yourself.** The team should review the installed rules and workflows before they land on `[DEFAULT_BRANCH]`.
 
+Return the main worktree to the default branch so subsequent git operations
+(branch deletion, worktree checks) don't fail due to the current branch being
+the setup branch:
+
+```bash
+git checkout [DEFAULT_BRANCH]
+```
+
 ---
 
 ## Step 9b — Register with workspace (mode B only)
