@@ -4,7 +4,10 @@
 IDLE
 
 ## Last Completed Task
-- v1.54.0: agentskills.io Gap 3 — multi-line YAML description support. validate.py _extract_description(), 1024-char limit, pre-commit hook, skill-authoring, sync-skeleton Step 4c. Also fixed AGENTS.md missing discussion-continuity + version drift.
+- v1.54.1: agentskills.io Gaps 1+2+4 — license: MIT (all SKILL.md), compatibility (skill-authoring), task-completion/references/, skill-authoring guide updated. Gap 5 N/A.
+
+## Previously Completed
+- v1.54.0: agentskills.io Gap 3 — multi-line YAML description support. validate.py _extract_description(), 1024-char limit, pre-commit hook, skill-authoring, sync-skeleton Step 4c.
 
 ## Previously Completed
 - v1.53.1: Fix session-start not triggered post-setup (folded into Final Step). Add post-merge cleanup to git-flow (branch -d, remote prune, RESUME update).

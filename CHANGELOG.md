@@ -4,6 +4,14 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-16 — v1.54.1: agentskills.io Gaps 1, 2, 4 — license, compatibility, references/
+
+license: MIT added to all 34 SKILL.md files. compatibility added to skill-authoring
+(only skill referencing .claude/ in body). task-completion/skeleton-contribution-
+checklist.md moved to references/ subdirectory. skill-authoring Step 1 documents
+optional standard fields. Gap 5 (skills-ref CI) closed as N/A.
+40 files changed.
+
 ## 2026-05-16 — v1.54.0: agentskills.io Gap 3 — multi-line YAML description support
 
 validate.py: _extract_description() handles folded/block YAML scalars;
