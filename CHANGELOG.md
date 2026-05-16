@@ -22,7 +22,12 @@ a skeleton sync, and agents re-read any that are currently active.
   non-active ones to user, then clears the triage entry.
 - **Backfilled:** `affected:` added to v1.54.2 CHANGELOG entry retroactively.
 
-affected: sync-skeleton, task-completion, skill-authoring
+affected: sync-skeleton, task-completion
+
+## v1.55.1 — 2026-05-17
+
+Fix false positive: removed `skill-authoring` from v1.55.0 `affected:` line.
+No skill-authoring files were modified in v1.55.0 — the entry was written too broadly.
 
 ## v1.54.2 — 2026-05-17
 
