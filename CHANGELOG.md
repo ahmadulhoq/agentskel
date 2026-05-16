@@ -14,6 +14,12 @@ skeleton-contribution-checklist + task-completion SKILL Step 1 document the rule
 Backfilled affected: into v1.54.2 entry.
 affected: sync-skeleton, task-completion
 
+## 2026-05-17 — v1.55.4: Replace broken Stop hook with deterministic script
+
+stop-verify.sh: checks uncommitted project/.memory/ changes, exits 0 or 2.
+settings.json: Stop hook changed from type:prompt (loop) to type:command.
+LESSONS.md 006: plan-first applies even to urgent-seeming bugs.
+
 ## 2026-05-17 — v1.55.3: Remove broken Stop hook + fix v1.55.2 affected: gap
 
 Stop hook type:prompt caused infinite loop (response triggers Stop again).
