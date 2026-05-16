@@ -4,6 +4,13 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-09 — v1.52.0: Session Notes, task capture routing, backlog grooming
+
+RESUME.md Session Notes section (within-session todos). core-behavior.md
+Task Capture section (routes "add to todo/backlog" to correct file). janitor
+Step 3 backlog grooming (P0/P1/P2 staleness, non-blocking). janitor cd fix.
+7 files changed.
+
 ## 2026-05-09 — v1.51.1: BACKLOG.md Jira ticket linking column
 
 Added Jira Ticket column to BACKLOG.md template. Blank = local-only intention.
