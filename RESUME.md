@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.51.0: Shared BACKLOG.md — new core/memory/BACKLOG.md template, session-start line-count check, task-completion Step 6 split (6a RESUME + 6b BACKLOG), setup-skeleton creates on install, sync-skeleton Step 5i migration for existing projects.
+- v1.51.1: BACKLOG.md Jira ticket linking column. Blank = local-only, populated = planned in Jira. task-completion 6b updated. Design evaluation ongoing for items 2–4 (TODO vs BACKLOG naming, capture convention, janitor review).
 
 ## Previously Completed
 - v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.

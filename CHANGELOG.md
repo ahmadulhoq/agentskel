@@ -4,6 +4,12 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-09 — v1.51.1: BACKLOG.md Jira ticket linking column
+
+Added Jira Ticket column to BACKLOG.md template. Blank = local-only intention.
+Populated = planned in Jira. Agent prompts for key when Jira configured.
+task-completion 6b updated with Jira column guidance.
+
 ## 2026-05-09 — v1.51.0: Shared BACKLOG.md — persistent task queue
 
 New core/memory/BACKLOG.md (P0/P1/P2 table + Done). session-start line-count
