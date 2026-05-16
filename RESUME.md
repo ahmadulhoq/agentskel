@@ -4,12 +4,12 @@
 IDLE
 
 ## Last Completed Task
-- v1.37: Created INSTALL.md with manual installation instructions for Cursor, GitHub Copilot, Windsurf, and Codex. Addressed issue #30.
+- v1.37: INSTALL.md for issue #30. Stop hook caught missing task-completion — .memory/CHANGELOG.md and TIME_LOG.md were not updated for v1.34 or v1.37 work until the hook flagged it.
 
 ## Previously Completed
-- v1.36: Fix sync-skeleton cd .memory directory bleed. Step 5 used cd .memory/cd .. — Bash tool persists CWD, causing gh pr create to run from .memory/ on ai-memory branch. Replaced with git -C .memory throughout. Added warning callout block.
-- v1.35: Fix pre-commit-check.sh worktree branch detection. Three-pronged guard: root branch, git -C .memory branch --show-current, command string grep.
-- v1.34: Native-first rule delivery + deterministic enforcement hooks. PR #31 merged.
+- v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.
+- v1.34: Native-first rule delivery + deterministic enforcement hooks. .claude/rules/ auto-load, AGENTS.md inline, condensed configs, pre-commit hook, 10 skill-wiring gaps fixed. PR #31 merged.
+- v1.31: refactor-code workflow (4-phase safe restructure). CSO description fixes (systematic-debugger, domain-expert, task-planner wired into develop-feature). Session-start mandate added directly to all tool config files and templates (CLAUDE.md, GEMINI.md, Cursor, Copilot, Windsurf) — was only in AGENTS.md which tools read lazily. sync-skeleton propagates fix to downstream projects.
 
 ## Next Task
 - (none)
