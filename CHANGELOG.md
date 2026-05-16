@@ -1,5 +1,17 @@
 # agentskel Changelog
 
+## v1.55.2 — 2026-05-17
+
+Fix: add precision rule to `affected:` checklist — only include a workflow/skill
+name if its file was directly modified, not merely mentioned in prose.
+Caught by dogfooding the triage feature (v1.55.1 removed the false positive;
+this hardens the rule to prevent recurrence).
+
+## v1.55.1 — 2026-05-17
+
+Fix false positive: removed `skill-authoring` from v1.55.0 `affected:` line.
+No skill-authoring files were modified in v1.55.0 — the entry was written too broadly.
+
 ## v1.55.0 — 2026-05-17
 
 ### Post-sync workflow/skill triage via `affected:` field
@@ -22,7 +34,12 @@ a skeleton sync, and agents re-read any that are currently active.
   non-active ones to user, then clears the triage entry.
 - **Backfilled:** `affected:` added to v1.54.2 CHANGELOG entry retroactively.
 
-affected: sync-skeleton, task-completion, skill-authoring
+affected: sync-skeleton, task-completion
+
+## v1.55.1 — 2026-05-17
+
+Fix false positive: removed `skill-authoring` from v1.55.0 `affected:` line.
+No skill-authoring files were modified in v1.55.0 — the entry was written too broadly.
 
 ## v1.54.2 — 2026-05-17
 
