@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.37: INSTALL.md for issue #30. Stop hook caught missing task-completion — .memory/CHANGELOG.md and TIME_LOG.md were not updated for v1.34 or v1.37 work until the hook flagged it.
+- v1.50.1: Fix pre-memory-push hook — skip rebase-pull when remote already integrated (merge-base --is-ancestor guard). CONFIG.md Skeleton Version synced to 1.50.0, Last Dependency Check updated to 2026-05-09. Conventions check still never run — remind user.
 
 ## Previously Completed
 - v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.

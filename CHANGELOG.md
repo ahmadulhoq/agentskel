@@ -4,6 +4,15 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-09 — v1.50.1: Fix pre-memory-push hook rebase-pull on already-integrated remote
+
+Hook ran pull --rebase unconditionally. After a merge commit, the rebase
+conflicted on old commits already resolved by the merge. Fix: skip pull when
+merge-base --is-ancestor confirms remote is already in HEAD.
+Files: .claude/hooks/pre-memory-push.sh, core/claude-hooks/pre-memory-push.sh.
+Also: updated CONFIG.md Last Dependency Check to 2026-05-09 (check-dependencies
+ran on empty dep list — agentskel has no code dependencies).
+
 ## 2026-04-24 — v1.50.0: Static validator + CI
 
 Added `scripts/validate.py` with five deterministic checks (frontmatter shape,
