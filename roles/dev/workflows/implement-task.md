@@ -30,6 +30,8 @@ description: Generic wrapper for any ad-hoc implementation request that doesn't 
    - **Estimated human effort** (how long a senior dev would take)
 6. Present the plan to the user. **Wait for explicit approval before
    writing any code.** No exceptions — every task requires approval.
+   **Concerns and tradeoffs alone are not a plan.** A plan must state: (1) proposed
+   approach, (2) files to modify, (3) open decision points.
 
 ## Phase 1b: Branch
 7. Create the branch following the **`git-flow`** skill before writing

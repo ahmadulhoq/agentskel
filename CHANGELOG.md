@@ -1,5 +1,22 @@
 # agentskel Changelog
 
+## v1.54.2 — 2026-05-17
+
+### Workflow plan gate strengthening
+
+Closes the "concerns ≠ plan" rationalization loophole observed in downstream projects.
+Agents were listing concerns/tradeoffs and then proceeding to implement without waiting
+for explicit approval — the existing gate text ("wait for approval") was too vague.
+
+- **develop-feature, implement-task, fix-tech-debt, refactor-code:** Strengthened the
+  plan presentation step with an explicit definition: a plan must state (1) proposed
+  approach, (2) files to modify, (3) open decision points. Concerns and tradeoffs alone
+  are not a plan.
+- **debug-issue:** Added a missing approval gate (step 10b) between Phase 3 (Root Cause
+  Isolation) and Phase 4 (Fix). Previously had no gate — agent could go straight from
+  root cause confirmation to writing code.
+- 10 files changed (5 source workflows in `roles/dev/workflows/` + 5 `.agents/` copies).
+
 ## v1.54.1 — 2026-05-16
 
 ### agentskills.io standard compliance — Gaps 1, 2, 4: license, compatibility, references/

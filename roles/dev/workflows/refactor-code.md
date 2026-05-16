@@ -35,7 +35,9 @@ description: When restructuring, renaming, or reorganising existing code without
 
 6. Write an explicit **out-of-scope** list — behavior changes, dependency upgrades, and bug fixes that will NOT happen in this PR.
 7. Break the refactor into atomic steps, each leaving tests green.
-8. Present the plan and out-of-scope list to the user. **Wait for approval.**
+8. Present the plan and out-of-scope list to the user. **Wait for explicit approval.**
+   **Concerns and tradeoffs alone are not a plan.** A plan must state: (1) proposed
+   approach, (2) files to modify, (3) open decision points.
 
 ## Phase 3: Execute (step-by-step)
 9. Follow `developer` skill standards.

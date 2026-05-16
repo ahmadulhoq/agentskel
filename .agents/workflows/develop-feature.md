@@ -35,7 +35,10 @@ use the `implement-from-ticket` workflow instead. If not from a ticket, continue
    - Any SACRED.md entries that might be affected
    - **Estimated human effort** (how long a senior dev would take manually)
 7. For large features with independent subtasks, use `subagent-dispatch` to parallelize implementation.
-8. Present the plan to the user. Wait for approval.
+8. Present the plan to the user. Wait for explicit approval before proceeding to Phase 2.
+   **Concerns and tradeoffs alone are not a plan.** A plan must state: (1) proposed
+   approach, (2) files to modify, (3) open decision points. Do not proceed without
+   an explicit "yes" or equivalent.
 9. Record the task start time.
 
 ## Phase 2: Implement

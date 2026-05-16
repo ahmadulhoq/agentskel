@@ -37,6 +37,9 @@ description: When the user reports a bug, an error, or unexpected behavior. Enfo
 
 9. Rule out each alternative hypothesis from step 5 explicitly.
 10. State the confirmed root cause with evidence.
+10b. Present the proposed fix to the user. State: approach, files to modify, and
+    alternatives considered. **Wait for explicit approval before writing any code.**
+    Concerns and tradeoffs alone are not a plan.
 
 ## Phase 4: Fix & Verify
 11. Implement the **minimal fix** targeting the confirmed root cause only.

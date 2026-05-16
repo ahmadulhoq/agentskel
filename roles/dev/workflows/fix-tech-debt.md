@@ -30,7 +30,9 @@ description: Systematic resolution of catalogued tech debt items from TECH_DEBT.
    - Risks and side effects (what might break)
    - Testing approach to prove the fix is correct and nothing regressed
    - **Estimated human effort** (how long a senior dev would take manually)
-7. Present the plan to the user. Wait for approval before writing any code.
+7. Present the plan to the user. Wait for explicit approval before writing any code.
+   **Concerns and tradeoffs alone are not a plan.** A plan must state: (1) proposed
+   approach, (2) files to modify, (3) open decision points.
 8. Record the task start time.
 
 ## Phase 2: Fix
