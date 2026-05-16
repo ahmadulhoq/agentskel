@@ -14,6 +14,12 @@ skeleton-contribution-checklist + task-completion SKILL Step 1 document the rule
 Backfilled affected: into v1.54.2 entry.
 affected: sync-skeleton, task-completion
 
+## 2026-05-17 — v1.55.2: Precision rule for affected: field
+
+Add precision rule to skeleton-contribution-checklist: only include a
+name if its file was directly modified, not merely mentioned in prose.
+Caught by dogfooding the triage feature.
+
 ## 2026-05-17 — v1.55.1: Fix skill-authoring false positive in v1.55.0 affected: line
 
 Removed skill-authoring from v1.55.0 affected: — no skill-authoring files changed.
