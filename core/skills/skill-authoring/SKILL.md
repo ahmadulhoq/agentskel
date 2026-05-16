@@ -38,7 +38,7 @@ skills to situations by scanning descriptions.
 2. Use the language a user would use in their request
 3. Start with "When..." or include "Use when..."
 4. Include the scenario, not the mechanism
-5. **Keep the description on a single line.** Multi-line YAML folded scalars (where the description spans two or more lines with continuation indent) break `.claude/skills/` stub generation and `AGENTS.md` catalog regeneration — both read the frontmatter line-by-line, so only the first line survives. A pre-commit hook enforces this on staged skill/workflow files.
+5. **Keep the description under 1024 characters** (agentskills.io spec hard limit). Multi-line YAML folded scalars (`>`) are supported — the validator and stub generator normalize them to a single string. If the description needs more than 2-3 sentences, the skill scope is probably too broad. A pre-commit hook enforces the 1024-char limit on staged files.
 
 | Bad (summary) | Good (triggering condition) |
 |---|---|
@@ -135,7 +135,7 @@ For **workflows**, location 1 is `roles/dev/workflows/X.md` and location 2 is
 **Stub format** (`.claude/skills/X.md`):
 ```yaml
 ---
-description: [same CSO description as source SKILL.md]
+description: [CSO description — normalize multi-line folded scalars to a single line]
 ---
 
 Read and follow the full skill at `.agents/skills/X/SKILL.md`.

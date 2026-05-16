@@ -8,7 +8,8 @@ every check passes, 1 when any check fails. Intended for pre-push and CI.
 Checks:
   1. frontmatter shape    — every skill/workflow has valid YAML frontmatter
                             with `description:` (and `name:` for SKILL.md)
-  2. single-line desc     — descriptions do not fold across multiple YAML lines
+  2. description length   — descriptions do not exceed 1024 characters
+                            (multi-line YAML folded scalars are supported)
   3. version consistency  — VERSION matches README, MASTER_PLAN, CONFIG
   4. stub parity          — .claude/skills/ stubs match sources byte-for-byte
                             in description + reference path; no orphans
@@ -29,9 +30,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
-DESC_LINE_RE = re.compile(r"^description:\s*(.*)$", re.MULTILINE)
 NAME_LINE_RE = re.compile(r"^name:\s*(.*)$", re.MULTILINE)
-MULTILINE_DESC_RE = re.compile(r"^description:.*\n[ \t]+\S", re.MULTILINE)
+
+MAX_DESC_CHARS = 1024  # agentskills.io spec hard limit
 
 PASS = "\033[32mPASS\033[0m"
 FAIL = "\033[31mFAIL\033[0m"
@@ -58,6 +59,32 @@ def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
+def _extract_description(frontmatter_block: str) -> str | None:
+    """Extract the logical description value from a YAML frontmatter block.
+
+    Handles single-line values and multi-line folded/block scalars (> and |).
+    Returns the value normalized to a single string with newlines collapsed to
+    spaces, or None if the field is missing or empty.
+    """
+    m = re.search(r"^description:[ \t]*(.*)", frontmatter_block, re.MULTILINE)
+    if not m:
+        return None
+    first = m.group(1).rstrip()
+    if first in (">", "|", ">-", "|-", ">+", "|+", ""):
+        # Multi-line scalar — collect indented continuation lines
+        rest = frontmatter_block[m.end():]
+        content = []
+        for line in rest.split("\n"):
+            if line and line[:1] in (" ", "\t"):
+                content.append(line.strip())
+            else:
+                break
+        joined = " ".join(content).strip()
+        return joined if joined else None
+    stripped = first.strip()
+    return stripped if stripped else None
+
+
 def _skill_workflow_files() -> list[Path]:
     patterns = [
         "core/skills/*/SKILL.md",
@@ -81,8 +108,8 @@ def check_frontmatter() -> Result:
             r.bad(f"{path.relative_to(REPO)}: missing or malformed YAML frontmatter")
             continue
         block = m.group(1)
-        desc_m = DESC_LINE_RE.search(block)
-        if not desc_m or not desc_m.group(1).strip():
+        desc = _extract_description(block)
+        if not desc:
             r.bad(f"{path.relative_to(REPO)}: frontmatter has no non-empty `description:`")
             continue
         if path.name == "SKILL.md":
@@ -94,12 +121,21 @@ def check_frontmatter() -> Result:
     return r
 
 
-def check_single_line_descriptions() -> Result:
-    r = Result("single-line descriptions")
+def check_description_length() -> Result:
+    r = Result(f"description length (≤{MAX_DESC_CHARS} chars)")
     for path in _skill_workflow_files():
         text = _read(path)
-        if MULTILINE_DESC_RE.search(text):
-            r.bad(f"{path.relative_to(REPO)}: description spans multiple YAML lines (breaks stub + catalog regeneration)")
+        m = FRONTMATTER_RE.match(text)
+        if not m:
+            continue  # frontmatter check will catch this
+        desc = _extract_description(m.group(1))
+        if desc is None:
+            continue  # frontmatter check will catch this
+        if len(desc) > MAX_DESC_CHARS:
+            r.bad(
+                f"{path.relative_to(REPO)}: description is {len(desc)} chars, "
+                f"exceeds {MAX_DESC_CHARS}-char limit"
+            )
             continue
         r.ok()
     return r
@@ -151,22 +187,30 @@ def check_stub_parity() -> Result:
         r.bad(".claude/skills/ directory missing")
         return r
 
-    # Build expected: name -> (source path, expected description)
-    expected: dict[str, tuple[Path, str, str]] = {}  # name -> (path, desc, kind)
+    # Build expected: name -> (source path, expected description, kind)
+    expected: dict[str, tuple[Path, str, str]] = {}
 
     for p in sorted(glob.glob(str(skills_dir / "*/SKILL.md"))):
-        name = Path(p).parent.name
-        m = DESC_LINE_RE.search(_read(Path(p)))
-        if not m:
+        path = Path(p)
+        name = path.parent.name
+        fm = FRONTMATTER_RE.match(_read(path))
+        if not fm:
             continue
-        expected[name] = (Path(p), m.group(1).strip(), "skill")
+        desc = _extract_description(fm.group(1))
+        if not desc:
+            continue
+        expected[name] = (path, desc, "skill")
 
     for p in sorted(glob.glob(str(workflows_dir / "*.md"))):
-        name = Path(p).stem
-        m = DESC_LINE_RE.search(_read(Path(p)))
-        if not m:
+        path = Path(p)
+        name = path.stem
+        fm = FRONTMATTER_RE.match(_read(path))
+        if not fm:
             continue
-        expected[name] = (Path(p), m.group(1).strip(), "workflow")
+        desc = _extract_description(fm.group(1))
+        if not desc:
+            continue
+        expected[name] = (path, desc, "workflow")
 
     # Check each stub
     stub_names: set[str] = set()
@@ -181,11 +225,11 @@ def check_stub_parity() -> Result:
 
         source_path, exp_desc, kind = expected[name]
         stub_text = _read(stub_path)
-        stub_m = DESC_LINE_RE.search(stub_text)
-        if not stub_m:
+        stub_fm = FRONTMATTER_RE.match(stub_text)
+        stub_desc = _extract_description(stub_fm.group(1)) if stub_fm else None
+        if not stub_desc:
             r.bad(f".claude/skills/{name}.md: stub has no `description:`")
             continue
-        stub_desc = stub_m.group(1).strip()
         if stub_desc != exp_desc:
             r.bad(f".claude/skills/{name}.md: description drift from source")
             continue
@@ -250,10 +294,12 @@ def check_agents_catalog_parity() -> Result:
         for p in sorted(glob.glob(str(REPO / pattern))):
             path = Path(p)
             name = path.parent.name if kind == "skill" else path.stem
-            m = DESC_LINE_RE.search(_read(path))
-            if not m:
+            text = _read(path)
+            fm = FRONTMATTER_RE.match(text)
+            desc = _extract_description(fm.group(1)) if fm else None
+            if not desc:
                 continue
-            out[name] = (m.group(1).strip(), str(path.relative_to(REPO)))
+            out[name] = (desc, str(path.relative_to(REPO)))
         return out
 
     exp_skills = expected_entries(".agents/skills/*/SKILL.md", "skill")
@@ -298,7 +344,7 @@ def check_changelog_has_version() -> Result:
 
 CHECKS = [
     check_frontmatter,
-    check_single_line_descriptions,
+    check_description_length,
     check_version_consistency,
     check_stub_parity,
     check_agents_catalog_parity,

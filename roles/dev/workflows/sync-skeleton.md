@@ -173,7 +173,7 @@ After updating `.agents/` sources in Step 4, refresh the derived artifacts so th
 
 **Refresh `.claude/skills/` stubs** (same logic as setup-skeleton Step 5b):
 
-1. For each `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`, regenerate `.claude/skills/[name].md` with the current frontmatter `description` (single line — multi-line descriptions are blocked by the pre-commit lint, so `grep -m1 '^description:' <file>` is reliable).
+1. For each `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`, regenerate `.claude/skills/[name].md` with the current frontmatter `description`. Use YAML-aware extraction (handle both single-line values and multi-line folded scalars `>`); normalize to a single line in the stub (join continuation lines with spaces). The `_extract_description()` function in `scripts/validate.py` is the reference implementation.
 2. **Orphan detection:** list existing `.claude/skills/*.md` whose corresponding source was renamed or removed in Step 4. Delete each orphan and report it to the user.
 3. Report the net change: N stubs regenerated, M stubs added, K orphans deleted.
 

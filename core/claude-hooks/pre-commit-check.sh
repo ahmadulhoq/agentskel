@@ -77,14 +77,34 @@ if [ -f ".memory/CONFIG.md" ] && grep -q 'Skeleton Path.*\.' .memory/CONFIG.md 2
     fi
 fi
 
-# Lint: staged skill/workflow files must use single-line YAML descriptions.
-# Multi-line descriptions break .claude/skills/ stub generation and AGENTS.md
-# catalog regeneration (both read the frontmatter line-by-line).
+# Lint: staged skill/workflow descriptions must not exceed 1024 chars
+# (agentskills.io spec limit). Multi-line YAML folded scalars (>) are allowed;
+# they are normalized to a single string for length measurement.
 STAGED=$(git diff --cached --name-only 2>/dev/null || true)
 if [ -n "$STAGED" ]; then
     BAD=$(echo "$STAGED" | python3 - <<'PY' 2>/dev/null || true
 import sys, re, os
-pattern = re.compile(r'^description:.*\n[ \t]+\S', re.MULTILINE)
+
+FM_RE = re.compile(r'^---\s*\n(.*?)\n---\s*\n', re.DOTALL)
+
+def extract_desc(fm_block):
+    m = re.search(r'^description:[ \t]*(.*)', fm_block, re.MULTILINE)
+    if not m:
+        return None
+    first = m.group(1).rstrip()
+    if first in ('>', '|', '>-', '|-', '>+', '|+', ''):
+        rest = fm_block[m.end():]
+        content = []
+        for line in rest.split('\n'):
+            if line and line[:1] in (' ', '\t'):
+                content.append(line.strip())
+            else:
+                break
+        joined = ' '.join(content).strip()
+        return joined if joined else None
+    stripped = first.strip()
+    return stripped if stripped else None
+
 bad = []
 for line in sys.stdin.read().splitlines():
     line = line.strip()
@@ -96,14 +116,18 @@ for line in sys.stdin.read().splitlines():
         continue
     with open(line) as f:
         text = f.read()
-    if pattern.search(text):
-        bad.append(line)
+    fm = FM_RE.match(text)
+    if not fm:
+        continue
+    desc = extract_desc(fm.group(1))
+    if desc and len(desc) > 1024:
+        bad.append(f"{line} ({len(desc)} chars)")
 if bad:
     print("; ".join(bad))
 PY
 )
     if [ -n "$BAD" ]; then
-        ERRORS="${ERRORS}Multi-line YAML description in: ${BAD}. Collapse to a single line (required for stub + catalog generation). "
+        ERRORS="${ERRORS}Description exceeds 1024-char limit in: ${BAD}. Shorten or split the skill scope. "
     fi
 fi
 

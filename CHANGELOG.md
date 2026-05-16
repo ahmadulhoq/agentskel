@@ -1,5 +1,30 @@
 # agentskel Changelog
 
+## v1.54.0 — 2026-05-16
+
+### agentskills.io standard compliance — Gap 3: multi-line YAML description support
+
+Removes the single-line description constraint that diverged from the
+agentskills.io open standard (which allows up to 1024 chars and recommends
+multi-line YAML folded scalars for richer triggering descriptions).
+
+- `scripts/validate.py` — replaced `check_single_line_descriptions()` with
+  `check_description_length()` (≤1024 chars, per spec). Added
+  `_extract_description()` helper that handles single-line, folded (`>`), and
+  block (`|`) YAML scalars. Updated `check_frontmatter()`, `check_stub_parity()`,
+  and `check_agents_catalog_parity()` to use it.
+- `core/claude-hooks/pre-commit-check.sh` + `.claude/hooks/pre-commit-check.sh`
+  — replaced inline multi-line lint with a 1024-char limit check using the same
+  YAML-aware extraction logic.
+- `core/skills/skill-authoring/SKILL.md` + `.agents/` copy — Step 2 Rule 5 now
+  says "under 1024 chars; multi-line YAML folded scalars (`>`) are supported."
+  Step 7 stub format updated to note normalization requirement.
+- `roles/dev/workflows/sync-skeleton.md` + `.agents/` copy — Step 4c stub
+  generation updated to use YAML-aware extraction instead of `grep -m1`.
+- Also fixed two pre-existing validator failures: `AGENTS.md` missing
+  `discussion-continuity` row (from v1.53.0); `README.md` and `MASTER_PLAN.md`
+  version refs stale at v1.50.0.
+
 ## v1.53.1 — 2026-05-09
 
 ### Fix session-start not triggered post-setup; add post-merge branch cleanup
