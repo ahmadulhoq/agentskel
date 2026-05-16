@@ -4,6 +4,11 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-09 — v1.53.1: Fix session-start post-setup + post-merge branch cleanup
+
+setup-skeleton: Step 11 folded into Final Step (was skippable). git-flow:
+Post-Merge Cleanup section added (branch -d, remote prune, RESUME update).
+
 ## 2026-05-09 — v1.53.0: discussion-continuity skill + task-completion Step 6c
 
 New skill: PAUSE saves topic/agreed/open/gate to Session Notes before switching.

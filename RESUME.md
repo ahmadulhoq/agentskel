@@ -4,7 +4,7 @@
 IDLE
 
 ## Last Completed Task
-- v1.53.0: discussion-continuity skill (PAUSE/RESUME operations) + task-completion Step 6c hard-enforcement. Discussions now have a formal lifecycle via Session Notes.
+- v1.53.1: Fix session-start not triggered post-setup (folded into Final Step). Add post-merge cleanup to git-flow (branch -d, remote prune, RESUME update).
 
 ## Previously Completed
 - v1.35-v1.36: Pre-commit hook worktree detection fix, sync-skeleton cd .memory directory bleed fix.
