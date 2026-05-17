@@ -4,6 +4,11 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-17 — v1.56.1: Fix stop-verify.sh RESUME.md false positive
+
+stop-verify.sh excluded RESUME.md from .memory/ dirty check. RESUME.md is
+local-only (never committed) — was blocking every session end when modified.
+
 ## 2026-05-17 — v1.56.0: Option D — plan-first enforcement (behavioral + advisory hook)
 
 "Plan first" moved to position 1 in core-behavior.md (all 4 copies). New "Never
