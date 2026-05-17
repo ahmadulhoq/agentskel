@@ -1,5 +1,26 @@
 # agentskel Changelog
 
+## v1.56.0 — 2026-05-17
+
+Option D: behavioral enforcement + advisory Edit/Write hook for plan-first gate.
+
+- `core/rules/core-behavior.md`, `core/claude-rules/core-behavior.md`,
+  `.claude/rules/core-behavior.md`, `.agents/rules/core-behavior.md`:
+  "Plan first" moved to position 1 in "How You Work". New rule added at position 2:
+  "Never modify files without explicit approval — verify go-ahead in *current exchange*
+  before calling Edit or Write. Urgency is not an exception."
+- `core/condensed-rules.md`: Added "Never Modify Files Without Explicit Approval"
+  section for tight-character-limit tools (Cursor, Windsurf).
+- `core/claude-hooks/pre-edit-check.sh` (new), `.claude/hooks/pre-edit-check.sh` (new):
+  Advisory hook — prints plan-gate reminder to stdout and exits 0 (non-blocking).
+  Fires before every Edit and Write tool call.
+- `core/claude-hooks/settings.json`, `.claude/settings.json`: Added PreToolUse matchers
+  for "Edit" and "Write" pointing to `pre-edit-check.sh`.
+- `.memory/LESSONS.md` Lesson 006: Extended with specific trigger — Edit/Write tool
+  call is the exact moment the gate must be checked; prior approval does not carry
+  forward across exchanges.
+- `MASTER_PLAN.md` point 11: Updated to describe the new advisory hook mechanism.
+
 ## v1.55.4 — 2026-05-17
 
 Replace broken Stop hook with deterministic shell script.

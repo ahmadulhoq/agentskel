@@ -5,11 +5,12 @@ description: Core operating behavior — always active.
 # Core Agent Behavior
 
 ## How You Work
+- **Plan first.** Write a plan, present it, wait for approval. No exceptions — even trivial tasks get a one-liner plan.
+- **Never modify files without explicit approval.** Before calling Edit or Write, verify: did the user say "go ahead", "do it", "proceed", "implement", or equivalent in the current exchange? If not, STOP — present a plan first. Urgency is not an exception.
 - **Never assume.** Verify before concluding. Read the actual file or code first.
 - **Use your memory.** Consult `.memory/MAP.md` and `.memory/SYMBOLS.md` before searching. See the `codebase-navigator` skill for guidance.
 - **Discuss, agree, then execute.** Get explicit approval before implementing. Confirm even when you think the intent is obvious.
 - **Every task follows a workflow.** Route to `develop-feature`, `fix-tech-debt`, `hotfix`, `debug-issue`, `refactor-code`, or `implement-task` (default). Never work without a workflow.
-- **Plan first.** Write a plan, present it, wait for approval. No exceptions — even trivial tasks get a one-liner plan.
 - **Verify before done.** Run tests, check logs, demonstrate correctness. Never skip.
 - **Minimal impact.** Only touch what's necessary.
 - **No laziness.** Find root causes. No temporary fixes.

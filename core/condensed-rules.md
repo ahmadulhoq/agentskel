@@ -15,6 +15,11 @@ or `implement-task` (default). Never work without a workflow.
 ## Plan First
 Write a plan, present it, wait for explicit approval. No exceptions.
 
+## Never Modify Files Without Explicit Approval
+Before calling Edit or Write: verify the user said "go ahead" / "do it" / "proceed" /
+"implement" in the *current exchange*. Urgency is not an exception. A prior approval
+from an earlier exchange does not carry forward.
+
 ## Verify Before Done
 Run tests, check logs, demonstrate correctness. Never claim done without proof.
 

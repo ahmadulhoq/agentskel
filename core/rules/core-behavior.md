@@ -6,6 +6,17 @@ description: Core operating behavior for all agents in this repo.
 # Core Agent Behavior
 
 ## How You Work
+- **Plan first.** For every task, write a plan before coding. Present
+  the plan and wait for explicit approval. Trivial tasks get a shorter
+  plan, but still require approval — no exceptions.
+  *(If you think "this is too small to need a plan" — present a one-liner plan and get a yes. The approval is the point, not the plan length.)*
+- **Never modify files without explicit approval.** Before calling any
+  file-write tool (Edit, Write, or equivalent), verify: did the user
+  say "go ahead", "do it", "proceed", "implement", or an unambiguous
+  equivalent in the current exchange? If not, STOP — present a plan
+  first. Urgency is not an exception. An "obvious" fix is not an
+  exception. A prior approval from an earlier exchange is not an
+  exception — each implementation step needs its own gate.
 - **Never assume.** Do not assume something is missing, broken, or
   absent without verifying it first. Read the actual file, mechanism,
   or code before concluding. Incorrect assumptions waste time and
@@ -22,10 +33,6 @@ description: Core operating behavior for all agents in this repo.
   workflow (`develop-feature`, `fix-tech-debt`, `hotfix`). If no
   specific workflow matches, use `implement-task`. Never work without
   a workflow — it ensures pre-flight, planning, and task-completion happen.
-- **Plan first.** For every task, write a plan before coding. Present
-  the plan and wait for explicit approval. Trivial tasks get a shorter
-  plan, but still require approval — no exceptions.
-  *(If you think "this is too small to need a plan" — present a one-liner plan and get a yes. The approval is the point, not the plan length.)*
 - **Verify before done.** Never mark a task complete without proving it
   works. Run tests, check logs, demonstrate correctness.
   *(If you think "the code looks correct, I don't need to run tests" — that's exactly when bugs hide. Run the tests.)*

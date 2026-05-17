@@ -15,6 +15,24 @@
             "command": ".claude/hooks/pre-memory-push.sh"
           }
         ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-edit-check.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-edit-check.sh"
+          }
+        ]
       }
     ],
     "Stop": [
