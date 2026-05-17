@@ -4,6 +4,17 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-17 — v1.56.0: Option D — plan-first enforcement (behavioral + advisory hook)
+
+"Plan first" moved to position 1 in core-behavior.md (all 4 copies). New "Never
+modify files without explicit approval" rule added at position 2 — explicitly names
+Edit/Write as the gate point and clarifies that prior approval does not carry forward.
+condensed-rules.md updated for tight-character-limit tools. pre-edit-check.sh (new):
+advisory hook that fires before Edit/Write, prints plan-gate reminder, exits 0.
+settings.json (core + installed) updated with Edit/Write PreToolUse matchers.
+LESSONS.md Lesson 006 extended: Edit/Write is the specific trigger to check.
+MASTER_PLAN.md point 11 updated to describe the advisory hook mechanism.
+
 ## 2026-05-17 — v1.55.0: Post-sync workflow/skill triage via affected: field
 
 CHANGELOG entries now include `affected: name, name, ...` for changes touching

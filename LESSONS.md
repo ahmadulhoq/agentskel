@@ -9,6 +9,7 @@
 - **Mistake:** Diagnosed the Stop hook loop and immediately implemented a fix (removed the hook entirely) without presenting a plan and waiting for user approval.
 - **Pattern:** "This is clearly broken, I'll fix it fast" — urgent-seeming bugs trigger the impulse to skip planning.
 - **Rule:** Urgency is not an exception to plan-first. Even for obvious bugs, state the diagnosis, propose the fix, wait for "go ahead." The user caught both the process violation AND that the fix was too blunt (removing enforcement entirely instead of replacing with a correct implementation).
+- **Specific trigger:** Calling Edit or Write tools is the exact moment the gate must be checked. Before any Edit/Write call, verify in thinking: "Did the user say go-ahead/do-it/proceed/implement in the *current exchange*?" A prior approval from an earlier message does not carry forward to new implementation steps. Concerns, tradeoffs, or analysis shared during discussion are not approval.
 
 ## Lesson 001 — 2026-03-25
 - **Mistake:** Skipped TIME_LOG.md entry after completing a development task (spec drift fixes, v1.7).
