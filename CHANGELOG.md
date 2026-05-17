@@ -1,5 +1,14 @@
 # agentskel Changelog
 
+## v1.56.1 — 2026-05-17
+
+Fix stop-verify.sh false positive on RESUME.md.
+
+- `core/claude-hooks/stop-verify.sh`, `.claude/hooks/stop-verify.sh`: exclude
+  `RESUME.md` from the `.memory/` dirty check. RESUME.md is intentionally
+  local-only and never committed to ai-memory — the hook was incorrectly blocking
+  every session end when RESUME.md had any modifications.
+
 ## v1.56.0 — 2026-05-17
 
 Option D: behavioral enforcement + advisory Edit/Write hook for plan-first gate.

@@ -14,7 +14,7 @@ fi
 
 # Check for uncommitted .memory/ changes
 if [ -d ".memory" ]; then
-    MEMORY_DIRTY=$(git -C .memory status --porcelain 2>/dev/null | grep -v "^$" || true)
+    MEMORY_DIRTY=$(git -C .memory status --porcelain 2>/dev/null | grep -v "RESUME.md" | grep -v "^$" || true)
     if [ -n "$MEMORY_DIRTY" ]; then
         WARNINGS="${WARNINGS}Uncommitted .memory/ changes — commit to ai-memory before finishing:\n${MEMORY_DIRTY}\n"
     fi
