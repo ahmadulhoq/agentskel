@@ -4,6 +4,27 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-21 — v1.57.0: External platform skills (Android) + validator third-party awareness
+
+Reference-don't-vendor approach to platform-specific skills. Google's
+android/skills follows the same agentskills.io standard and installs to
+the same `.agents/skills/` path we use — files drop in and work. agentskel
+gains:
+- `docs/PLATFORM-SKILLS.md` with Android section + install/update guidance
+- `setup-skeleton` Step 9c suggests install on Android projects (3-option
+  prompt: install / ask later / decline; outcome stored in CONFIG)
+- `sync-skeleton` Step 4d re-checks on every sync, reminds to refresh at
+  30-day cadence, respects `declined` flag
+- `core/memory/CONFIG.md` gains `External Platform Skills` + `Last External
+  Skills Check` rows
+- `developer/SKILL.md` Android section points to PLATFORM-SKILLS.md
+- `scripts/validate.py` distinguishes first-party (in core/ or roles/) from
+  third-party skills — parity checks skip the latter so downstream installs
+  with android/skills don't fail validation
+
+Also fixed pre-existing version drift in README (was v1.55.4) and
+.memory/CONFIG.md Skeleton Version (was v1.50.0).
+
 ## 2026-05-17 — v1.56.1: Fix stop-verify.sh RESUME.md false positive
 
 stop-verify.sh excluded RESUME.md from .memory/ dirty check. RESUME.md is
@@ -128,7 +149,6 @@ merge-base --is-ancestor confirms remote is already in HEAD.
 Files: .claude/hooks/pre-memory-push.sh, core/claude-hooks/pre-memory-push.sh.
 Also: updated CONFIG.md Last Dependency Check to 2026-05-09 (check-dependencies
 ran on empty dep list — agentskel has no code dependencies).
-
 ## 2026-04-24 — v1.50.0: Static validator + CI
 
 Added `scripts/validate.py` with five deterministic checks (frontmatter shape,
