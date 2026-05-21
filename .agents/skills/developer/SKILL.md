@@ -67,6 +67,11 @@ Every code decision must consider its impact on the end user.
   `.agents/standards/DEPENDENCY_MANAGEMENT.md`.
 - Comply with `.agents/standards/ANDROID_ARCHITECTURE.md` and
   `.agents/standards/STYLE_GUIDE.md`.
+- For deep platform-specific tasks (R8 keep rule analysis, Camera1→CameraX
+  migration, Jetpack Compose adaptive/theming, AGP build, testing setup),
+  Google maintains the [android/skills](https://github.com/android/skills)
+  open-standard skill pack. agentskel suggests installing it on Android
+  projects — see [docs/PLATFORM-SKILLS.md](../../docs/PLATFORM-SKILLS.md).
 <!-- END PLATFORM: Android -->
 
 <!-- PLATFORM: iOS -->

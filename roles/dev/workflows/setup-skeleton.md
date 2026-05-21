@@ -577,6 +577,48 @@ If install mode B (workspace platform):
 
 ---
 
+## Step 9c — Suggest external platform skills (platform-aware)
+
+For platforms with canonical externally-maintained skill packs, suggest installation. **Only suggest if not already installed and not previously declined.**
+
+Detection (do both):
+1. **Filesystem scan:** any `.agents/skills/*/SKILL.md` whose frontmatter has `metadata.author: Google LLC` (Android skills tag themselves this way). If any found → already installed.
+2. **CONFIG flag:** read `External Platform Skills` from `.memory/CONFIG.md`. Values: `(empty)`, `installed`, or `declined`.
+
+Decision logic:
+- If filesystem scan finds skills AND flag is `(empty)` or `installed` → set flag to `installed`, update `Last External Skills Check` to now, skip suggestion.
+- If filesystem scan finds nothing AND flag is `declined` → skip suggestion silently.
+- If filesystem scan finds nothing AND flag is `(empty)` → suggest install (below). Record outcome.
+
+**Per-platform suggestions:**
+
+- **Android** (`Platform` = `android` or contains "android"):
+  ```
+  Google maintains an open-standard Android skill pack at
+  https://github.com/android/skills covering R8 keep rule analysis,
+  Camera1→CameraX migration, Jetpack Compose adaptive/theming/migration,
+  AGP build, testing setup, and more. They install into .agents/skills/
+  (the same location as agentskel's skills) and work with every supported
+  tool.
+
+  Install now?
+    (y) Yes — show me the install command
+    (n) No, but ask me again next sync
+    (d) No, don't ask again
+
+  See docs/PLATFORM-SKILLS.md for details.
+  ```
+
+  - On `y`: show `android skills add --all --project=.` and the manual-clone fallback from PLATFORM-SKILLS.md. After user reports install complete, re-run filesystem scan. If found, set flag to `installed`, set `Last External Skills Check` to now.
+  - On `n`: leave flag `(empty)`. sync-skeleton will re-suggest.
+  - On `d`: set flag to `declined`.
+
+- **iOS / web / other**: no external pack endorsed yet. Skip silently. PLATFORM-SKILLS.md will be updated when canonical sources emerge.
+
+After the install/decline outcome, regenerate `.claude/skills/` stubs (if `claude` in Supported Tools) and AGENTS.md catalog so newly-installed skills are discoverable. Use the same logic as Step 5b and Step 5d.
+
+---
+
 ## Step 10 — Report and next steps
 
 Report to the user:

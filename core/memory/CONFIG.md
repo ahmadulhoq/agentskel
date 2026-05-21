@@ -35,6 +35,8 @@ Update to `active` once the cartographer workflow finishes.
 | Last Conventions Check | YYYY-MM-DDTHH:MMZ |
 | Supported Tools | [SUPPORTED_TOOLS] |
 | Last Skeleton Check | YYYY-MM-DDTHH:MMZ |
+| External Platform Skills | (empty) |
+| Last External Skills Check | YYYY-MM-DDTHH:MMZ |
 
 **Supported Tools** — comma-separated list of tools with native configs installed (e.g. `claude, cursor, copilot`). Valid values: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. `AGENTS.md` is always installed regardless. Only tools listed here get native config files created/updated during setup and sync.
 **Skeleton Path** — optional. If set, `sync-skeleton` and `check-skeleton` workflows read the skeleton from this local path instead of fetching from GitHub. Leave blank if no local clone is available.
@@ -43,6 +45,8 @@ Update to `active` once the cartographer workflow finishes.
 **Last Dependency Check** — updated by `check-dependencies` workflow on completion.
 **Last Conventions Check** — updated by `update-conventions` workflow on completion.
 **Last Skeleton Check** — updated by `check-skeleton` workflow on completion.
+**External Platform Skills** — `(empty)`, `installed`, or `declined`. Records whether the user has installed externally-published platform skill packs (e.g. [android/skills](https://github.com/android/skills)). Set during `setup-skeleton` for relevant platforms. `declined` suppresses re-prompting on sync. See [docs/PLATFORM-SKILLS.md](../docs/PLATFORM-SKILLS.md).
+**Last External Skills Check** — updated when external platform skills are installed or refreshed. 30-day cadence; sync-skeleton suggests refresh when overdue.
 
 ---
 

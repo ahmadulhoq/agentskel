@@ -193,7 +193,32 @@ Run `chmod +x` on each copied script. Do not overwrite the per-tool settings/hoo
 
 ---
 
-### Step 4d — Record updated workflows and skills for post-sync triage
+### Step 4d — External platform skills (refresh / re-suggest)
+
+For projects whose `Platform` (in `.memory/CONFIG.md`) has a canonical externally-maintained skill pack (see [docs/PLATFORM-SKILLS.md](../../docs/PLATFORM-SKILLS.md)):
+
+**Detection** (do both):
+1. **Filesystem scan:** any `.agents/skills/*/SKILL.md` whose frontmatter has `metadata.author: Google LLC` (or equivalent publisher tag) → already installed.
+2. **CONFIG flag:** `External Platform Skills` value: `(empty)`, `installed`, or `declined`.
+
+**Reconcile flag with reality first:**
+- Scan finds skills + flag is `(empty)` → set flag to `installed`, set `Last External Skills Check` to now.
+- Scan finds nothing + flag is `installed` → user uninstalled. Set flag to `(empty)`.
+
+**Then act per state:**
+
+| State | Action |
+|---|---|
+| `installed` and `Last External Skills Check` <30 days ago | Skip silently. |
+| `installed` and `Last External Skills Check` >=30 days ago | Suggest refresh: "Android skills last refreshed [date]. Re-run `android skills add --all --project=.` to pull updates from Google." Update `Last External Skills Check` if user confirms refresh. |
+| `(empty)` and Platform=android | Re-suggest install (same prompt and three options as setup-skeleton Step 9c: y/n/d). |
+| `declined` | Skip silently. |
+
+After install/refresh, re-run Step 4c (stub regeneration) so any newly added skills get `.claude/skills/` stubs.
+
+---
+
+### Step 4e — Record updated workflows and skills for post-sync triage
 
 From the CHANGELOG entries identified in Step 1, collect all `affected:` line values
 across every **applied** entry (skip Skipped entries). These name the workflows and
