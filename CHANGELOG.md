@@ -1,5 +1,37 @@
 # agentskel Changelog
 
+## v1.57.0 — 2026-05-21
+
+### External platform skills — Android (reference, don't vendor)
+
+agentskel covers cross-platform agent behavior; platform-specific deep skills
+come from canonical external sources. First entry: Google's
+[android/skills](https://github.com/android/skills) (open agentskills.io
+standard, Apache-2.0, installs to `.agents/skills/` — same path we use).
+
+- **`docs/PLATFORM-SKILLS.md`** (new) — Android section, install + update
+  guidance, scope note. iOS / web / KMP placeholders for future entries.
+- **`setup-skeleton` Step 9c** (new) — for Android projects, suggests
+  `android skills add --all --project=.` (or manual clone fallback) if not
+  already installed and not previously declined. Three-option prompt
+  (install / ask again / decline). Outcome recorded in CONFIG.md.
+- **`sync-skeleton` Step 4d** (new) — every sync re-checks: re-suggests
+  install if `(empty)`, reminds to refresh when `Last External Skills Check`
+  is >=30 days old, stays silent for `declined` and recent `installed`.
+- **`core/memory/CONFIG.md` template** — new fields:
+  `External Platform Skills` (`(empty)`/`installed`/`declined`),
+  `Last External Skills Check` (timestamp).
+- **`developer/SKILL.md` Android section** — pointer to PLATFORM-SKILLS.md.
+
+### Validator — third-party skill awareness
+
+`scripts/validate.py` now distinguishes first-party skills/workflows (those
+with sources in `core/` or `roles/`) from third-party ones present only in
+`.agents/`. Parity checks (stub parity, AGENTS.md catalog parity) skip
+third-party entries — they're outside agentskel's parity contract. Without
+this change, downstream projects that installed Android skills would have
+seen the validator fail on every Android skill stub.
+
 ## v1.56.1 — 2026-05-17
 
 Fix stop-verify.sh false positive on RESUME.md.

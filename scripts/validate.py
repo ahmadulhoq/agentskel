@@ -177,6 +177,21 @@ def check_version_consistency() -> Result:
     return r
 
 
+def _is_first_party_skill(name: str) -> bool:
+    """A skill is first-party (under agentskel's parity contract) if it has a
+    source in core/skills/ or roles/dev/skills/. Skills present only in
+    .agents/skills/ (e.g. externally-installed packs like android/skills)
+    are third-party and skipped by parity checks."""
+    return (REPO / "core/skills" / name / "SKILL.md").exists() or (
+        REPO / "roles/dev/skills" / name / "SKILL.md"
+    ).exists()
+
+
+def _is_first_party_workflow(name: str) -> bool:
+    """A workflow is first-party if it has a source in roles/dev/workflows/."""
+    return (REPO / "roles/dev/workflows" / f"{name}.md").exists()
+
+
 def check_stub_parity() -> Result:
     r = Result("stub parity")
     skills_dir = REPO / ".agents/skills"
@@ -187,12 +202,22 @@ def check_stub_parity() -> Result:
         r.bad(".claude/skills/ directory missing")
         return r
 
-    # Build expected: name -> (source path, expected description, kind)
+    # Build two sets:
+    #   - `expected`: first-party skills/workflows under parity contract
+    #   - `agents_present`: every name with a SKILL.md / workflow.md in .agents/
+    #     (used to distinguish "third-party present" from "orphan stub")
+    # Third-party skills (e.g. android/skills) live in .agents/ but have no
+    # source in core/ or roles/. Skip parity for them, but their stubs are
+    # legitimate — don't flag as orphan.
     expected: dict[str, tuple[Path, str, str]] = {}
+    agents_present: set[str] = set()
 
     for p in sorted(glob.glob(str(skills_dir / "*/SKILL.md"))):
         path = Path(p)
         name = path.parent.name
+        agents_present.add(name)
+        if not _is_first_party_skill(name):
+            continue
         fm = FRONTMATTER_RE.match(_read(path))
         if not fm:
             continue
@@ -204,6 +229,9 @@ def check_stub_parity() -> Result:
     for p in sorted(glob.glob(str(workflows_dir / "*.md"))):
         path = Path(p)
         name = path.stem
+        agents_present.add(name)
+        if not _is_first_party_workflow(name):
+            continue
         fm = FRONTMATTER_RE.match(_read(path))
         if not fm:
             continue
@@ -220,6 +248,10 @@ def check_stub_parity() -> Result:
         stub_names.add(name)
 
         if name not in expected:
+            if name in agents_present:
+                # Third-party skill — has source in .agents/ but not in
+                # core/ or roles/. Skip parity check.
+                continue
             r.bad(f".claude/skills/{name}.md: orphan (no source in .agents/)")
             continue
 
@@ -241,7 +273,8 @@ def check_stub_parity() -> Result:
             continue
         r.ok()
 
-    # Missing stubs
+    # Missing stubs (only flag for first-party — third-party stub generation
+    # is the responsibility of the external pack's installer)
     missing = sorted(set(expected) - stub_names)
     for name in missing:
         r.bad(f".claude/skills/{name}.md: missing (source {expected[name][0].relative_to(REPO)} has no stub)")
@@ -289,23 +322,40 @@ def check_agents_catalog_parity() -> Result:
     cat_skills = parse_rows(sk_m.group(1))
     cat_workflows = parse_rows(wf_m.group(1))
 
-    def expected_entries(pattern: str, kind: str) -> dict[str, tuple[str, str]]:
+    def expected_entries(pattern: str, kind: str) -> tuple[dict[str, tuple[str, str]], set[str]]:
+        """Returns (first_party_expected, agents_present).
+
+        Third-party skills/workflows (no source in core/ or roles/) are
+        excluded from `first_party_expected` but recorded in `agents_present`
+        so we can tell "third-party row" from "true orphan row" later."""
         out: dict[str, tuple[str, str]] = {}
+        present: set[str] = set()
         for p in sorted(glob.glob(str(REPO / pattern))):
             path = Path(p)
             name = path.parent.name if kind == "skill" else path.stem
+            present.add(name)
+            is_first_party = (
+                _is_first_party_skill(name) if kind == "skill" else _is_first_party_workflow(name)
+            )
+            if not is_first_party:
+                continue
             text = _read(path)
             fm = FRONTMATTER_RE.match(text)
             desc = _extract_description(fm.group(1)) if fm else None
             if not desc:
                 continue
             out[name] = (desc, str(path.relative_to(REPO)))
-        return out
+        return out, present
 
-    exp_skills = expected_entries(".agents/skills/*/SKILL.md", "skill")
-    exp_workflows = expected_entries(".agents/workflows/*.md", "workflow")
+    exp_skills, agents_skills = expected_entries(".agents/skills/*/SKILL.md", "skill")
+    exp_workflows, agents_workflows = expected_entries(".agents/workflows/*.md", "workflow")
 
-    def compare(label: str, expected: dict[str, tuple[str, str]], actual: dict[str, tuple[str, str]]) -> None:
+    def compare(
+        label: str,
+        expected: dict[str, tuple[str, str]],
+        actual: dict[str, tuple[str, str]],
+        present: set[str],
+    ) -> None:
         for name, (desc, path) in expected.items():
             if name not in actual:
                 r.bad(f"AGENTS.md {label}: missing row for `{name}` (source exists at {path})")
@@ -318,11 +368,15 @@ def check_agents_catalog_parity() -> Result:
                 r.bad(f"AGENTS.md {label} `{name}`: path `{a_path}` != source path `{path}`")
                 continue
             r.ok()
+        # An actual row is orphan only if it's not first-party AND not
+        # third-party-present in .agents/. Third-party rows are legitimate.
         for name in sorted(set(actual) - set(expected)):
+            if name in present:
+                continue  # third-party row — out of parity contract
             r.bad(f"AGENTS.md {label}: orphan row for `{name}` (no source in .agents/)")
 
-    compare("Skills", exp_skills, cat_skills)
-    compare("Workflows", exp_workflows, cat_workflows)
+    compare("Skills", exp_skills, cat_skills, agents_skills)
+    compare("Workflows", exp_workflows, cat_workflows, agents_workflows)
     return r
 
 
