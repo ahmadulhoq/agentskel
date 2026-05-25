@@ -546,7 +546,9 @@ Decision logic:
   See docs/PLATFORM-SKILLS.md for details.
   ```
 
-  - On `y`: show `android skills add --all --project=.` and the manual-clone fallback from PLATFORM-SKILLS.md. After user reports install complete, re-run filesystem scan. If found, set flag to `installed`, set `Last External Skills Check` to now.
+  - On `y`: show `android skills add --all --project=.` and the manual-clone fallback from PLATFORM-SKILLS.md. After the user reports install complete, **re-run the filesystem scan to verify**:
+    - If one or more `.agents/skills/*/SKILL.md` with `metadata.author: Google LLC` is now present → set flag to `installed`, set `Last External Skills Check` to now.
+    - If scan finds nothing → **DO NOT set flag to `installed`**. The install appears incomplete (CLI missing, network failure, partial clone, etc.). Leave flag `(empty)`, report to the user with the scan output, and stop. sync-skeleton will re-suggest on the next run.
   - On `n`: leave flag `(empty)`. sync-skeleton will re-suggest.
   - On `d`: set flag to `declined`.
 

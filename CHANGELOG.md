@@ -1,5 +1,22 @@
 # agentskel Changelog
 
+## v1.57.3 — 2026-05-31
+
+### Fix: setup-skeleton Step 9c install verification gate
+- Tightens the install outcome wording in `setup-skeleton` Step 9c. The
+  previous text said "If found, set flag to `installed`" — implicitly
+  leaving "not found" undefined. Agents could (and in dogfood testing did)
+  set the flag eagerly without verifying the filesystem scan returned any
+  Google LLC author SKILL.md files.
+- New wording is explicit: on scan miss, DO NOT set flag, report to user
+  with scan output, stop. Bug surfaced by E2E test against a downstream
+  Android install — flag was `installed` but no SKILL.md files were
+  present, only orphan `references/` subdirectories from a partial clone.
+- `sync-skeleton` Step 4d's reconcile logic was already correct (scan miss
+  + flag `installed` → reset to `(empty)`) so any in-the-wild bogus
+  `installed` flags self-correct on next sync.
+affected: setup-skeleton
+
 ## v1.57.2 — 2026-05-21
 
 Fix two setup-skeleton bugs introduced or exposed in v1.57.0.
