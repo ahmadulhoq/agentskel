@@ -4,6 +4,16 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-05-21 — v1.57.2: Fix setup-skeleton step ordering + ai-memory default branch
+
+Fix 1: Step 9c (platform skills) moved before the git commit in Step 9 — was running
+after git checkout [DEFAULT_BRANCH], causing agent to switch back to setup branch to
+commit regenerated stubs, leaving worktree stuck and blocking branch deletion.
+Fix 2: gh repo edit --default-branch added after git push origin ai-memory in Step 3
+to explicitly pin GitHub default branch (brand-new repos take first-pushed branch as
+default). Verification gates added after both git checkout [DEFAULT_BRANCH] calls.
+affected: setup-skeleton
+
 ## 2026-05-21 — v1.57.0: External platform skills (Android) + validator third-party awareness
 
 Reference-don't-vendor approach to platform-specific skills. Google's
