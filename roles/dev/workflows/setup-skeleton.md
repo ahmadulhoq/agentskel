@@ -82,9 +82,23 @@ git rm -rf .
 git commit --allow-empty -m "init: ai-memory branch"
 git push origin ai-memory
 
+# Explicitly pin the GitHub default branch — on a brand-new repo, pushing
+# ai-memory first would otherwise make it the default on GitHub.
+gh repo edit [GITHUB_SLUG] --default-branch [DEFAULT_BRANCH]
+
 # Return to default branch
 git checkout [DEFAULT_BRANCH]
+```
 
+**Gate — verify branch before continuing:**
+```bash
+git branch --show-current
+# Must output: [DEFAULT_BRANCH]
+# If output is anything else (e.g. "ai-memory"), STOP.
+# Do not run git worktree add or any further steps until resolved manually.
+```
+
+```bash
 # Mount ai-memory as a worktree at .memory/
 git worktree add .memory ai-memory
 ```
@@ -472,6 +486,78 @@ Add `scripts/install-agent.sh` to the git staging in Step 9.
 
 ## Step 9 — Commit and open PR
 
+> **Ordering:** Complete Steps 9b and 9c below **before** the git commands in
+> "Commit". Any files they generate — external skills, regenerated `.claude/skills/`
+> stubs, updated `AGENTS.md` — must be included in the setup commit.
+
+---
+
+### Step 9b — Register with workspace (mode B only)
+
+**Skip if install mode is A (single-project).**
+
+If install mode B (workspace platform):
+1. `cd` to the workspace root (parent directory or user-specified path from Step 0).
+2. Read `.agentskel-workspace.yml`.
+3. Add the new platform entry to `platforms` list:
+   ```yaml
+   - name: [SUBDIR_NAME]
+     path: ./[SUBDIR_NAME]
+     setup_complete: true
+   ```
+4. Regenerate workspace root `AGENTS.md` from
+   `[SKELETON_PATH]/core/workspace-templates/AGENTS.md.template` with updated
+   platforms list.
+5. Commit the workspace config + AGENTS.md changes separately (workspace root
+   may be its own git repo or not — handle both cases).
+6. `cd` back to the platform subdir.
+
+---
+
+### Step 9c — Suggest external platform skills (platform-aware)
+
+For platforms with canonical externally-maintained skill packs, suggest installation. **Only suggest if not already installed and not previously declined.**
+
+Detection (do both):
+1. **Filesystem scan:** any `.agents/skills/*/SKILL.md` whose frontmatter has `metadata.author: Google LLC` (Android skills tag themselves this way). If any found → already installed.
+2. **CONFIG flag:** read `External Platform Skills` from `.memory/CONFIG.md`. Values: `(empty)`, `installed`, or `declined`.
+
+Decision logic:
+- If filesystem scan finds skills AND flag is `(empty)` or `installed` → set flag to `installed`, update `Last External Skills Check` to now, skip suggestion.
+- If filesystem scan finds nothing AND flag is `declined` → skip suggestion silently.
+- If filesystem scan finds nothing AND flag is `(empty)` → suggest install (below). Record outcome.
+
+**Per-platform suggestions:**
+
+- **Android** (`Platform` = `android` or contains "android"):
+  ```
+  Google maintains an open-standard Android skill pack at
+  https://github.com/android/skills covering R8 keep rule analysis,
+  Camera1→CameraX migration, Jetpack Compose adaptive/theming/migration,
+  AGP build, testing setup, and more. They install into .agents/skills/
+  (the same location as agentskel's skills) and work with every supported
+  tool.
+
+  Install now?
+    (y) Yes — show me the install command
+    (n) No, but ask me again next sync
+    (d) No, don't ask again
+
+  See docs/PLATFORM-SKILLS.md for details.
+  ```
+
+  - On `y`: show `android skills add --all --project=.` and the manual-clone fallback from PLATFORM-SKILLS.md. After user reports install complete, re-run filesystem scan. If found, set flag to `installed`, set `Last External Skills Check` to now.
+  - On `n`: leave flag `(empty)`. sync-skeleton will re-suggest.
+  - On `d`: set flag to `declined`.
+
+- **iOS / web / other**: no external pack endorsed yet. Skip silently. PLATFORM-SKILLS.md will be updated when canonical sources emerge.
+
+After the install/decline outcome, regenerate `.claude/skills/` stubs (if `claude` in Supported Tools) and AGENTS.md catalog so newly-installed skills are discoverable. Use the same logic as Step 5b and Step 5d.
+
+---
+
+### Commit
+
 Commit all project files to the setup branch and open a PR for review.
 
 Only include tool-specific files that were created (based on Supported Tools):
@@ -546,76 +632,18 @@ gh pr create \
 **Do NOT merge the PR yourself.** The team should review the installed rules and workflows before they land on `[DEFAULT_BRANCH]`.
 
 Return the main worktree to the default branch so subsequent git operations
-(branch deletion, worktree checks) don't fail due to the current branch being
-the setup branch:
+(branch deletion, worktree checks) don't fail:
 
 ```bash
 git checkout [DEFAULT_BRANCH]
 ```
 
----
-
-## Step 9b — Register with workspace (mode B only)
-
-**Skip this step if install mode is A (single-project).**
-
-If install mode B (workspace platform):
-1. `cd` to the workspace root (parent directory or user-specified path from Step 0).
-2. Read `.agentskel-workspace.yml`.
-3. Add the new platform entry to `platforms` list:
-   ```yaml
-   - name: [SUBDIR_NAME]
-     path: ./[SUBDIR_NAME]
-     setup_complete: true
-   ```
-4. Regenerate workspace root `AGENTS.md` from
-   `[SKELETON_PATH]/core/workspace-templates/AGENTS.md.template` with updated
-   platforms list.
-5. Commit the workspace config + AGENTS.md changes separately (workspace root
-   may be its own git repo or not — handle both cases).
-6. `cd` back to the platform subdir.
-
----
-
-## Step 9c — Suggest external platform skills (platform-aware)
-
-For platforms with canonical externally-maintained skill packs, suggest installation. **Only suggest if not already installed and not previously declined.**
-
-Detection (do both):
-1. **Filesystem scan:** any `.agents/skills/*/SKILL.md` whose frontmatter has `metadata.author: Google LLC` (Android skills tag themselves this way). If any found → already installed.
-2. **CONFIG flag:** read `External Platform Skills` from `.memory/CONFIG.md`. Values: `(empty)`, `installed`, or `declined`.
-
-Decision logic:
-- If filesystem scan finds skills AND flag is `(empty)` or `installed` → set flag to `installed`, update `Last External Skills Check` to now, skip suggestion.
-- If filesystem scan finds nothing AND flag is `declined` → skip suggestion silently.
-- If filesystem scan finds nothing AND flag is `(empty)` → suggest install (below). Record outcome.
-
-**Per-platform suggestions:**
-
-- **Android** (`Platform` = `android` or contains "android"):
-  ```
-  Google maintains an open-standard Android skill pack at
-  https://github.com/android/skills covering R8 keep rule analysis,
-  Camera1→CameraX migration, Jetpack Compose adaptive/theming/migration,
-  AGP build, testing setup, and more. They install into .agents/skills/
-  (the same location as agentskel's skills) and work with every supported
-  tool.
-
-  Install now?
-    (y) Yes — show me the install command
-    (n) No, but ask me again next sync
-    (d) No, don't ask again
-
-  See docs/PLATFORM-SKILLS.md for details.
-  ```
-
-  - On `y`: show `android skills add --all --project=.` and the manual-clone fallback from PLATFORM-SKILLS.md. After user reports install complete, re-run filesystem scan. If found, set flag to `installed`, set `Last External Skills Check` to now.
-  - On `n`: leave flag `(empty)`. sync-skeleton will re-suggest.
-  - On `d`: set flag to `declined`.
-
-- **iOS / web / other**: no external pack endorsed yet. Skip silently. PLATFORM-SKILLS.md will be updated when canonical sources emerge.
-
-After the install/decline outcome, regenerate `.claude/skills/` stubs (if `claude` in Supported Tools) and AGENTS.md catalog so newly-installed skills are discoverable. Use the same logic as Step 5b and Step 5d.
+**Gate — verify branch before continuing:**
+```bash
+git branch --show-current
+# Must output: [DEFAULT_BRANCH]
+# If not, STOP — do not proceed until resolved manually.
+```
 
 ---
 

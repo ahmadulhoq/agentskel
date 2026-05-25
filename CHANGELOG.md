@@ -1,5 +1,22 @@
 # agentskel Changelog
 
+## v1.57.2 — 2026-05-21
+
+Fix two setup-skeleton bugs introduced or exposed in v1.57.0.
+
+- `roles/dev/workflows/setup-skeleton.md`, `.agents/workflows/setup-skeleton.md`:
+  **Fix 1 — Step 9c ordering:** Steps 9b and 9c (workspace registration and platform
+  skills) restructured as subsections inside Step 9, placed before the git commit
+  block. Previously Step 9c ran after `git checkout [DEFAULT_BRANCH]`, causing the
+  agent to switch back to `chore/setup-skeleton` to commit regenerated stubs/AGENTS.md
+  — leaving the worktree on the setup branch and blocking later branch deletion.
+  **Fix 2 — ai-memory as default branch:** After `git push origin ai-memory` in Step 3,
+  `gh repo edit [GITHUB_SLUG] --default-branch [DEFAULT_BRANCH]` now explicitly pins
+  the GitHub default branch (brand-new repos take the first-pushed branch as default).
+  Verification gate added after `git checkout [DEFAULT_BRANCH]` in both Step 3 and
+  the new Step 9 commit section.
+affected: setup-skeleton
+
 ## v1.57.0 — 2026-05-21
 
 ### External platform skills — Android (reference, don't vendor)
