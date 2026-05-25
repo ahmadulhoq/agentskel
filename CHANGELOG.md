@@ -14,6 +14,18 @@ to explicitly pin GitHub default branch (brand-new repos take first-pushed branc
 default). Verification gates added after both git checkout [DEFAULT_BRANCH] calls.
 affected: setup-skeleton
 
+## 2026-05-22 — v1.57.1: setup-skeleton Step 9c install verification gate
+
+Dogfood E2E test against Muslim-Pro-Android surfaced a downstream state
+where the `External Platform Skills` flag was `installed` but no SKILL.md
+files with `metadata.author: Google LLC` were present — only orphan
+`references/` subdirectories from a partial install. My Step 9c wording
+("If found, set flag to `installed`") left "not found" implicit, allowing
+agents to set the flag eagerly. New wording explicitly requires a
+scan-confirm gate: on scan miss, do NOT set flag, report scan output,
+stop. sync-skeleton Step 4d's reconcile logic already handles in-the-wild
+bogus `installed` flags on next sync.
+
 ## 2026-05-21 — v1.57.0: External platform skills (Android) + validator third-party awareness
 
 Reference-don't-vendor approach to platform-specific skills. Google's
