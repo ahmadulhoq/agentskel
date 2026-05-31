@@ -49,7 +49,7 @@ Ask the user for the following. Do not proceed until all are confirmed.
 | Lead engineer GitHub handle | `lead-dev` |
 | Leads team name (without org) | `android-leads` |
 | GitHub org | `my-org` |
-| Skeleton path on disk | e.g. `../agentskel`. Auto-resolve: if `$CLAUDE_PLUGIN_ROOT` is set and contains a `VERSION` file, use it. Otherwise check `../agentskel`. Otherwise ask the user. |
+| Skeleton path on disk | Auto-resolved — do not ask the user unless all auto-resolve steps fail. Resolution order: (1) `Skeleton Path` in `.memory/CONFIG.md` if present; (2) `$CLAUDE_PLUGIN_ROOT` if set and contains `VERSION`; (3) `~/.agentskel/skeleton/` if present; (4) `../agentskel` (legacy probe); (5) not found → clone automatically: `git clone https://github.com/ahmadulhoq/agentskel ~/.agentskel/skeleton`. Clone failure → stop and report. Once resolved to `~/.agentskel/skeleton/`, pull latest: `git -C ~/.agentskel/skeleton pull --ff-only origin main \|\| warn`. |
 | Blueprint path on disk (optional) | e.g. `../my-blueprint` (only for multi-project teams) |
 | Supported tools | Comma-separated: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. Ask which tools the team uses. `AGENTS.md` is always installed. |
 
@@ -67,7 +67,7 @@ Present the collected values to the user and ask for explicit confirmation befor
    ```
    If it exists, stop and notify the user — this repo may already be set up.
 4. Confirm `.memory/` directory does NOT already exist as a worktree.
-5. Confirm the skeleton (agentskel) is accessible at the provided path.
+5. Confirm the skeleton (agentskel) is accessible at `[SKELETON_PATH]` (auto-resolved in Step 1).
 
 ---
 

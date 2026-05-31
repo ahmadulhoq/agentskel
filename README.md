@@ -133,17 +133,25 @@ The agent walks through the changes, picks the ones that apply, and opens a PR.
 
 ## Manual install (without the plugin)
 
+Install to the canonical machine-level location:
+
 ```bash
-git clone https://github.com/ahmadulhoq/agentskel.git
+git clone https://github.com/ahmadulhoq/agentskel ~/.agentskel/skeleton
 ```
 
-Then in your project, say: *"Run the setup-skeleton workflow. The skeleton is at `../agentskel`."*
+That's it. setup-skeleton and sync-skeleton find it automatically from that path —
+no configuration needed. The skeleton auto-updates (`git pull`) each time a
+workflow runs.
+
+If you already have agentskel cloned elsewhere, it still works — set
+`Skeleton Path` in `.memory/CONFIG.md` to your existing clone path and
+the auto-resolution will use it first.
 
 ---
 
 ## Current version
 
-**v1.58.0** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
+**v1.59.0** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## Contributing
 

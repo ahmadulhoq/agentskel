@@ -28,14 +28,18 @@ If you are not sure whether the current user is authorized, ask before proceedin
 3. Resolve the skeleton location — follow this order:
    - Check `.memory/CONFIG.md` for a `Skeleton Path` field. If set and the path exists on disk — use it as `[SKELETON_PATH]`.
    - If not set, check `$CLAUDE_PLUGIN_ROOT` — if set and contains a `VERSION` file, use it.
-   - If not set, probe common locations in order: `../agentskel`
-   - If a local path is found — use it as `[SKELETON_PATH]`. If it wasn't stored in `CONFIG.md`, offer to save it now.
-   - If **no local path is found** — ask the user:
-     > "No local skeleton (agentskel) clone found. How would you like to proceed?
-     > **A)** Clone it locally (provide the clone URL)
-     > **B)** Read from GitHub directly (requires internet; will not see any local changes that haven't been pushed)"
-   - If the user chooses **A** — run the clone, then use the local path as `[SKELETON_PATH]`.
-   - If the user chooses **B** — use the `gh api` commands in the [GitHub Fetch Reference](#github-fetch-reference) section below. Confirm `gh auth status` passes before continuing.
+   - If not set, check `~/.agentskel/skeleton/` — if it exists and contains a `VERSION` file, use it.
+   - If not set, probe `../agentskel` (legacy fallback).
+   - If **no local path is found** — clone to the canonical location automatically:
+     ```bash
+     git clone https://github.com/ahmadulhoq/agentskel ~/.agentskel/skeleton
+     ```
+     If the clone fails (no network, auth error) — stop and report. The user must resolve connectivity before continuing.
+   - Once `[SKELETON_PATH]` is resolved, if it is `~/.agentskel/skeleton/` — pull latest before reading:
+     ```bash
+     git -C ~/.agentskel/skeleton pull --ff-only origin main || echo "Warning — could not update skeleton. Using local copy."
+     ```
+   - If `[SKELETON_PATH]` was not stored in `CONFIG.md`, offer to save it now.
 4. Read the current skeleton version from `[SKELETON_PATH]/VERSION`.
 5. Read the project's recorded version from `.memory/CONFIG.md` (`Skeleton Version` field).
 6. If `.memory/CONFIG.md` does not exist, the project is on a pre-v3.5 setup. Note this — a migration step is required (see Step 5b).

@@ -1,5 +1,24 @@
 # agentskel Changelog
 
+## v1.59.0 — 2026-05-31
+
+### Canonical skeleton location (~/.agentskel/skeleton/)
+
+setup-skeleton and sync-skeleton now auto-resolve and auto-update the skeleton
+source — no "where is your agentskel clone?" prompt.
+
+- **Resolution order** (both workflows): (1) `Skeleton Path` in CONFIG.md;
+  (2) `$CLAUDE_PLUGIN_ROOT`; (3) `~/.agentskel/skeleton/`; (4) `../agentskel`
+  legacy probe; (5) not found → auto-clone to `~/.agentskel/skeleton/`.
+- **Auto-pull**: once resolved to `~/.agentskel/skeleton/`, runs
+  `git pull --ff-only origin main` before reading — skeleton is always fresh.
+  Pull failure warns and proceeds with local copy (same pattern as install-agent.sh).
+- **Existing setups unaffected**: `Skeleton Path` in CONFIG.md takes precedence;
+  custom clone paths keep working as-is.
+- **README**: updated Manual Install section to document `~/.agentskel/skeleton/`
+  as the canonical path with migration note for existing clones.
+affected: setup-skeleton, sync-skeleton
+
 ## v1.58.0 — 2026-05-31
 
 ### Shared external skills store (~/.agentskel/)
