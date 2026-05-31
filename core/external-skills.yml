@@ -1,0 +1,27 @@
+# External skill pack registry
+#
+# Each entry declares a canonical externally-maintained skill pack.
+# agentskel uses this manifest to suggest, install, and refresh packs
+# on matching projects — without hardcoding platform logic in workflows.
+#
+# Fields:
+#   id            — unique identifier; used as directory name under ~/.agentskel/skills/
+#   name          — human-readable pack name
+#   author_tag    — value of metadata.author in the pack's SKILL.md files (used for scan)
+#   platform_match — substring matched against Platform field in .memory/CONFIG.md (case-insensitive)
+#   install_cmd   — preferred install command (run from project root)
+#   clone_url     — git URL for manual fallback install
+#   description   — one-line summary shown to users in prompts
+#   license       — SPDX license identifier
+
+packs:
+  - id: android
+    name: Android Skills
+    author_tag: "Google LLC"
+    platform_match: android
+    install_cmd: "android skills add --all --project=."
+    clone_url: https://github.com/android/skills
+    description: >
+      R8/Proguard, CameraX migration, Jetpack Compose adaptive/theming/migration,
+      AGP build, testing setup, Navigation, identity, performance, XR.
+    license: Apache-2.0

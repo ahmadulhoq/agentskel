@@ -516,45 +516,56 @@ If install mode B (workspace platform):
 
 ### Step 9c — Suggest external platform skills (platform-aware)
 
-For platforms with canonical externally-maintained skill packs, suggest installation. **Only suggest if not already installed and not previously declined.**
+For platforms with canonical externally-maintained skill packs, suggest installation.
+**Only suggest if not already installed and not previously declined.**
 
-Detection (do both):
-1. **Filesystem scan:** any `.agents/skills/*/SKILL.md` whose frontmatter has `metadata.author: Google LLC` (Android skills tag themselves this way). If any found → already installed.
-2. **CONFIG flag:** read `External Platform Skills` from `.memory/CONFIG.md`. Values: `(empty)`, `installed`, or `declined`.
+Read `[SKELETON_PATH]/core/external-skills.yml` for the full pack registry.
+Match packs where `platform_match` is a case-insensitive substring of the project's `Platform`.
 
-Decision logic:
-- If filesystem scan finds skills AND flag is `(empty)` or `installed` → set flag to `installed`, update `Last External Skills Check` to now, skip suggestion.
-- If filesystem scan finds nothing AND flag is `declined` → skip suggestion silently.
-- If filesystem scan finds nothing AND flag is `(empty)` → suggest install (below). Record outcome.
+**Detection** (do both):
+1. **Shared store scan:** any `~/.agentskel/skills/*/SKILL.md` whose frontmatter has
+   `metadata.author: [pack.author_tag]`. If found → already installed in shared store.
+2. **CONFIG flag:** read `External Platform Skills` from `.memory/CONFIG.md`.
+   Values: `(empty)`, `installed`, or `declined`.
 
-**Per-platform suggestions:**
+**Decision logic:**
+- Scan finds skills AND flag is `(empty)` or `installed` → set flag to `installed`,
+  update `Last External Skills Check` to now, skip suggestion.
+- Scan finds nothing AND flag is `declined` → skip silently.
+- Scan finds nothing AND flag is `(empty)` → suggest install (below). Record outcome.
 
-- **Android** (`Platform` = `android` or contains "android"):
-  ```
-  Google maintains an open-standard Android skill pack at
-  https://github.com/android/skills covering R8 keep rule analysis,
-  Camera1→CameraX migration, Jetpack Compose adaptive/theming/migration,
-  AGP build, testing setup, and more. They install into .agents/skills/
-  (the same location as agentskel's skills) and work with every supported
-  tool.
+**Prompt** (per matching pack):
+```
+[pack.name] maintains an open-standard skill pack at [pack.clone_url]
+covering [pack.description]. Skills install into ~/.agentskel/skills/ (shared
+across all your projects on this machine) and are linked into .agents/skills/.
 
-  Install now?
-    (y) Yes — show me the install command
-    (n) No, but ask me again next sync
-    (d) No, don't ask again
+Install now?
+  (y) Yes — show me the install command
+  (n) No, but ask me again next sync
+  (d) No, don't ask again
 
-  See docs/PLATFORM-SKILLS.md for details.
-  ```
+See docs/PLATFORM-SKILLS.md for details.
+```
 
-  - On `y`: show `android skills add --all --project=.` and the manual-clone fallback from PLATFORM-SKILLS.md. After the user reports install complete, **re-run the filesystem scan to verify**:
-    - If one or more `.agents/skills/*/SKILL.md` with `metadata.author: Google LLC` is now present → set flag to `installed`, set `Last External Skills Check` to now.
-    - If scan finds nothing → **DO NOT set flag to `installed`**. The install appears incomplete (CLI missing, network failure, partial clone, etc.). Leave flag `(empty)`, report to the user with the scan output, and stop. sync-skeleton will re-suggest on the next run.
-  - On `n`: leave flag `(empty)`. sync-skeleton will re-suggest.
-  - On `d`: set flag to `declined`.
+**On `y` — install to shared store and link:**
+1. Run `[pack.install_cmd]` (e.g. `android skills add --all --project=.`).
+2. Move any newly-created skill dirs from `.agents/skills/` to `~/.agentskel/skills/[pack.id]/`.
+3. Create gitignored symlinks: for each skill dir moved,
+   `ln -sfn ~/.agentskel/skills/[pack.id]/[skill-dir] .agents/skills/[skill-dir]`.
+4. Append each symlinked dir name to `.agents/skills/.gitignore` (create if needed; avoid duplicates).
+5. **Re-scan** `~/.agentskel/skills/[pack.id]/*/SKILL.md` for `metadata.author: [pack.author_tag]`:
+   - One or more found → set flag to `installed`, set `Last External Skills Check` to now.
+   - None found → **DO NOT set flag**. Leave `(empty)`, report scan output, stop.
+     sync-skeleton will re-suggest on next run.
 
-- **iOS / web / other**: no external pack endorsed yet. Skip silently. PLATFORM-SKILLS.md will be updated when canonical sources emerge.
+**On `n`:** leave flag `(empty)`. sync-skeleton will re-suggest.
 
-After the install/decline outcome, regenerate `.claude/skills/` stubs (if `claude` in Supported Tools) and AGENTS.md catalog so newly-installed skills are discoverable. Use the same logic as Step 5b and Step 5d.
+**On `d`:** set flag to `declined`.
+
+After install, regenerate `.claude/skills/` stubs (if `claude` in Supported Tools) and
+AGENTS.md catalog so newly-linked skills are discoverable. Use the same logic as
+Step 5b and Step 5d.
 
 ---
 

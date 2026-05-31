@@ -1,5 +1,36 @@
 # agentskel Changelog
 
+## v1.58.0 — 2026-05-31
+
+### Shared external skills store (~/.agentskel/)
+
+External skill packs now install to a machine-level shared store at
+`~/.agentskel/skills/` instead of directly into each project. Projects get
+gitignored symlinks in `.agents/skills/` — one update refreshes all projects
+on the machine simultaneously.
+
+- **`core/external-skills.yml`** (new) — machine-readable pack registry. Each entry
+  declares `id`, `name`, `author_tag`, `platform_match`, `install_cmd`, `clone_url`,
+  `description`, and `license`. Adding a new pack requires only a manifest entry —
+  no workflow changes needed.
+- **`~/.agentskel/`** — machine-level agent workspace. `skills/` is the first
+  subdirectory; structure accommodates future `workflows/`, `integrations/`, `memory/`.
+- **`roles/dev/workflows/update-external-skills.md`** (new) — dedicated workflow to
+  refresh shared store, verify install via author-tag scan, recreate broken symlinks,
+  regenerate stubs + AGENTS.md catalog, and update CONFIG timestamps.
+- **`roles/dev/workflows/setup-skeleton.md`** Step 9c — install target changed to
+  `~/.agentskel/skills/[pack.id]/`; creates gitignored symlinks in `.agents/skills/`;
+  reads pack details from manifest rather than hardcoded Android logic.
+- **`roles/dev/workflows/sync-skeleton.md`** Step 4d — staleness check and
+  re-suggestion now delegate to `update-external-skills` instead of inline logic.
+- **`scripts/install-agent.sh`** — new section reads `.agents/skills/.gitignore` to
+  discover external skills, finds them in `~/.agentskel/skills/`, and recreates
+  symlinks. If shared store is missing, prints instructions and names missing skills.
+- **`docs/PLATFORM-SKILLS.md`** — rewritten to explain shared-store architecture,
+  symlink model, manual install commands targeting `~/.agentskel/skills/`, and how
+  to add new packs via the manifest.
+affected: setup-skeleton, sync-skeleton, update-external-skills
+
 ## v1.57.3 — 2026-05-31
 
 ### Fix: setup-skeleton Step 9c install verification gate
