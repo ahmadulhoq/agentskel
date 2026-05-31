@@ -14,7 +14,7 @@ to explicitly pin GitHub default branch (brand-new repos take first-pushed branc
 default). Verification gates added after both git checkout [DEFAULT_BRANCH] calls.
 affected: setup-skeleton
 
-## 2026-05-22 — v1.57.1: setup-skeleton Step 9c install verification gate
+## 2026-05-31 — v1.57.3: setup-skeleton Step 9c install verification gate
 
 Dogfood E2E test against Muslim-Pro-Android surfaced a downstream state
 where the `External Platform Skills` flag was `installed` but no SKILL.md
