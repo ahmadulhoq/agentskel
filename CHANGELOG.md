@@ -14,6 +14,14 @@ to explicitly pin GitHub default branch (brand-new repos take first-pushed branc
 default). Verification gates added after both git checkout [DEFAULT_BRANCH] calls.
 affected: setup-skeleton
 
+## 2026-05-31 — v1.58.0: Shared external skills store (~/.agentskel/)
+
+External skills now live in ~/.agentskel/skills/ (shared per machine). Projects
+get gitignored symlinks. New core/external-skills.yml manifest — adding packs
+requires only a YAML entry. New update-external-skills workflow. sync-skeleton
+Step 4d migrates old-style installs automatically. install-agent.sh recreates
+symlinks on clone via .gitignore manifest.
+
 ## 2026-05-31 — v1.57.3: setup-skeleton Step 9c install verification gate
 
 Dogfood E2E test against Muslim-Pro-Android surfaced a downstream state
