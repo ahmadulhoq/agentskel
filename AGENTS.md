@@ -112,6 +112,7 @@ Read `.memory/RESUME.md` to restore session state.
 | sync-versions | When actual project dependency versions may have drifted from VERSIONS.md. Run after dependency upgrades or when VERSIONS.md looks stale. | `.agents/workflows/sync-versions.md` |
 | sync-workspace-dispatcher | When workspace dispatcher templates have changed in a newer skeleton version. Regenerates dispatcher files at the workspace root while preserving the workspace name, platforms list, and blueprint path from config. | `.agents/workflows/sync-workspace-dispatcher.md` |
 | update-conventions | When project coding conventions may have drifted from actual practice, or Last Conventions Check in CONFIG.md is overdue (90-day cadence). Also run when adopting a new library or framework that needs convention coverage. | `.agents/workflows/update-conventions.md` |
+| update-external-skills | Refresh externally-maintained skill packs in the machine-level shared store (~/.agentskel/skills/) and re-link them into the current project. Run when sync-skeleton flags a pack as stale (>=30 days), or manually to pull the latest pack updates. | `.agents/workflows/update-external-skills.md` |
 | update-team-member | When an existing team member's roles, ownership, or contact info changes. Use when a member stays on the team but their responsibilities, email, or handle need to be updated without adding or removing anyone. | `.agents/workflows/update-team-member.md` |
 
 ## Memory

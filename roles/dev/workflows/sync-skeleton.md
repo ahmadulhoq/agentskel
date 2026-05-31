@@ -195,26 +195,50 @@ Run `chmod +x` on each copied script. Do not overwrite the per-tool settings/hoo
 
 ### Step 4d — External platform skills (refresh / re-suggest)
 
-For projects whose `Platform` (in `.memory/CONFIG.md`) has a canonical externally-maintained skill pack (see [docs/PLATFORM-SKILLS.md](../../docs/PLATFORM-SKILLS.md)):
+Read `[SKELETON_PATH]/core/external-skills.yml` for the full pack registry.
+For each pack where `platform_match` matches the project's `Platform`:
 
-**Detection** (do both):
-1. **Filesystem scan:** any `.agents/skills/*/SKILL.md` whose frontmatter has `metadata.author: Google LLC` (or equivalent publisher tag) → already installed.
-2. **CONFIG flag:** `External Platform Skills` value: `(empty)`, `installed`, or `declined`.
+**Migration — old-style install detection (run once, before reconcile):**
 
-**Reconcile flag with reality first:**
+Scan `.agents/skills/*/SKILL.md` for entries with `metadata.author: [pack.author_tag]`
+where the parent directory is a **real directory** (not a symlink). This indicates a
+pre-v1.58.0 install where skills landed directly in the project.
+
+For each such real directory (e.g. `.agents/skills/r8-analyzer/`):
+1. Create `~/.agentskel/skills/[pack.id]/` if it doesn't exist.
+2. Move the directory to the shared store:
+   ```bash
+   mv .agents/skills/[skill-dir] ~/.agentskel/skills/[pack.id]/[skill-dir]
+   ```
+3. Replace with a symlink:
+   ```bash
+   ln -sfn ~/.agentskel/skills/[pack.id]/[skill-dir] .agents/skills/[skill-dir]
+   ```
+4. Append `[skill-dir]` to `.agents/skills/.gitignore` (create if missing; avoid duplicates).
+
+After migrating all dirs for this pack, commit the `.gitignore` change:
+```bash
+git add .agents/skills/.gitignore
+git commit -m "chore: migrate [pack.name] to shared store (~/.agentskel/skills/)"
+```
+
+If any move fails (permission error, disk full), stop and report — do not leave a
+partially migrated state. The original dirs are safe until the move succeeds.
+
+**Reconcile shared store with CONFIG flag** (after migration):
+- Scan `~/.agentskel/skills/[pack.id]/*/SKILL.md` for `metadata.author: [pack.author_tag]`.
 - Scan finds skills + flag is `(empty)` → set flag to `installed`, set `Last External Skills Check` to now.
-- Scan finds nothing + flag is `installed` → user uninstalled. Set flag to `(empty)`.
+- Scan finds nothing + flag is `installed` → shared store missing or emptied. Set flag to `(empty)`.
+- Verify symlinks in `.agents/skills/` are valid (not broken). Recreate broken ones.
 
 **Then act per state:**
 
 | State | Action |
 |---|---|
 | `installed` and `Last External Skills Check` <30 days ago | Skip silently. |
-| `installed` and `Last External Skills Check` >=30 days ago | Suggest refresh: "Android skills last refreshed [date]. Re-run `android skills add --all --project=.` to pull updates from Google." Update `Last External Skills Check` if user confirms refresh. |
-| `(empty)` and Platform=android | Re-suggest install (same prompt and three options as setup-skeleton Step 9c: y/n/d). |
+| `installed` and `Last External Skills Check` >=30 days ago | Run the **`update-external-skills`** workflow. |
+| `(empty)` | Re-suggest install using the same prompt as setup-skeleton Step 9c (y/n/d). On `y`: run **`update-external-skills`**. |
 | `declined` | Skip silently. |
-
-After install/refresh, re-run Step 4c (stub regeneration) so any newly added skills get `.claude/skills/` stubs.
 
 ---
 
