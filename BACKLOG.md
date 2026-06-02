@@ -8,7 +8,6 @@
 
 | ID | Priority | Title | Added | Jira Ticket | Notes |
 |----|----------|-------|-------|-------------|-------|
-| BL-001 | P2 | Multi-project Android skills: deduplicate install across projects | 2026-06-02 | | `.agents/skills/` is per-project, so N Android projects = N copies + N refresh runs. Two options: (a) symlink approach — canonical location like `~/.agentskel-third-party/android/`, setup-skeleton creates symlinks per project; (b) tool-native user-level — `~/.claude/skills/` etc., per-tool guidance only. Trigger: when team has 3+ Android projects and refresh churn becomes annoying. Not urgent. Surfaced in v1.57.x design discussion. |
 
 ---
 
