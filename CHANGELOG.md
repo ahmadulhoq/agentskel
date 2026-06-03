@@ -4,6 +4,19 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-03 — v1.59.1: Auto-link external skills on session-start (no manual install-agent.sh)
+
+After v1.58.0+ syncs introduced external-skill manifest entries, teammates
+pulling the merged sync had to remember to run `scripts/install-agent.sh`
+manually before their first agent session — otherwise the agent would
+silently miss those skills. New `session-start` Step 1b detects missing
+symlinks (manifest entries in `.agents/skills/.gitignore` with no matching
+symlink) and runs `install-agent.sh` once; idempotent and safe. Surfaces
+any "shared store missing pack" warnings and offers to run the
+`update-external-skills` workflow. `sync-skeleton` Step 7 PR body template
+now includes accurate post-merge teammate instructions, replacing the
+ad-hoc misleading "symlinks point at non-existent dir" wording.
+
 ## 2026-05-21 — v1.57.2: Fix setup-skeleton step ordering + ai-memory default branch
 
 Fix 1: Step 9c (platform skills) moved before the git commit in Step 9 — was running
