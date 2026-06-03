@@ -550,6 +550,11 @@ gh pr create \
 ### Memory files
 `.memory/CONFIG.md` Skeleton Version updated to v[CURRENT_VERSION] (already pushed to ai-memory).
 
+### After merge — for teammates pulling this branch
+External skill symlinks under `.agents/skills/` are gitignored (machine-local). They do not arrive with `git pull`. Your AI agent's `session-start` workflow detects this and runs `scripts/install-agent.sh` automatically on next session start. If your shared `~/.agentskel/skills/` store does not yet contain a pack listed in `.agents/skills/.gitignore`, session-start will surface the missing pack and offer to run the `update-external-skills` workflow.
+
+If you want to run the script manually before opening your agent: `bash scripts/install-agent.sh`.
+
 **Review notes:** Check that adapted changes correctly reflect [PLATFORM]-specific commands and paths.
 EOF
 )" \

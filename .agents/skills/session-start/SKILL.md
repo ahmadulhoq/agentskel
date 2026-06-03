@@ -28,6 +28,18 @@ until this procedure is complete.**
      > workflow first. See the agentskel README for setup instructions."
   4. **End session.** Do not attempt any work without memory files.
 
+## Step 1b — Link external skills (auto-recover after pull)
+
+External skill packs (e.g. Google's android/skills) install into a shared per-machine store at `~/.agentskel/skills/` and are surfaced to each project via gitignored symlinks under `.agents/skills/`. After a teammate pulls a sync that introduced new external skill entries — or after a fresh clone — the manifest exists but the symlinks do not yet. Detect and auto-recover before reading anything else.
+
+- [ ] Check whether `.agents/skills/.gitignore` exists.
+- [ ] **Does not exist →** no external skills configured for this project. Skip to Step 2.
+- [ ] **Exists →** read the manifest (non-comment, non-blank lines are external skill directory names). For each entry, check whether `.agents/skills/[name]` exists as a symlink.
+  - If every entry resolves to an existing symlink → skip to Step 2.
+  - If any entry is missing → run `bash scripts/install-agent.sh` once. The script is idempotent: it re-pulls `.memory/`, then for each manifest entry tries to create a symlink pointing into `~/.agentskel/skills/`. Surface any "shared store missing pack" warnings the script prints to the user, and offer to run the **`update-external-skills`** workflow now if a pack needs installing.
+
+This step makes external skills available without the teammate having to remember a manual install step. The script is safe to re-run.
+
 ## Step 2 — Read memory files
 
 ### Read now (essential — do not skip):
