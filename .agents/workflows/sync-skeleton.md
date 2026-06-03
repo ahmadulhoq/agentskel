@@ -37,7 +37,7 @@ If you are not sure whether the current user is authorized, ask before proceedin
      If the clone fails (no network, auth error) — stop and report. The user must resolve connectivity before continuing.
    - Once `[SKELETON_PATH]` is resolved, if it is `~/.agentskel/skeleton/` — pull latest before reading:
      ```bash
-     git -C ~/.agentskel/skeleton pull --ff-only origin main || echo "Warning — could not update skeleton. Using local copy."
+     git -C ~/.agentskel/skeleton pull --ff-only origin main 2>/dev/null || echo "Warning — could not update skeleton. Using local copy."
      ```
    - If `[SKELETON_PATH]` was not stored in `CONFIG.md`, offer to save it now.
 4. Read the current skeleton version from `[SKELETON_PATH]/VERSION`.

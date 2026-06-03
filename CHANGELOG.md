@@ -1,5 +1,13 @@
 # agentskel Changelog
 
+## v1.59.2 — 2026-06-03
+
+### Fix: suppress misleading `fatal:` git stderr in install-agent.sh and sync-skeleton self-update
+- `scripts/install-agent.sh` and `sync-skeleton` Step 0 ran `git pull` without redirecting stderr. When the pull failed for any reason (no network, no remote, stale worktree), git printed `fatal: …` to the user's screen — alarming, because the script handles the failure cleanly with a friendly "Warning — continuing" message immediately after. Surfaced by v1.59.1 dogfood test in a sandbox without `origin`.
+- Both call sites now redirect stderr to `/dev/null`, matching the pattern already used in `session-start` and `pre-memory-push.sh`. The `||` fallback continues to print the agentskel-friendly warning.
+- `setup-skeleton` Step 1 instruction text updated to match.
+- affected: setup-skeleton, sync-skeleton
+
 ## v1.59.1 — 2026-06-03
 
 ### Fix: external skill symlinks auto-link on session-start (no manual `install-agent.sh`)

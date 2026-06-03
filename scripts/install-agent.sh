@@ -10,7 +10,7 @@ SHARED_SKILLS_ROOT="$HOME/.agentskel/skills"
 
 if [ -d ".memory" ]; then
   echo "Pulling latest AI memory..."
-  git -C .memory pull --ff-only origin ai-memory || {
+  git -C .memory pull --ff-only origin ai-memory 2>/dev/null || {
     echo "Warning — could not pull latest memory. Continuing with local copy."
   }
   echo "Done — .memory/ is up to date."
