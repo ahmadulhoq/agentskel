@@ -1,5 +1,5 @@
 # Project Map: agentskel
-> Last updated: 2026-03-27T15:20Z by Cartographer Agent
+> Last updated: 2026-06-03T15:30Z by Cartographer Agent (refresh — see RESUME Cartography State for indexed HEAD SHA)
 
 ## Architecture Pattern
 - Pattern: Framework — skeleton templates + role-based workflows/skills/standards
@@ -15,19 +15,27 @@
 
 | Module | Responsibility | Key Entry Points |
 |--------|---------------|-----------------|
-| `core/memory/` | 15 memory file templates — project identity, codebase map, session state, conventions, tech debt, dependency tracking | CONFIG.md (identity + description), RULES.md (project context + rules), MAP.md (architecture), SYMBOLS.md (symbol index), RESUME.md (session state) |
-| `core/rules/` | Always-on agent behavior rules | core-behavior.md (planning, communication, memory protocol, skeleton contribution), security-non-negotiables.md (credentials, validation, least privilege) |
-| `core/skills/` | 3 procedural skills — mandatory lifecycle procedures | session-start/SKILL.md (8-step init), task-completion/SKILL.md (7-step post-task with Steps 5b/5c for skeleton repos), git-flow/SKILL.md (branch/commit/PR) |
-| `core/` (root) | Entry point templates, native tool config templates, and secret exclusions | AGENTS.md.template, CLAUDE.md.template, GEMINI.md.template, cursor-rule.mdc.template, copilot-instructions.md.template, windsurf-rule.md.template, .claudeignore |
-| `roles/dev/workflows/` | 18 dev workflows — multi-step missions triggered by user | setup-skeleton.md (install), cartographer.md (map codebase), develop-feature.md (build), implement-task.md (ad-hoc tasks), sync-skeleton.md (update), brainstorm-feature.md (pre-impl spec), debug-issue.md (structured debugging), refactor-code.md (safe restructure) |
+| `core/memory/` | 18 memory file templates — project identity, codebase map, session state, conventions, tech debt, dependency tracking, team roster, Jira workflow, backlog | CONFIG.md, RULES.md, MAP.md, SYMBOLS.md, RESUME.md, TEAM.md, JIRA_WORKFLOW.md, BACKLOG.md |
+| `core/rules/` | 2 always-on agent behavior rules | core-behavior.md, security-non-negotiables.md |
+| `core/skills/` | 9 procedural skills — mandatory lifecycle and meta-capabilities | session-start, task-completion, git-flow, codebase-navigator, skill-authoring, subagent-dispatch, atlassian-integration, knowledge-routing, discussion-continuity |
+| `core/claude-rules/` | 3 Claude-specific rule files (auto-loaded by Claude Code) | core-behavior.md, security.md, bootstrap.md |
+| `core/claude-hooks/` | 5 enforcement scripts + Claude settings template | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, settings.json |
+| `core/{cursor,windsurf,copilot,codex}-hooks/` | Per-tool hook configs for non-Claude tools | hooks.json (each), stop-verify.sh (cursor) |
+| `core/workspace-templates/` | 7 workspace dispatcher templates (workspace install mode) | dispatcher AGENTS.md, CLAUDE.md, GEMINI.md, claude-rules/routing.md, cursor/windsurf rules |
+| `core/` (root) | Entry point templates and shared registries | AGENTS.md.template, CLAUDE.md.template, GEMINI.md.template, cursor-rule.mdc.template, copilot-instructions.md.template, windsurf-rule.md.template, condensed-rules.md, external-skills.yml |
+| `roles/dev/workflows/` | 33 dev workflows — multi-step missions triggered by user | setup-skeleton, cartographer, develop-feature, implement-task, sync-skeleton, brainstorm-feature, debug-issue, refactor-code, hotfix, fix-tech-debt, cut-release, janitor, check-dependencies, check-skeleton, sync-versions, update-conventions, parity-check, create-blueprint, publish-adr, publish-postmortem, setup-team, add/remove/update-team-member, sync-team-from-github, setup-jira, implement-from-ticket, setup-confluence, setup-workspace, add/remove-workspace-platform, sync-workspace-dispatcher, update-external-skills |
 | `roles/dev/skills/` | 8 domain skills — specialist agent knowledge | developer, code-reviewer, test-engineer, task-planner, domain-expert, test-driven-development, systematic-debugger, using-git-worktrees |
 | `roles/dev/standards/` | 7 standards — architecture, style, git, dependency, API, platform-specific architecture | ARCHITECTURE.md (multi-platform with markers), STYLE_GUIDE.md, GIT_WORKFLOW.md, DEPENDENCY_MANAGEMENT.md, API_CONTRACT.md, ANDROID_ARCHITECTURE.md, IOS_ARCHITECTURE.md |
-| `roles/dev/prompts/` | 8 mission start prompts — context-setting for workflows | cartographer.md, develop-feature.md, setup-skeleton.md, sync-skeleton.md, code-review.md, check-skeleton.md, update-conventions.md, parity-check.md |
+| `roles/dev/prompts/` | 8 mission start prompts — context-setting for workflows | cartographer, develop-feature, setup-skeleton, sync-skeleton, code-review, check-skeleton, update-conventions, parity-check |
 | `roles/devops/` | Placeholder for future DevOps role | README.md (planned: deployment, monitoring, incident response) |
-| `.agents/` | Installed copy of rules, workflows, skills, standards (self-install for dogfooding) | Mirrors core/ and roles/dev/ — kept in sync via sync-skeleton |
-| `.claude/skills/` | 29 auto-generated Claude Code stubs for skill/workflow discovery | One stub per skill (11) and workflow (18) |
-| `root` | Project identity, versioning, ADR, maintenance docs | VERSION (skeleton version), CHANGELOG.md, README.md, MASTER_PLAN.md (ADR), MAINTAIN_MASTER_PLAN.md (gitignored checklist), AGENTS.md, CLAUDE.md, GEMINI.md, CONTRIBUTING.md, LICENSE |
-| `scripts/` | Developer onboarding | install-agent.sh (mount ai-memory worktree) |
+| `.agents/` | Installed copy of rules, workflows, skills, standards (self-install for dogfooding) | Mirrors core/ and roles/dev/ — kept in sync via sync-skeleton. 17 skills, 33 workflows, 3 rules, 7 standards |
+| `.claude/skills/` | 50 auto-generated Claude Code stubs for skill/workflow discovery | One stub per `.agents/` skill (17) and workflow (33) |
+| `.claude/rules/` | Claude Code native-loaded rules (copies of core/claude-rules) | core-behavior.md, security.md, bootstrap.md |
+| `.claude/hooks/` | Installed Claude hook scripts (copies of core/claude-hooks) | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh |
+| `.claude-plugin/` | Plugin manifest for Claude Code `/plugin install` | plugin.json, hook.json |
+| `docs/` | Setup and coordination docs for users | ATLASSIAN-SETUP.md, INSTALL-MODES.md, PLATFORM-SKILLS.md, TEAM-COORDINATION.md |
+| `scripts/` | Developer onboarding + validation | install-agent.sh (mount + link), validate.py (static checks for CI and pre-PR) |
+| `root` | Project identity, versioning, ADR, maintenance docs | VERSION, CHANGELOG.md, README.md, MASTER_PLAN.md (ADR), MAINTAIN_MASTER_PLAN.md (gitignored), AGENTS.md, CLAUDE.md, GEMINI.md, CONTRIBUTING.md, INSTALL.md, LICENSE |
 
 ## Internal Frameworks / Shared Libraries
 | Framework | Responsibility | Used By |
