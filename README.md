@@ -151,7 +151,7 @@ the auto-resolution will use it first.
 
 ## Current version
 
-**v1.59.1** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
+**v1.59.2** — see [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## Contributing
 
