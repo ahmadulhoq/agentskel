@@ -4,6 +4,15 @@
 IDLE
 
 ## Last Completed Task
+- v1.59.2: Suppress misleading `fatal:` git stderr. `install-agent.sh` memory pull and `sync-skeleton` Step 0 skeleton self-update both redirect `git pull` stderr to `/dev/null`, matching the pattern already used in session-start and pre-memory-push.sh. The `||` fallback still prints the friendly warning. setup-skeleton instruction text also updated. Surfaced by v1.59.1 dogfood test.
+
+## Previously Completed
+- v1.59.1: Auto-link external skills on session-start. New Step 1b detects missing symlinks (manifest in `.agents/skills/.gitignore`) and runs `install-agent.sh` once (idempotent). sync-skeleton Step 7 PR body gained accurate post-merge teammate instructions. Replaces the manual "remember to run install-agent.sh" friction surfaced during a downstream sync.
+
+## Previously Completed
+- v1.57.0: External platform skills (Android, reference-don't-vendor). docs/PLATFORM-SKILLS.md, setup-skeleton Step 9c, sync-skeleton Step 4d (30-day refresh cadence + 3-option prompt + declined flag), CONFIG.md fields (External Platform Skills, Last External Skills Check), developer/SKILL.md pointer, validator distinguishes first-party vs third-party for stub + catalog parity. Also fixed pre-existing README v1.55.4 + Skeleton Version v1.50.0 drift. PR #37 merged.
+
+## Previously Completed
 - v1.55.0: Post-sync workflow/skill triage via affected: field. CHANGELOG entries for skeleton now include affected: names. sync-skeleton Step 4d + Final Step triage. task-completion + checklist updated.
 
 ## Previously Completed
@@ -68,4 +77,4 @@ IDLE
 - Coverage gate passed — 13 modules complete, 0 remaining.
 
 ## Timestamp (UTC)
-- 2026-04-16T14:57Z
+- 2026-06-03T09:00Z

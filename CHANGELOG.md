@@ -4,6 +4,18 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-03 — v1.59.2: Suppress misleading `fatal:` git stderr
+
+When `git pull` fails (no network, no remote, stale worktree), git prints
+`fatal: …` to the user's screen — alarming, because two of our call sites
+handle the failure cleanly and follow up with a friendly warning. Surfaced
+by v1.59.1 dogfood test in a sandbox without origin. Fixed:
+`scripts/install-agent.sh` (memory pull) and `sync-skeleton` Step 0
+(self-update skeleton pull). Both now redirect stderr to `/dev/null`,
+matching the pattern already used in session-start and pre-memory-push.sh.
+The `||` fallback continues to print the agentskel-friendly warning.
+`setup-skeleton` instruction text updated to match.
+
 ## 2026-06-03 — v1.59.1: Auto-link external skills on session-start (no manual install-agent.sh)
 
 After v1.58.0+ syncs introduced external-skill manifest entries, teammates
