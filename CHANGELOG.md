@@ -1,5 +1,23 @@
 # agentskel Changelog
 
+## v1.59.1 — 2026-06-03
+
+### Fix: external skill symlinks auto-link on session-start (no manual `install-agent.sh`)
+- After a sync that introduced new external skill entries (v1.58.0+ shared
+  store), teammates pulling the merged sync had to remember to run
+  `scripts/install-agent.sh` to materialise the gitignored symlinks. The
+  agent's first session post-pull would silently miss the external skills.
+- New `session-start` Step 1b detects manifest entries in
+  `.agents/skills/.gitignore` that have no matching symlink, runs
+  `install-agent.sh` once (idempotent), and surfaces any "shared store
+  missing pack" warnings the script prints. Offers to run
+  `update-external-skills` if a pack needs installing.
+- `sync-skeleton` Step 7 PR body template now includes an "After merge —
+  for teammates pulling this branch" section explaining the auto-link
+  behavior. Replaces the misleading ad-hoc "symlinks point at non-existent
+  dir" wording that surfaced during a recent sync.
+- affected: session-start, sync-skeleton
+
 ## v1.59.0 — 2026-05-31
 
 ### Canonical skeleton location (~/.agentskel/skeleton/)
