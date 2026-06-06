@@ -4,6 +4,9 @@
 IDLE
 
 ## Last Completed Task
+- v1.61.0: Gemini CLI / Antigravity parity bundle (3 items): 50 stubs in `.gemini/skills/<name>/SKILL.md` so workflows are skill-discoverable to Gemini; `gemini-extension.json` + `.claude-plugin/plugin.json` bumped to v1.61.0; new `core/gemini-hooks/` with 4 JSON-contract hook scripts + settings.json template; setup-skeleton + sync-skeleton + validator updated. 354 ok, 0 fail.
+
+## Previously Completed
 - v1.60.0: Fix Claude Code skill discovery — root cause of "Claude misses all workflows." All 50 stubs migrated from `.claude/skills/<name>.md` (flat, silently ignored by Claude Code's loader) to `.claude/skills/<name>/SKILL.md` (directory, the spec-required format). setup-skeleton + sync-skeleton + validator updated. Downstream migration step added so existing projects auto-convert on next sync via `git mv`. Verified empirically: all 50 skills now appear in the available-skills list.
 
 ## Previously Completed
@@ -94,4 +97,4 @@ IDLE
 - Note: this was a refresh (not a full re-cartography). SYMBOLS.md scripts section was updated at v1.57.0; other sections unchanged from previous cartography. A full re-index would require reading every workflow and skill source file — deferred to a future cartographer run when justified by significant structural change.
 
 ## Timestamp (UTC)
-- 2026-06-06T20:30Z
+- 2026-06-07T10:00Z

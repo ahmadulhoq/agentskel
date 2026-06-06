@@ -4,6 +4,30 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.61.0: Gemini CLI / Antigravity parity bundle
+
+Three-item bundle closing the Gemini-side parity gaps to match v1.60.0's
+Claude fix:
+
+1. Workflow discoverability: generated 50 stubs in `.gemini/skills/<name>/SKILL.md`
+   so workflows in `.agents/workflows/` (which Gemini doesn't auto-scan) become
+   discoverable as skills. setup-skeleton Step 5b1 (new) + sync-skeleton Step 4c
+   refresh these on every install/sync. Validator gains `gemini stub parity`
+   check mirroring `claude stub parity`.
+
+2. Extension manifest: `gemini-extension.json` (already at repo root) bumped
+   v1.26.0 → v1.61.0; description clarified to set expectations.
+   `.claude-plugin/plugin.json` also bumped for consistency.
+
+3. Gemini-format hooks: new `core/gemini-hooks/` with 4 scripts following
+   Gemini's strict JSON I/O contract (stdin JSON, stdout JSON-only, stderr for
+   rejection reasons). Events: `BeforeTool` (pre-commit, pre-memory-push,
+   pre-edit), `AfterAgent` (stop-verify). Plus `settings.json` template.
+   setup-skeleton Step 5b3 extended with Gemini install block.
+
+All three required reading the actual Gemini CLI docs (not guessing). Validator
+green: 354 ok, 0 fail (added gemini stub parity check, 50 items).
+
 ## 2026-06-06 — v1.60.0: Fix Claude Code skill discovery — migrate stubs to directory layout
 
 Root cause of "Claude misses all workflows": project-level `.claude/skills/<name>.md`
