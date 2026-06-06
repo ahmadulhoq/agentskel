@@ -4,6 +4,24 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.63.0: Cartography refresh (MAP + SYMBOLS + RESUME state)
+
+Memory-only refresh. No workflow/code changes. v1.60-v1.62.x cross-tool work
+compounded into cartography drift; this PR aligns MAP.md, SYMBOLS.md, and
+RESUME Cartography State with reality.
+
+MAP.md: rewrote architecture pattern entry-points section with per-tool
+explicit list (was single line); module registry updated for all 5 hook
+dirs (cursor expanded, gemini new, windsurf expanded, codex same,
+copilot deleted) + new tool-specific stub dirs (.gemini/skills/,
+.cursor/rules/, .windsurf/workflows/, .github/prompts/); validate.py
+grown to 10 checks. SYMBOLS.md: 5 new functions added, 1 removed
+(check_stub_parity refactored). RESUME Cartography State: new HEAD,
+coverage target ~430 (was 262).
+
+`.agent` symlink documented as legacy compat — decided to keep (harmless,
+no signal it's truly unused).
+
 ## 2026-06-07 — v1.62.2: Windsurf hook scripts (wrong I/O contract — silent allow bug)
 
 Continuing v1.62.1's self-audit. Verified Windsurf + Codex hook I/O contracts

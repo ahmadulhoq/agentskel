@@ -4,6 +4,9 @@
 IDLE
 
 ## Last Completed Task
+- v1.63.0: Cartography refresh — memory-only. MAP.md architecture pattern + module registry updated for v1.60-v1.62.x reality (per-tool entry points enumerated; cursor/gemini/windsurf hook dirs expanded; copilot-hooks removed; new tool-specific stub dirs `.gemini/skills/`, `.cursor/rules/`, `.windsurf/workflows/`, `.github/prompts/`). SYMBOLS.md scripts/validate.py refreshed (5 new functions, 1 removed). RESUME Cartography State: new HEAD, coverage target ~430. `.agent` symlink documented as legacy compat (kept). 472 ok, 0 fail.
+
+## Previously Completed
 - v1.62.2: Windsurf hook scripts wrong I/O contract — silent allow bug. Pre-v1.62.2 sourced from `core/claude-hooks/` which reads `tool_input.command`; Windsurf nests as `tool_info.command_line`. COMMAND var was always empty → every commit/push silently allowed. Wrote 4 Windsurf-format scripts in `core/windsurf-hooks/`. Added pre_write_code event (plan-gate, matches other tools). stop-verify can't block post_cascade_response per docs — stderr+exit 0. Codex verified compatible with Claude — no changes. 472 ok, 0 fail.
 
 ## Previously Completed
@@ -78,32 +81,43 @@ IDLE
 - v1.34: Native-first rule delivery (.claude/rules/ auto-load, AGENTS.md inline, condensed configs). Deterministic pre-commit hook. 10 skill-wiring gaps fixed.
 
 ## Cartography State
-- Last indexed commit: 3814944b8a16c6d2a5c426674423ada902837055
-- Last indexed date: 2026-06-03
-- Coverage target: 262 source files (.md, .sh, .py, .yml, .json, .mdc, .template; excluding .git/ and .memory/)
+- Last indexed commit: 4537ff49e0f1c5e59f613de3757c4170742d0eb4
+- Last indexed date: 2026-06-07
+- Coverage target: ~430 source files (.md, .sh, .py, .yml, .json, .mdc, .template; excluding .git/ and .memory/). Big jump from previous 262 — driven by v1.60-v1.62 generating per-tool stub/workflow/prompt directories.
 - Symbols format: single (SYMBOLS.md holds all symbols directly — agentskel itself has few code symbols beyond scripts/validate.py)
 - [x] core/memory (18 files)
 - [x] core/rules (2 files)
-- [x] core/skills (9 directories — atlassian-integration, codebase-navigator, discussion-continuity, git-flow, knowledge-routing, session-start, skill-authoring, subagent-dispatch, task-completion)
-- [x] core/claude-rules (3 files)
-- [x] core/claude-hooks (5 files — pre-commit-check, pre-memory-push, pre-edit-check, stop-verify, settings.json)
-- [x] core/cursor-hooks (2 files), core/windsurf-hooks (1), core/copilot-hooks (1), core/codex-hooks (1)
-- [x] core/workspace-templates (7 files — dispatcher templates)
-- [x] core/ root (8 files — 3 entry-point templates, 3 native-config templates, condensed-rules.md, external-skills.yml)
+- [x] core/skills (9 directories)
+- [x] core/claude-rules (3 files), core/claude-hooks (5 files)
+- [x] core/cursor-hooks (5 files — 4 scripts + hooks.json; new scripts in v1.62.0)
+- [x] core/gemini-hooks (5 files — 4 scripts + settings.json; **new directory in v1.61.0**)
+- [x] core/windsurf-hooks (5 files — 4 scripts + hooks.json; new scripts in v1.62.2)
+- [x] core/codex-hooks (1 file — hooks.json; scripts sourced from core/claude-hooks/)
+- [x] core/copilot-hooks **REMOVED in v1.62.0** (Copilot has no hooks concept)
+- [x] core/workspace-templates (7 files)
+- [x] core/ root (8 files — entry-point + native-config templates + condensed-rules.md + external-skills.yml)
 - [x] roles/dev/workflows (33 files)
-- [x] roles/dev/skills (8 directories — code-reviewer, developer, domain-expert, systematic-debugger, task-planner, test-driven-development, test-engineer, using-git-worktrees)
-- [x] roles/dev/standards (7 files)
-- [x] roles/dev/prompts (8 files)
-- [x] roles/devops (1 placeholder file)
+- [x] roles/dev/skills (8 directories)
+- [x] roles/dev/standards (7 files), roles/dev/prompts (8 files), roles/devops (1 placeholder)
 - [x] .agents/ (60 installed copies — 17 skills, 33 workflows, 3 rules, 7 standards)
-- [x] .claude/skills/ (50 auto-generated stubs)
-- [x] .claude/rules/ (3 files), .claude/hooks/ (4 files), .claude/settings.json
-- [x] .claude-plugin/ (2 manifest files)
-- [x] docs/ (4 files — ATLASSIAN-SETUP, INSTALL-MODES, PLATFORM-SKILLS, TEAM-COORDINATION)
-- [x] scripts/ (2 files — install-agent.sh, validate.py)
-- [x] Root files (VERSION, CHANGELOG.md, README.md, MASTER_PLAN.md, MAINTAIN_MASTER_PLAN.md, AGENTS.md, CLAUDE.md, GEMINI.md, CONTRIBUTING.md, INSTALL.md, LICENSE, .gitignore, .claudeignore) + native tool configs (.cursor/rules/agentskel.mdc, .github/copilot-instructions.md, .windsurf/rules/agentskel.md)
+- [x] .claude/skills/ (50 stubs, **directory layout `<name>/SKILL.md`** since v1.60.0)
+- [x] .claude/rules/ (3 files), .claude/hooks/ (4 scripts + settings.json)
+- [x] .claude-plugin/ (2 files — plugin.json, marketplace.json; version tracks agentskel)
+- [x] .gemini/skills/ (50 stubs — **new in v1.61.0**)
+- [x] .cursor/rules/ (51 .mdc files — 1 always-on `agentskel.mdc` + 50 per-name with `alwaysApply: false`; **expanded in v1.62.0**)
+- [x] .cursor/hooks.json (workspace root, **moved from `.cursor/hooks/hooks-cursor.json` in v1.62.0** — old path was silently inactive)
+- [x] .windsurf/rules/ (1 file — agentskel.md)
+- [x] .windsurf/workflows/ (33 files — **new in v1.62.0**, slash-invokable)
+- [x] .windsurf/hooks.json (workspace root)
+- [x] .github/copilot-instructions.md
+- [x] .github/prompts/ (33 .prompt.md files — **new in v1.62.0**, Copilot slash commands)
+- [x] .github/CODEOWNERS
+- [x] docs/ (4 files)
+- [x] scripts/ (2 files — install-agent.sh, validate.py with 10 deterministic checks)
+- [x] gemini-extension.json (version tracks agentskel)
+- [x] Root files (VERSION, CHANGELOG.md, README.md, MASTER_PLAN.md, MAINTAIN_MASTER_PLAN.md, AGENTS.md, CLAUDE.md, GEMINI.md, CONTRIBUTING.md, INSTALL.md, LICENSE, .gitignore, .claudeignore) + `.agent` symlink (legacy compat)
 - Coverage gate passed — all top-level directories under git tracking accounted for. 0 unprocessed.
-- Note: this was a refresh (not a full re-cartography). SYMBOLS.md scripts section was updated at v1.57.0; other sections unchanged from previous cartography. A full re-index would require reading every workflow and skill source file — deferred to a future cartographer run when justified by significant structural change.
+- Note: this was a v1.63.0 cartography refresh that updates module registry + cartography state after the v1.60-v1.62.x cross-tool work (5 releases of structural changes). SYMBOLS.md scripts/validate.py section also updated (5 new functions, 1 removed). Not a full per-file re-index — deferred to a future cartographer run when justified.
 
 ## Timestamp (UTC)
-- 2026-06-07T19:00Z
+- 2026-06-07T20:00Z

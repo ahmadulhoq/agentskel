@@ -1,12 +1,20 @@
 # Project Map: agentskel
-> Last updated: 2026-06-03T15:30Z by Cartographer Agent (refresh — see RESUME Cartography State for indexed HEAD SHA)
+> Last updated: 2026-06-07T20:00Z by Cartographer Agent (refresh — see RESUME Cartography State for indexed HEAD SHA)
 
 ## Architecture Pattern
 - Pattern: Framework — skeleton templates + role-based workflows/skills/standards
 - Two components: Skeleton (always required) + Blueprint (optional, multi-project teams)
 - Install model: Templates in `core/` and `roles/` are copied to downstream projects during setup
 - Memory model: Orphaned `ai-memory` git branch mounted as worktree at `.memory/`
-- Entry points: `CLAUDE.md` (Claude Code), `GEMINI.md` (Antigravity), `.agent` symlink to `.agents/`
+- Tool entry points (each tool reads its own native files; all chain back to AGENTS.md):
+  - `AGENTS.md` — universal entry point (Codex CLI reads natively; thin wrappers point at this)
+  - `CLAUDE.md` + `.claude/rules/` + `.claude/skills/<name>/SKILL.md` + `.claude/hooks/` + `.claude/settings.json` (Claude Code, per `.claude-plugin/plugin.json`)
+  - `GEMINI.md` + `.gemini/skills/<name>/SKILL.md` + `.gemini/hooks/` + `gemini-extension.json` (Gemini CLI / Antigravity)
+  - `.cursor/rules/<name>.mdc` (per-skill agent-requested) + `.cursor/rules/agentskel.mdc` (always-on core) + `.cursor/hooks.json` (Cursor)
+  - `.windsurf/rules/agentskel.md` + `.windsurf/workflows/<name>.md` (slash-invokable) + `.windsurf/hooks.json` (Windsurf)
+  - `.github/copilot-instructions.md` + `.github/prompts/<name>.prompt.md` (GitHub Copilot — no hooks support)
+  - `.codex/hooks.json` + `.agents/skills/` (upward auto-discovery) (Codex CLI)
+  - `.agent` symlink → `.agents/` — **legacy compat path**; current Gemini docs only mention `.agents/` plural, but the singular symlink stays for any older installs that may still reference it.
 - DI: N/A
 - Navigation: N/A
 - UI: N/A (markdown/shell)
@@ -20,7 +28,11 @@
 | `core/skills/` | 9 procedural skills — mandatory lifecycle and meta-capabilities | session-start, task-completion, git-flow, codebase-navigator, skill-authoring, subagent-dispatch, atlassian-integration, knowledge-routing, discussion-continuity |
 | `core/claude-rules/` | 3 Claude-specific rule files (auto-loaded by Claude Code) | core-behavior.md, security.md, bootstrap.md |
 | `core/claude-hooks/` | 5 enforcement scripts + Claude settings template | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, settings.json |
-| `core/{cursor,windsurf,copilot,codex}-hooks/` | Per-tool hook configs for non-Claude tools | hooks.json (each), stop-verify.sh (cursor) |
+| `core/cursor-hooks/` | 4 Cursor-format hook scripts + hooks.json | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, hooks.json. Cursor's I/O contract is `command` at top of stdin JSON + `{permission,user_message,agent_message}` JSON on stdout (v1.62.0). |
+| `core/gemini-hooks/` | 4 Gemini-format hook scripts + settings.json | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, settings.json. Gemini's I/O contract is `tool_input.command` stdin + JSON-only stdout (v1.61.0). |
+| `core/windsurf-hooks/` | 4 Windsurf-format hook scripts + hooks.json | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, hooks.json. Windsurf's I/O contract is `tool_info.command_line` stdin + stderr-based blocking (v1.62.2). |
+| `core/codex-hooks/` | Codex hook config (scripts sourced from core/claude-hooks/, verified compatible) | hooks.json. Codex's I/O contract matches Claude's (`tool_input.command` + exit-code blocking). |
+| `core/copilot-hooks/` | **DELETED in v1.62.0** — GitHub Copilot has no hooks concept. | — |
 | `core/workspace-templates/` | 7 workspace dispatcher templates (workspace install mode) | dispatcher AGENTS.md, CLAUDE.md, GEMINI.md, claude-rules/routing.md, cursor/windsurf rules |
 | `core/` (root) | Entry point templates and shared registries | AGENTS.md.template, CLAUDE.md.template, GEMINI.md.template, cursor-rule.mdc.template, copilot-instructions.md.template, windsurf-rule.md.template, condensed-rules.md, external-skills.yml |
 | `roles/dev/workflows/` | 33 dev workflows — multi-step missions triggered by user | setup-skeleton, cartographer, develop-feature, implement-task, sync-skeleton, brainstorm-feature, debug-issue, refactor-code, hotfix, fix-tech-debt, cut-release, janitor, check-dependencies, check-skeleton, sync-versions, update-conventions, parity-check, create-blueprint, publish-adr, publish-postmortem, setup-team, add/remove/update-team-member, sync-team-from-github, setup-jira, implement-from-ticket, setup-confluence, setup-workspace, add/remove-workspace-platform, sync-workspace-dispatcher, update-external-skills |
@@ -29,12 +41,21 @@
 | `roles/dev/prompts/` | 8 mission start prompts — context-setting for workflows | cartographer, develop-feature, setup-skeleton, sync-skeleton, code-review, check-skeleton, update-conventions, parity-check |
 | `roles/devops/` | Placeholder for future DevOps role | README.md (planned: deployment, monitoring, incident response) |
 | `.agents/` | Installed copy of rules, workflows, skills, standards (self-install for dogfooding) | Mirrors core/ and roles/dev/ — kept in sync via sync-skeleton. 17 skills, 33 workflows, 3 rules, 7 standards |
-| `.claude/skills/` | 50 auto-generated Claude Code stubs for skill/workflow discovery | One stub per `.agents/` skill (17) and workflow (33) |
+| `.claude/skills/` | 50 auto-generated Claude Code skill stubs in **directory layout** (`<name>/SKILL.md`) | One stub per `.agents/` skill (17) and workflow (33). Pre-v1.60.0 used flat `<name>.md` which Claude silently ignored. |
 | `.claude/rules/` | Claude Code native-loaded rules (copies of core/claude-rules) | core-behavior.md, security.md, bootstrap.md |
 | `.claude/hooks/` | Installed Claude hook scripts (copies of core/claude-hooks) | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh |
-| `.claude-plugin/` | Plugin manifest for Claude Code `/plugin install` | plugin.json, hook.json |
+| `.claude-plugin/` | Plugin manifest for Claude Code `/plugin install` | plugin.json (tracks agentskel version) |
+| `.gemini/skills/` | 50 auto-generated Gemini stubs in directory layout | One stub per `.agents/` skill + workflow. Workflows aren't on Gemini's auto-discovery path otherwise (v1.61.0). |
+| `.cursor/rules/` | 51 Cursor rules: 1 always-on core (`agentskel.mdc`) + 50 per-skill/workflow stubs with `alwaysApply: false` (agent-requested discovery) | agentskel.mdc + 50 `<name>.mdc` files (v1.62.0) |
+| `.cursor/hooks.json` | Cursor hooks at workspace root (NOT `.cursor/hooks/`) | Wires beforeShellExecution / afterFileEdit / stop to scripts in `.cursor/hooks/` (v1.62.0). |
+| `.windsurf/rules/` | Always-on Windsurf rule | agentskel.md |
+| `.windsurf/workflows/` | 33 first-class Windsurf workflows — `/<name>` slash-invokable | One per `.agents/workflows/` file (v1.62.0) |
+| `.windsurf/hooks.json` | Windsurf hooks (uses `pre_run_command` / `pre_write_code` / `post_cascade_response` — Windsurf has no `stop` event) | v1.62.0 + v1.62.2 |
+| `.github/copilot-instructions.md` | Always-loaded Copilot instructions | Inline rules: Session Start, Workflow routing, Plan First, Task Completion. |
+| `.github/prompts/` | 33 Copilot slash-invokable prompt files — `/<name>.prompt.md` | One per `.agents/workflows/` file. Copilot has no hooks concept (v1.62.0). |
 | `docs/` | Setup and coordination docs for users | ATLASSIAN-SETUP.md, INSTALL-MODES.md, PLATFORM-SKILLS.md, TEAM-COORDINATION.md |
-| `scripts/` | Developer onboarding + validation | install-agent.sh (mount + link), validate.py (static checks for CI and pre-PR) |
+| `scripts/` | Developer onboarding + validation | install-agent.sh (mount memory worktree + link external skills); validate.py (10 deterministic checks: frontmatter, descriptions, version consistency across 5 files, parity for 4 tool stub dirs, AGENTS.md catalog parity, CHANGELOG presence) |
+| `gemini-extension.json` | Gemini CLI extension manifest at repo root (tracks agentskel version) | Lets users run `gemini extensions install <repo-url>` |
 | `root` | Project identity, versioning, ADR, maintenance docs | VERSION, CHANGELOG.md, README.md, MASTER_PLAN.md (ADR), MAINTAIN_MASTER_PLAN.md (gitignored), AGENTS.md, CLAUDE.md, GEMINI.md, CONTRIBUTING.md, INSTALL.md, LICENSE |
 
 ## Internal Frameworks / Shared Libraries

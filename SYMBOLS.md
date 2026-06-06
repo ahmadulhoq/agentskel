@@ -126,10 +126,16 @@
 | _extract_description | function | scripts/validate.py |
 | _is_first_party_skill | function | scripts/validate.py |
 | _is_first_party_workflow | function | scripts/validate.py |
+| _stub_parity_for | function | scripts/validate.py |
+| _flat_stub_parity | function | scripts/validate.py |
 | check_frontmatter | function | scripts/validate.py |
 | check_description_length | function | scripts/validate.py |
 | check_version_consistency | function | scripts/validate.py |
-| check_stub_parity | function | scripts/validate.py |
+| check_claude_stub_parity | function | scripts/validate.py |
+| check_gemini_stub_parity | function | scripts/validate.py |
+| check_cursor_rule_parity | function | scripts/validate.py |
+| check_windsurf_workflow_parity | function | scripts/validate.py |
+| check_copilot_prompt_parity | function | scripts/validate.py |
 | check_agents_catalog_parity | function | scripts/validate.py |
 | check_changelog_has_version | function | scripts/validate.py |
 | main | function | scripts/validate.py |
