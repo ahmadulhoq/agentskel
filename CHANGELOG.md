@@ -1,5 +1,36 @@
 # agentskel Changelog
 
+## v1.62.2 — 2026-06-07
+
+### Fix: Windsurf hook scripts had wrong I/O contract (silent allow on every commit/push)
+
+Continuing the v1.62.1 self-audit. Verified Windsurf and Codex hook I/O contracts against current docs (deferred item from v1.62.0).
+
+**Windsurf — silent bug found and fixed**
+
+The pre-v1.62.2 install copied scripts from `core/claude-hooks/` to `.windsurf/hooks/`. Claude's scripts read the command from `tool_input.command` on stdin — but **Windsurf nests it as `tool_info.command_line`**. Result: the `COMMAND` variable in every Windsurf install was always empty, and `pre-commit-check.sh` / `pre-memory-push.sh` silently allowed every git commit and ai-memory push regardless of state. This bug has been live since whenever Windsurf hooks were first shipped.
+
+Per Windsurf's docs (https://docs.devin.ai/desktop/cascade/hooks):
+- stdin: JSON with `agent_action_name` + `tool_info` (event-specific keys: `command_line` for `pre_run_command`, `file_path` for `pre_write_code`)
+- stdout: informational (UI display when `show_output: true`)
+- stderr: error / rejection reason
+- exit codes: 0 = allow, 2 = block (**pre-hooks only**), other = error → action proceeds
+
+Fix:
+- 4 new Windsurf-format scripts in `core/windsurf-hooks/` (pre-commit-check, pre-memory-push, pre-edit-check, stop-verify) that read `tool_info.command_line` / `tool_info.file_path` from stdin.
+- New `pre_write_code` event wired in `core/windsurf-hooks/hooks.json` (plan-gate reminder — matches the other tools' coverage).
+- `stop-verify.sh` adjusted: `post_cascade_response` is a post-event, so it cannot block (exit 2 is pre-hooks only per docs). Warnings go to stderr, script exits 0.
+- setup-skeleton install steps source from `core/windsurf-hooks/` (was `core/claude-hooks/`).
+- sync-skeleton gains a v1.62.2 migration block: force-overwrite the four scripts in `.windsurf/hooks/` from the new location.
+
+**Codex — verified, no changes needed**
+
+Per Codex docs (https://developers.openai.com/codex/hooks): stdin JSON uses `tool_input.command` — same key as Claude. Exit codes and matchers match too. Sourcing `.codex/hooks/` scripts from `core/claude-hooks/` is intentional and supported. setup-skeleton text updated to reflect this is verified, not just an assumption.
+
+**Validator** — no new checks. 471 ok, 0 fail (unchanged from v1.62.1; new scripts add no new validations).
+
+affected: setup-skeleton, sync-skeleton
+
 ## v1.62.1 — 2026-06-07
 
 ### Fix: plugin manifest version drift + setup-skeleton clarity
