@@ -4,6 +4,9 @@
 IDLE
 
 ## Last Completed Task
+- v1.62.2: Windsurf hook scripts wrong I/O contract — silent allow bug. Pre-v1.62.2 sourced from `core/claude-hooks/` which reads `tool_input.command`; Windsurf nests as `tool_info.command_line`. COMMAND var was always empty → every commit/push silently allowed. Wrote 4 Windsurf-format scripts in `core/windsurf-hooks/`. Added pre_write_code event (plan-gate, matches other tools). stop-verify can't block post_cascade_response per docs — stderr+exit 0. Codex verified compatible with Claude — no changes. 472 ok, 0 fail.
+
+## Previously Completed
 - v1.62.1: Self-audit follow-up. v1.62.0 forgot to bump gemini-extension.json + .claude-plugin/plugin.json (stayed at 1.61.0). Bumped both to 1.62.1 (matching VERSION). Extended validator check_version_consistency to cover plugin manifests (regression-tested: it caught the drift before fix). Disambiguated setup-skeleton "same 3 hook scripts" text for Windsurf and Codex with explicit source paths + honest disclaimer about unverified I/O contracts. 472 ok, 0 fail.
 
 ## Previously Completed

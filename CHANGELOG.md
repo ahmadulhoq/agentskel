@@ -4,6 +4,28 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.62.2: Windsurf hook scripts (wrong I/O contract — silent allow bug)
+
+Continuing v1.62.1's self-audit. Verified Windsurf + Codex hook I/O contracts
+against current docs.
+
+**Windsurf silent bug:** Claude scripts read `tool_input.command` from stdin,
+but Windsurf nests command as `tool_info.command_line`. The COMMAND var was
+always empty on every Windsurf install. Pre-commit and pre-memory-push
+hooks silently allowed everything. Bug since Windsurf hooks first shipped.
+
+Wrote 4 Windsurf-format scripts in core/windsurf-hooks/ that read the right
+key. Added pre_write_code event (plan-gate, matches other tools).
+stop-verify can't block on post_cascade_response per docs (post-hooks
+can't exit 2) — surfaces warnings via stderr instead. setup-skeleton +
+sync-skeleton updated; v1.62.2 migration block force-overwrites the four
+scripts in downstream `.windsurf/hooks/`.
+
+**Codex verified, no changes:** tool_input.command matches Claude. Sourcing
+from core/claude-hooks/ confirmed intentional.
+
+472 ok, 0 fail on validator.
+
 ## 2026-06-07 — v1.62.1: Plugin manifest drift + setup-skeleton clarity
 
 Self-audit caught three gaps in the v1.60/v1.61/v1.62 series:
