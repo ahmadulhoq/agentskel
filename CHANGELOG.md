@@ -4,6 +4,25 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-06 — v1.60.0: Fix Claude Code skill discovery — migrate stubs to directory layout
+
+Root cause of "Claude misses all workflows": project-level `.claude/skills/<name>.md`
+flat files were silently ignored by Claude Code's loader since v1.26. Spec requires
+`.claude/skills/<name>/SKILL.md` (directory). Migrated all 50 stubs in this repo,
+updated setup-skeleton Step 5b and sync-skeleton Step 4c, added migration step for
+downstream projects (auto-converts pre-v1.60.0 flat layouts on next sync via git mv).
+validator updated to check directory layout and flag legacy flat files. Verified
+empirically: created test stub in correct format → appeared in available-skills
+immediately; bulk-migrated 50 → all visible after file-watcher caught up.
+
+Diagnosis surfaced by HelpDesk transcript audit (12,639 lines): 0 session-start
+runs, 1 task-completion run, 0 workflow invocations vs ~1,011 Edit/Write calls.
+Format mismatch silently broke every Claude session since March 2026.
+
+Side benefit: skills now auto-bind to slash commands (`/debug-issue` etc.) and CSO
+description matching works. Future PATCHes will address session-start auto-fire
+(SessionStart hook) and task-completion enforcement (strengthened Stop hook).
+
 ## 2026-06-03 — v1.59.2: Suppress misleading `fatal:` git stderr
 
 When `git pull` fails (no network, no remote, stale worktree), git prints
