@@ -249,6 +249,35 @@ When skills or workflows are added/removed, re-running setup or sync regenerates
 
 ---
 
+## Step 5b1 — Generate .gemini/skills/ stubs (Gemini CLI / Antigravity)
+
+**Skip this step if `antigravity` is not in Supported Tools.**
+
+Gemini CLI discovers workspace skills from `.gemini/skills/<name>/SKILL.md` (directory format — same agentskills.io open standard as Claude). Gemini also supports `.agents/skills/<name>/SKILL.md` as an interop alias and reads it directly, so first-party skills already in `.agents/skills/` are discovered without stubs.
+
+**Why we still generate `.gemini/skills/` stubs:** agentskel's workflows live in `.agents/workflows/*.md`, which Gemini's auto-discovery does NOT scan. Without stubs, the 33 workflows would be invisible to Gemini as skills. Stubs in `.gemini/skills/` surface them as discoverable skills with full progressive disclosure, slash-command auto-binding (`/develop-feature`, `/debug-issue`, etc.), and `/skills disable/enable` control.
+
+```bash
+mkdir -p .gemini/skills
+```
+
+For each file matching `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`:
+
+1. Read the YAML frontmatter (`name` and `description` fields).
+2. Create the stub directory and SKILL.md: `mkdir -p .gemini/skills/[name] && write to .gemini/skills/[name]/SKILL.md`.
+3. Stub format (same as Claude — single source of truth for both tools):
+
+```markdown
+---
+name: [name from frontmatter]
+description: [description from frontmatter, normalized to a single line]
+---
+
+Read and follow the full [skill|workflow] at `[relative path to the source file]`.
+```
+
+---
+
 ## Step 5b2 — Generate .claude/rules/ (Claude Code native auto-load)
 
 **Skip this step if `claude` is not in Supported Tools.**
@@ -281,9 +310,25 @@ mkdir -p .claude/hooks
 ```
 1. Copy `[SKELETON_PATH]/core/claude-hooks/pre-commit-check.sh` → `.claude/hooks/pre-commit-check.sh`
 2. Copy `[SKELETON_PATH]/core/claude-hooks/pre-memory-push.sh` → `.claude/hooks/pre-memory-push.sh`
-3. `chmod +x .claude/hooks/*.sh`
-4. If `.claude/settings.json` does not exist, copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
-5. If `.claude/settings.json` already exists, merge the `hooks` section from the template.
+3. Copy `[SKELETON_PATH]/core/claude-hooks/pre-edit-check.sh` → `.claude/hooks/pre-edit-check.sh`
+4. Copy `[SKELETON_PATH]/core/claude-hooks/stop-verify.sh` → `.claude/hooks/stop-verify.sh`
+5. `chmod +x .claude/hooks/*.sh`
+6. If `.claude/settings.json` does not exist, copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
+7. If `.claude/settings.json` already exists, merge the `hooks` section from the template.
+
+**Gemini CLI / Antigravity** (if `antigravity` in Supported Tools):
+```bash
+mkdir -p .gemini/hooks
+```
+1. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-commit-check.sh` → `.gemini/hooks/pre-commit-check.sh`
+2. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-memory-push.sh` → `.gemini/hooks/pre-memory-push.sh`
+3. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-edit-check.sh` → `.gemini/hooks/pre-edit-check.sh`
+4. Copy `[SKELETON_PATH]/core/gemini-hooks/stop-verify.sh` → `.gemini/hooks/stop-verify.sh`
+5. `chmod +x .gemini/hooks/*.sh`
+6. If `.gemini/settings.json` does not exist, copy `[SKELETON_PATH]/core/gemini-hooks/settings.json` → `.gemini/settings.json`
+7. If `.gemini/settings.json` already exists, merge the `hooks` block from the template.
+
+Gemini hooks use a different I/O contract than Claude's (JSON stdin/stdout, different event names: `BeforeTool`/`AfterAgent`). The Gemini scripts are dedicated bash files in `core/gemini-hooks/` — not the same scripts as Claude's.
 
 **Cursor** (if `cursor` in Supported Tools):
 ```bash

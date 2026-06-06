@@ -169,13 +169,15 @@ for this project's platform (and those should have their comment tags stripped).
 
 ---
 
-### Step 4c — Refresh Claude Code stubs and enforcement hooks
+### Step 4c — Refresh tool-specific stubs and enforcement hooks
 
-**Skip entirely if `claude` is not in Supported Tools.**
+**Skip stub regeneration entirely if neither `claude` nor `antigravity` is in Supported Tools.**
 
 After updating `.agents/` sources in Step 4, refresh the derived artifacts so they reflect the new source content. Setup-skeleton generates these on first install; sync must refresh them, or downstream projects keep stale stubs and hooks.
 
-**Refresh `.claude/skills/` stubs** (directory layout — `.claude/skills/<name>/SKILL.md`; same logic as setup-skeleton Step 5b):
+#### `.claude/skills/` refresh (Claude Code) — only when `claude` in Supported Tools
+
+Stubs use directory layout — `.claude/skills/<name>/SKILL.md`; same logic as setup-skeleton Step 5b:
 
 1. **Pre-step — migrate legacy flat layout if present.** Pre-v1.60.0 stubs lived at `.claude/skills/<name>.md` (flat). Claude Code's loader silently ignores that layout. For each flat `.claude/skills/<name>.md` file (excluding `.gitignore`):
    - `mkdir -p .claude/skills/<name>` then `git mv .claude/skills/<name>.md .claude/skills/<name>/SKILL.md`
@@ -184,11 +186,20 @@ After updating `.agents/` sources in Step 4, refresh the derived artifacts so th
 3. **Orphan detection:** list existing `.claude/skills/<name>/` directories whose corresponding source was renamed or removed in Step 4 (and which aren't third-party / external pack skills). Delete each orphan directory and report it to the user.
 4. Report the net change: N stubs migrated from flat layout, M stubs regenerated, K stubs added, L orphans deleted.
 
-**Refresh enforcement hooks** — for each tool in Supported Tools, re-copy the latest scripts from `[SKELETON_PATH]/core/*-hooks/`:
+#### `.gemini/skills/` refresh (Gemini CLI / Antigravity) — only when `antigravity` in Supported Tools
+
+Stubs use the same agentskills.io directory layout — `.gemini/skills/<name>/SKILL.md`. Gemini reads `.agents/skills/` directly as an alias, so first-party skills already in `.agents/skills/` don't need stubs — but workflows in `.agents/workflows/` are not auto-discovered by Gemini, so they need `.gemini/skills/<workflow>/SKILL.md` stubs.
+
+1. For each `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`, regenerate `.gemini/skills/<name>/SKILL.md` using the same logic and stub body format as the Claude refresh above. (Yes, both tools get stubs for first-party skills too — keeps the generator symmetric and the tools-list explicit.)
+2. **Orphan detection:** same logic as the Claude refresh. Delete `.gemini/skills/<name>/` directories whose source was renamed or removed.
+3. Report the net change.
+
+#### Refresh enforcement hooks — for each tool in Supported Tools, re-copy the latest scripts from `[SKELETON_PATH]/core/*-hooks/`:
 
 | Tool | Destination | Scripts |
 |---|---|---|
-| `claude` | `.claude/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh` |
+| `claude` | `.claude/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh`, `pre-edit-check.sh`, `stop-verify.sh` |
+| `antigravity` | `.gemini/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh`, `pre-edit-check.sh`, `stop-verify.sh` (Gemini-format: JSON stdin/stdout contract; not the same as Claude scripts) |
 | `cursor` | `.cursor/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh`, `stop-verify.sh` |
 | `windsurf` | `.windsurf/hooks/` | same three |
 | `copilot` | `.github/hooks/` | same three |

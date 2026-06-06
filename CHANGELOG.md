@@ -1,5 +1,38 @@
 # agentskel Changelog
 
+## v1.61.0 — 2026-06-07
+
+### Gemini CLI / Antigravity parity bundle
+
+Follow-up to v1.60.0's Claude Code fix. Audited agentskel's integration against the current Gemini CLI spec (`docs.code.claude.com` style ref at `github.com/google-gemini/gemini-cli/docs/`) and closed three gaps in one bundle.
+
+**Item 1 — Workflow discoverability as Gemini skills**
+
+Gemini auto-discovers skills from `.gemini/skills/<name>/SKILL.md` (and `.agents/skills/` as an interop alias). agentskel's first-party skills in `.agents/skills/` are picked up via the alias, but the 33 workflows in `.agents/workflows/` are not on Gemini's discovery path. Generated 50 stubs in `.gemini/skills/<name>/SKILL.md` so every workflow and skill is discoverable, gets a `/<name>` slash-command auto-binding, and supports progressive disclosure / `/skills disable|enable`. `setup-skeleton` Step 5b1 (new) and `sync-skeleton` Step 4c (extended) generate / refresh these for Gemini installs. Validator gains a `gemini stub parity` check that mirrors `claude stub parity`.
+
+**Item 2 — Real Gemini extension manifest**
+
+`gemini-extension.json` already existed at repo root but was pinned to v1.26.0 (stale by 35 releases). Bumped to v1.61.0 and clarified the description to set expectations: `gemini extensions install https://github.com/ahmadulhoq/agentskel` now loads agentskel's `GEMINI.md` as global context; full per-project install still goes through `setup-skeleton`. Also bumped `.claude-plugin/plugin.json` from 1.26.0 → 1.61.0 to match.
+
+**Item 3 — Gemini-format enforcement hooks**
+
+New `core/gemini-hooks/` with four hook scripts that mirror Claude's enforcement layer but follow Gemini's strict JSON I/O contract (stdin = JSON event payload; stdout = JSON-only decision; stderr = rejection reason on exit 2; "Silence is Mandatory"):
+
+- `pre-commit-check.sh` — `BeforeTool` on `run_shell_command`, blocks git commit if CHANGELOG/TIME_LOG missing, lints multi-line YAML in staged skill/workflow files
+- `pre-memory-push.sh` — `BeforeTool` on `run_shell_command`, auto-pulls --rebase before ai-memory push (skips when remote tip is already an ancestor or remote doesn't exist)
+- `pre-edit-check.sh` — `BeforeTool` on `replace`/`write_file`, emits plan-gate reminder as `systemMessage` (advisory, allows)
+- `stop-verify.sh` — `AfterAgent`, blocks stop if uncommitted project or `.memory/` changes remain (sets `decision:"deny"` so the model addresses it rather than silently stopping)
+
+Wired via `core/gemini-hooks/settings.json` (project-level template). `setup-skeleton` Step 5b3 extended with a Gemini install block; `sync-skeleton` Step 4c table now lists Gemini alongside the other tools.
+
+**Why bundle:** all three are Gemini-side parity work. Each was researched against current Gemini CLI docs; none required guesses. Bundling keeps the review surface coherent and downstream sync to one PR.
+
+**Out of scope (future):**
+- Bundling skills in the Gemini extension itself (currently extension only ships `GEMINI.md` context; skills come from per-project install)
+- `.agent` singular symlink deprecation — Gemini docs only mention `.agents/` but legacy installs may still rely on it; leave as-is until a Gemini-only team confirms it's safe to drop
+
+affected: setup-skeleton, sync-skeleton
+
 ## v1.60.0 — 2026-06-06
 
 ### Fix: Claude Code skill discovery — migrate stubs from flat to directory layout
