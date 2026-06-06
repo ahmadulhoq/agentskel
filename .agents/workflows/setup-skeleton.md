@@ -426,11 +426,14 @@ Cursor hook scripts use Cursor's own I/O contract — `command` at the top level
 ```bash
 mkdir -p .windsurf/hooks
 ```
-1. Copy the same 3 hook scripts to `.windsurf/hooks/`
+1. Copy from `[SKELETON_PATH]/core/claude-hooks/`:
+   - `pre-commit-check.sh` → `.windsurf/hooks/pre-commit-check.sh`
+   - `pre-memory-push.sh` → `.windsurf/hooks/pre-memory-push.sh`
+   - `stop-verify.sh` → `.windsurf/hooks/stop-verify.sh`
 2. `chmod +x .windsurf/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/windsurf-hooks/hooks.json` → `.windsurf/hooks.json`
 
-Note: Windsurf's `hooks.json` uses `post_cascade_response` (not `stop` — Windsurf has no `stop` event). Pre-v1.62.0 installs referenced `stop` and the hook was silently dead.
+Note: Windsurf's `hooks.json` uses `post_cascade_response` (not `stop` — Windsurf has no `stop` event). Pre-v1.62.0 installs referenced `stop` and the hook was silently dead. Scripts are sourced from `core/claude-hooks/` — Windsurf's hook I/O contract has not been formally verified to match Claude's; if Windsurf differs (like Cursor does), these scripts may not block correctly. A `v1.62.x` audit will verify and write Windsurf-format scripts if needed.
 
 **Copilot** (if `copilot` in Supported Tools):
 GitHub Copilot does NOT support hooks. The pre-v1.62.0 `.github/hooks/` install was dead code on every Copilot install. No hook installation for Copilot.
@@ -439,11 +442,14 @@ GitHub Copilot does NOT support hooks. The pre-v1.62.0 `.github/hooks/` install 
 ```bash
 mkdir -p .codex/hooks
 ```
-1. Copy the same 3 hook scripts to `.codex/hooks/`
+1. Copy from `[SKELETON_PATH]/core/claude-hooks/`:
+   - `pre-commit-check.sh` → `.codex/hooks/pre-commit-check.sh`
+   - `pre-memory-push.sh` → `.codex/hooks/pre-memory-push.sh`
+   - `stop-verify.sh` → `.codex/hooks/stop-verify.sh`
 2. `chmod +x .codex/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/codex-hooks/hooks.json` → `.codex/hooks.json`
 
-After install, the user must run `codex` once in the project and accept the trust prompt so `.codex/hooks.json` activates (project hooks load only when the repo is marked trusted).
+After install, the user must run `codex` once in the project and accept the trust prompt so `.codex/hooks.json` activates (project hooks load only when the repo is marked trusted). Scripts are sourced from `core/claude-hooks/` because the Codex hook event names (`PreToolUse`, `Stop`) match Claude's — but Codex's stdin/stdout contract has not been formally verified to match Claude's. If a downstream Codex user reports broken hooks, a `v1.62.x` audit will write Codex-format scripts.
 
 Hook scripts are tool-specific because each tool has its own I/O contract. The scripts in each `core/<tool>-hooks/` directory follow that tool's spec. Common enforcement logic (CHANGELOG/TIME_LOG check, ai-memory auto-pull, plan-gate reminder, stop-verify) is mirrored across tools but wrapped in tool-specific JSON I/O.
 

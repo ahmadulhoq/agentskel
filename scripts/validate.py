@@ -155,10 +155,14 @@ def check_version_consistency() -> Result:
     # (rel path, regex, required). .memory/ files live on an orphan branch and
     # are not present in a plain `main` checkout (e.g. in CI). Skip missing
     # optional files — they're validated in local dev where .memory/ is mounted.
+    # Plugin/extension manifests track agentskel's version so users see the
+    # right value in their tool's plugin list.
     checks = [
         ("README.md", r"\*\*v(\d+\.\d+\.\d+)\*\* — see", True),
         ("MASTER_PLAN.md", r"Corresponds to: agentskel v(\d+\.\d+\.\d+)", True),
         (".memory/CONFIG.md", r"Skeleton Version\s*\|\s*(\d+\.\d+\.\d+)", False),
+        ("gemini-extension.json", r'"version":\s*"(\d+\.\d+\.\d+)"', True),
+        (".claude-plugin/plugin.json", r'"version":\s*"(\d+\.\d+\.\d+)"', True),
     ]
     for rel, pat, required in checks:
         path = REPO / rel
