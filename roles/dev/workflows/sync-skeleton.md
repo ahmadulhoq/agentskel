@@ -194,20 +194,49 @@ Stubs use the same agentskills.io directory layout — `.gemini/skills/<name>/SK
 2. **Orphan detection:** same logic as the Claude refresh. Delete `.gemini/skills/<name>/` directories whose source was renamed or removed.
 3. Report the net change.
 
+#### `.cursor/rules/<name>.mdc` refresh (Cursor) — only when `cursor` in Supported Tools
+
+Cursor reads per-file rules at `.cursor/rules/*.mdc`. For workflow discoverability, generate one rule per skill and workflow with `alwaysApply: false` (agent-requested by description).
+
+1. Preserve the existing always-on `.cursor/rules/agentskel.mdc` (core rules).
+2. For each `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`, regenerate `.cursor/rules/<name>.mdc` (same logic as setup-skeleton Step 5b1a).
+3. Orphan detection: delete `.cursor/rules/<name>.mdc` (not `agentskel.mdc`) whose source was renamed/removed.
+
+#### `.windsurf/workflows/<name>.md` refresh (Windsurf) — only when `windsurf` in Supported Tools
+
+Windsurf has first-class workflows at `.windsurf/workflows/<name>.md`, invoked via `/<name>`.
+
+1. For each `.agents/workflows/*.md`, regenerate `.windsurf/workflows/<name>.md` (same logic as setup-skeleton Step 5b1b).
+2. Orphan detection: delete `.windsurf/workflows/<name>.md` whose source was removed.
+
+#### `.github/prompts/<name>.prompt.md` refresh (Copilot) — only when `copilot` in Supported Tools
+
+Copilot's prompt files at `.github/prompts/*.prompt.md`.
+
+1. For each `.agents/workflows/*.md`, regenerate `.github/prompts/<name>.prompt.md` (same logic as setup-skeleton Step 5b1c).
+2. Orphan detection: delete `.github/prompts/<name>.prompt.md` whose source was removed.
+
 #### Refresh enforcement hooks — for each tool in Supported Tools, re-copy the latest scripts from `[SKELETON_PATH]/core/*-hooks/`:
 
-| Tool | Destination | Scripts |
+| Tool | Hook scripts | Settings/config |
 |---|---|---|
-| `claude` | `.claude/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh`, `pre-edit-check.sh`, `stop-verify.sh` |
-| `antigravity` | `.gemini/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh`, `pre-edit-check.sh`, `stop-verify.sh` (Gemini-format: JSON stdin/stdout contract; not the same as Claude scripts) |
-| `cursor` | `.cursor/hooks/` | `pre-commit-check.sh`, `pre-memory-push.sh`, `stop-verify.sh` |
-| `windsurf` | `.windsurf/hooks/` | same three |
-| `copilot` | `.github/hooks/` | same three |
-| `codex` | `.codex/hooks/` | same three |
+| `claude` | `.claude/hooks/` — `pre-commit-check.sh`, `pre-memory-push.sh`, `pre-edit-check.sh`, `stop-verify.sh` | `.claude/settings.json` |
+| `antigravity` | `.gemini/hooks/` — same 4 (Gemini-format: JSON stdin/stdout, `BeforeTool`/`AfterAgent` events) | `.gemini/settings.json` |
+| `cursor` | `.cursor/hooks/` — same 4 (Cursor-format: `command` at stdin root, JSON `{permission,user_message,agent_message}` on stdout) | **`.cursor/hooks.json`** at workspace root (NOT `.cursor/hooks/`) |
+| `windsurf` | `.windsurf/hooks/` — same 3 (no `pre-edit`); uses `post_cascade_response` for stop, not `stop` | `.windsurf/hooks.json` at workspace root |
+| `copilot` | none — Copilot has no hooks concept | none |
+| `codex` | `.codex/hooks/` — same 3 | `.codex/hooks.json` |
 
-Run `chmod +x` on each copied script. Do not overwrite the per-tool settings/hooks JSON (`.claude/settings.json`, `.cursor/hooks/hooks-cursor.json`, etc.) — the user may have merged project-specific entries. If the skeleton's settings template has new fields not in the project copy, merge only the new fields.
+**Pre-v1.62.0 migrations (apply once during sync):**
 
-**Gate:** Do not proceed to Step 5 until stubs reflect current sources and hook scripts match `[SKELETON_PATH]/core/*-hooks/` byte-for-byte (run `diff` to verify).
+- Cursor: if `.cursor/hooks/hooks-cursor.json` exists, `git rm` it and copy the new file to `.cursor/hooks.json` (workspace root). The old path was silently inactive — Cursor reads `.cursor/hooks.json`.
+- Cursor: re-copy scripts from `core/cursor-hooks/` (not `core/claude-hooks/` — pre-v1.62.0 setup-skeleton sourced from the wrong directory).
+- Windsurf: re-copy `.windsurf/hooks.json` — `stop` event is now `post_cascade_response`. Pre-v1.62.0 `stop` hook was a silent no-op.
+- Copilot: if `.github/hooks/` exists, `git rm` the directory. Copilot has no hooks concept; these files never executed.
+
+Run `chmod +x` on each copied script. Do not overwrite the per-tool settings/hooks JSON unless adopting the v1.62.0 migration — the user may have merged project-specific entries. If the skeleton's settings template has new fields not in the project copy, merge only the new fields.
+
+**Gate:** Do not proceed to Step 5 until stubs, workflows, prompts, and hook scripts match `[SKELETON_PATH]/core/*-hooks/` and `[SKELETON_PATH]/.{cursor,windsurf,github}/` byte-for-byte (run `diff` to verify).
 
 ---
 

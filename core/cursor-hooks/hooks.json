@@ -1,19 +1,19 @@
 {
   "version": 1,
   "hooks": {
-    "sessionStart": [
-      {
-        "command": "./hooks/session-start"
-      }
-    ],
-    "preToolUse": [
+    "beforeShellExecution": [
       {
         "command": ".cursor/hooks/pre-commit-check.sh",
-        "matcher": "shell(git commit*)"
+        "matcher": "^(.*[;&|[:space:]])?git[[:space:]]+commit([[:space:]]|$)"
       },
       {
         "command": ".cursor/hooks/pre-memory-push.sh",
-        "matcher": "shell(git*push*ai-memory*)"
+        "matcher": "git[[:space:]].*push.*ai-memory"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/pre-edit-check.sh"
       }
     ],
     "stop": [

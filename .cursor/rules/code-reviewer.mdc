@@ -1,0 +1,6 @@
+---
+description: When reviewing a PR, auditing code quality, or validating changes against the project's standards and sacred behaviors.
+alwaysApply: false
+---
+
+Read and follow the full skill at `.agents/skills/code-reviewer/SKILL.md`.

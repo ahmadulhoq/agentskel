@@ -278,6 +278,85 @@ Read and follow the full [skill|workflow] at `[relative path to the source file]
 
 ---
 
+## Step 5b1a — Generate .cursor/rules/<name>.mdc stubs (Cursor)
+
+**Skip this step if `cursor` is not in Supported Tools.**
+
+Cursor reads `.cursor/rules/*.mdc` files. Generate one per skill and workflow with `alwaysApply: false` so Cursor invokes them on description match (agent-requested). The existing always-on `.cursor/rules/agentskel.mdc` stays as the core rule. The per-name rules give Cursor discoverable, scoped procedural guidance.
+
+```bash
+mkdir -p .cursor/rules
+```
+
+For each file matching `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`:
+
+1. Read frontmatter `description`.
+2. Write `.cursor/rules/<name>.mdc`:
+
+```markdown
+---
+description: [description from frontmatter]
+alwaysApply: false
+---
+
+Read and follow the full [skill|workflow] at `[source path]`.
+```
+
+---
+
+## Step 5b1b — Generate .windsurf/workflows/<name>.md (Windsurf slash commands)
+
+**Skip this step if `windsurf` is not in Supported Tools.**
+
+Windsurf has first-class workflows at `.windsurf/workflows/<name>.md`, invoked via `/<name>`. Without these, every agentskel workflow is buried inside one always-on rule file (and not slash-invokable).
+
+```bash
+mkdir -p .windsurf/workflows
+```
+
+For each file matching `.agents/workflows/*.md`:
+
+1. Read frontmatter `description`.
+2. Write `.windsurf/workflows/<name>.md`:
+
+```markdown
+# /<name>
+
+<description from frontmatter>
+
+Read and follow the full workflow at `<source path>`.
+```
+
+Note: Windsurf workflows are markdown only (no required frontmatter). 12k char limit per file.
+
+---
+
+## Step 5b1c — Generate .github/prompts/<name>.prompt.md (GitHub Copilot)
+
+**Skip this step if `copilot` is not in Supported Tools.**
+
+Copilot reads `.github/prompts/*.prompt.md` slash-invokable prompt files. Each becomes `/<name>` in Copilot Chat / Agent mode.
+
+```bash
+mkdir -p .github/prompts
+```
+
+For each file matching `.agents/workflows/*.md`:
+
+1. Read frontmatter `description`.
+2. Write `.github/prompts/<name>.prompt.md`:
+
+```markdown
+---
+description: [description from frontmatter]
+mode: agent
+---
+
+Read and follow the full workflow at `<source path>`.
+```
+
+---
+
 ## Step 5b2 — Generate .claude/rules/ (Claude Code native auto-load)
 
 **Skip this step if `claude` is not in Supported Tools.**
@@ -334,11 +413,14 @@ Gemini hooks use a different I/O contract than Claude's (JSON stdin/stdout, diff
 ```bash
 mkdir -p .cursor/hooks
 ```
-1. Copy `[SKELETON_PATH]/core/claude-hooks/pre-commit-check.sh` → `.cursor/hooks/pre-commit-check.sh`
-2. Copy `[SKELETON_PATH]/core/claude-hooks/pre-memory-push.sh` → `.cursor/hooks/pre-memory-push.sh`
-3. Copy `[SKELETON_PATH]/core/cursor-hooks/stop-verify.sh` → `.cursor/hooks/stop-verify.sh`
-4. `chmod +x .cursor/hooks/*.sh`
-5. Copy `[SKELETON_PATH]/core/cursor-hooks/hooks-cursor.json` → `.cursor/hooks/hooks-cursor.json`
+1. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-commit-check.sh` → `.cursor/hooks/pre-commit-check.sh`
+2. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-memory-push.sh` → `.cursor/hooks/pre-memory-push.sh`
+3. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-edit-check.sh` → `.cursor/hooks/pre-edit-check.sh`
+4. Copy `[SKELETON_PATH]/core/cursor-hooks/stop-verify.sh` → `.cursor/hooks/stop-verify.sh`
+5. `chmod +x .cursor/hooks/*.sh`
+6. Copy `[SKELETON_PATH]/core/cursor-hooks/hooks.json` → `.cursor/hooks.json` (workspace root — NOT `.cursor/hooks/`; pre-v1.62.0 path was wrong and Cursor silently ignored it)
+
+Cursor hook scripts use Cursor's own I/O contract — `command` at the top level of stdin JSON; `{"permission":"allow"|"deny", "user_message", "agent_message"}` JSON on stdout. Not the same as Claude's scripts.
 
 **Windsurf** (if `windsurf` in Supported Tools):
 ```bash
@@ -348,13 +430,10 @@ mkdir -p .windsurf/hooks
 2. `chmod +x .windsurf/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/windsurf-hooks/hooks.json` → `.windsurf/hooks.json`
 
+Note: Windsurf's `hooks.json` uses `post_cascade_response` (not `stop` — Windsurf has no `stop` event). Pre-v1.62.0 installs referenced `stop` and the hook was silently dead.
+
 **Copilot** (if `copilot` in Supported Tools):
-```bash
-mkdir -p .github/hooks
-```
-1. Copy the same 3 hook scripts to `.github/hooks/`
-2. `chmod +x .github/hooks/*.sh`
-3. Copy `[SKELETON_PATH]/core/copilot-hooks/hooks.json` → `.github/hooks/hooks.json`
+GitHub Copilot does NOT support hooks. The pre-v1.62.0 `.github/hooks/` install was dead code on every Copilot install. No hook installation for Copilot.
 
 **Codex** (if `codex` in Supported Tools):
 ```bash
@@ -364,8 +443,9 @@ mkdir -p .codex/hooks
 2. `chmod +x .codex/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/codex-hooks/hooks.json` → `.codex/hooks.json`
 
-The hook scripts (pre-commit-check.sh, pre-memory-push.sh, stop-verify.sh) are
-tool-agnostic bash scripts. Only the config format differs per tool.
+After install, the user must run `codex` once in the project and accept the trust prompt so `.codex/hooks.json` activates (project hooks load only when the repo is marked trusted).
+
+Hook scripts are tool-specific because each tool has its own I/O contract. The scripts in each `core/<tool>-hooks/` directory follow that tool's spec. Common enforcement logic (CHANGELOG/TIME_LOG check, ai-memory auto-pull, plan-gate reminder, stop-verify) is mirrored across tools but wrapped in tool-specific JSON I/O.
 
 ---
 

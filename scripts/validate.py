@@ -303,6 +303,147 @@ def check_gemini_stub_parity() -> Result:
     return _stub_parity_for("gemini stub", REPO / ".gemini/skills", "Gemini CLI")
 
 
+def _flat_stub_parity(
+    label: str,
+    stubs_dir: Path,
+    glob_pattern: str,
+    name_from_path,
+    include_skills: bool,
+    include_workflows: bool,
+    ignored_names: frozenset = frozenset(),
+) -> Result:
+    """Parity check for tools using flat-file stubs (one file per stub, not a directory).
+
+    Used for `.cursor/rules/*.mdc`, `.windsurf/workflows/*.md`,
+    `.github/prompts/*.prompt.md`.
+
+    Args:
+        label: human-readable name for the check.
+        stubs_dir: directory holding the stub files.
+        glob_pattern: glob inside stubs_dir (e.g. '*.mdc', '*.md', '*.prompt.md').
+        name_from_path: callable(Path)->str extracting the canonical stub name.
+        include_skills: include `.agents/skills/*` in the expected set.
+        include_workflows: include `.agents/workflows/*` in the expected set.
+        ignored_names: stub names to skip entirely (e.g. 'agentskel' for Cursor's
+            always-on rule that isn't workflow-specific).
+    """
+    r = Result(label)
+    if not stubs_dir.exists():
+        r.bad(f"{stubs_dir.relative_to(REPO)}/ directory missing")
+        return r
+
+    expected: dict[str, tuple[Path, str]] = {}
+    agents_present: set[str] = set()
+
+    if include_skills:
+        for p in sorted(glob.glob(str(REPO / ".agents/skills/*/SKILL.md"))):
+            path = Path(p)
+            name = path.parent.name
+            agents_present.add(name)
+            if not _is_first_party_skill(name):
+                continue
+            fm = FRONTMATTER_RE.match(_read(path))
+            if not fm:
+                continue
+            desc = _extract_description(fm.group(1))
+            if not desc:
+                continue
+            expected[name] = (path, desc)
+
+    if include_workflows:
+        for p in sorted(glob.glob(str(REPO / ".agents/workflows/*.md"))):
+            path = Path(p)
+            name = path.stem
+            agents_present.add(name)
+            if not _is_first_party_workflow(name):
+                continue
+            fm = FRONTMATTER_RE.match(_read(path))
+            if not fm:
+                continue
+            desc = _extract_description(fm.group(1))
+            if not desc:
+                continue
+            expected[name] = (path, desc)
+
+    rel_stubs = stubs_dir.relative_to(REPO)
+    stub_names: set[str] = set()
+
+    for stub in sorted(glob.glob(str(stubs_dir / glob_pattern))):
+        stub_path = Path(stub)
+        name = name_from_path(stub_path)
+        if name in ignored_names:
+            continue
+        stub_names.add(name)
+
+        if name not in expected:
+            if name in agents_present:
+                continue  # third-party — out of parity contract
+            r.bad(f"{rel_stubs}/{stub_path.name}: orphan (no source in .agents/)")
+            continue
+
+        source_path, exp_desc = expected[name]
+        stub_text = _read(stub_path)
+        # Look for description either in frontmatter or just check presence
+        stub_fm = FRONTMATTER_RE.match(stub_text)
+        stub_desc = _extract_description(stub_fm.group(1)) if stub_fm else None
+        if not stub_desc:
+            # Fallback: check if description text appears anywhere in stub
+            # (Windsurf workflows have description in body, not frontmatter)
+            if exp_desc not in stub_text:
+                r.bad(f"{rel_stubs}/{stub_path.name}: missing description")
+                continue
+        elif stub_desc != exp_desc:
+            r.bad(f"{rel_stubs}/{stub_path.name}: description drift from source")
+            continue
+
+        rel_source = str(source_path.relative_to(REPO))
+        if rel_source not in stub_text:
+            r.bad(f"{rel_stubs}/{stub_path.name}: missing reference to {rel_source}")
+            continue
+
+        r.ok()
+
+    missing = sorted(set(expected) - stub_names)
+    for name in missing:
+        r.bad(f"{rel_stubs}: missing stub for {name} (source {expected[name][0].relative_to(REPO)})")
+
+    return r
+
+
+def check_cursor_rule_parity() -> Result:
+    return _flat_stub_parity(
+        "cursor rule parity",
+        REPO / ".cursor/rules",
+        "*.mdc",
+        lambda p: p.stem,
+        include_skills=True,
+        include_workflows=True,
+        ignored_names=frozenset({"agentskel"}),  # always-on core rule
+    )
+
+
+def check_windsurf_workflow_parity() -> Result:
+    return _flat_stub_parity(
+        "windsurf workflow parity",
+        REPO / ".windsurf/workflows",
+        "*.md",
+        lambda p: p.stem,
+        include_skills=False,
+        include_workflows=True,
+    )
+
+
+def check_copilot_prompt_parity() -> Result:
+    return _flat_stub_parity(
+        "copilot prompt parity",
+        REPO / ".github/prompts",
+        "*.prompt.md",
+        lambda p: p.name.removesuffix(".prompt.md"),
+        include_skills=False,
+        include_workflows=True,
+    )
+
+
 def check_agents_catalog_parity() -> Result:
     """AGENTS.md Skills/Workflows tables reflect current .agents/ source descriptions.
 
@@ -423,6 +564,9 @@ CHECKS = [
     check_version_consistency,
     check_claude_stub_parity,
     check_gemini_stub_parity,
+    check_cursor_rule_parity,
+    check_windsurf_workflow_parity,
+    check_copilot_prompt_parity,
     check_agents_catalog_parity,
     check_changelog_has_version,
 ]

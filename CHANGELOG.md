@@ -1,5 +1,34 @@
 # agentskel Changelog
 
+## v1.62.0 — 2026-06-07
+
+### Cross-tool discoverability + dead-code cleanup for Cursor, Windsurf, Copilot
+
+Completes the cross-tool parity series begun with v1.60.0 (Claude) and v1.61.0 (Gemini). Audited Cursor, Windsurf, Copilot, and Codex against current docs. Codex needed no changes; the other three each had a mix of silently broken artifacts and missing first-class discoverability.
+
+**Cursor — 3 major fixes + workflow discoverability**
+- **Hooks were silently inactive on every Cursor install since v1.22.** We installed `.cursor/hooks/hooks-cursor.json`; Cursor reads `.cursor/hooks.json` at workspace root. Renamed the source, changed setup-skeleton to install to the correct path, added v1.62.0 migration to sync-skeleton.
+- Matcher syntax in the old file used invented `"shell(git commit*)"` — replaced with regex matchers per Cursor's spec. Hook events changed from generic `preToolUse` to `beforeShellExecution` for shell commands.
+- Removed the `sessionStart` reference that pointed at `./hooks/session-start`, a script we never shipped.
+- Replaced Claude-format scripts (which Cursor would have silently ignored, since Cursor's I/O contract is `command` at the top of stdin JSON and `{permission,user_message,agent_message}` JSON out) with 4 Cursor-format scripts in `core/cursor-hooks/`.
+- Generated 50 per-file `.cursor/rules/<name>.mdc` with `alwaysApply: false` so each skill/workflow is agent-requested-discoverable. Existing always-on `agentskel.mdc` stays for core rules.
+
+**Windsurf — 1 major fix + workflow discoverability**
+- **`stop` hook was a silent no-op** — Windsurf has no `stop` event. Replaced with `post_cascade_response` per docs.
+- Generated 33 first-class `.windsurf/workflows/<name>.md` files — slash-invokable as `/<name>`. Before, workflows were buried in one always-on rule with no slash binding.
+
+**Copilot — major dead-code removal + slash prompts**
+- **`core/copilot-hooks/` and `.github/hooks/` were silently dead** — GitHub Copilot has no hooks concept. Deleted source directory; setup-skeleton no longer installs Copilot hook artifacts.
+- Generated 33 `.github/prompts/<name>.prompt.md` slash-invokable prompts.
+
+**Codex** — verified `core/codex-hooks/hooks.json` event names (`PreToolUse`, `Stop`) and matcher syntax match the spec. No changes needed.
+
+**Validator** — three new checks: `cursor rule parity`, `windsurf workflow parity`, `copilot prompt parity`. Common logic factored into `_flat_stub_parity()`. 470 ok, 0 fail at v1.62.0 (was 354).
+
+**Downstream migration** — `sync-skeleton` Step 4c gains explicit v1.62.0 migration: rename Cursor hooks file via `git mv`, re-copy scripts from `core/cursor-hooks/` (pre-v1.62.0 sourced from `core/claude-hooks/`), fix Windsurf `stop` → `post_cascade_response`, `git rm -rf .github/hooks/`. Migrations show as renames/deletes in the sync PR.
+
+affected: setup-skeleton, sync-skeleton
+
 ## v1.61.0 — 2026-06-07
 
 ### Gemini CLI / Antigravity parity bundle
