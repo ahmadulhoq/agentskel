@@ -1,5 +1,17 @@
 # agentskel Changelog
 
+## v1.63.1 — 2026-06-07
+
+### Doc: sync-skeleton gains CONFIG.md field-add enumeration + AI tool restart hint
+
+Two minor doc gaps from the self-audit of downstream-migration coverage. Both improve sync-skeleton's user-facing guidance without changing any logic.
+
+**Step 5 (memory update) — enumerate historical CONFIG.md field additions.** Old text said "Apply any memory file template updates" — vague. Downstream projects on older skeleton versions had no way to know v1.49.0 added Atlassian fields, v1.57.0 added External Platform Skills fields, etc. Step 5 now explicitly tells the agent to diff the project's CONFIG.md against the template, with a hint list of historical additions (v1.22 Supported Tools, v1.23 Last Skeleton Check, v1.49.0 Atlassian section, v1.57.0 External Platform Skills + Last External Skills Check).
+
+**Step 8 (session reload) — restart-required tools.** Previous text told the agent to re-execute session-start. That picks up skill/rule/workflow changes (most tools watch those dirs). But hook config changes (`.cursor/hooks.json`, `.windsurf/hooks.json`, `.gemini/settings.json`, `.claude/settings.json`, `.codex/hooks.json`) are loaded once at session start and don't reload live. Sync-skeleton now explicitly says: if the sync touched any hook config, tell the user to restart their AI tool. Per-tool restart behavior documented inline.
+
+affected: sync-skeleton
+
 ## v1.63.0 — 2026-06-07
 
 ### Cartography refresh: MAP.md + SYMBOLS.md after the v1.60–v1.62.x cross-tool work
