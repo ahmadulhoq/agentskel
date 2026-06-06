@@ -4,6 +4,29 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.63.1: sync-skeleton doc gaps (CONFIG field enumeration + restart hint)
+
+Two minor doc gaps from the downstream-migration audit:
+
+1. Step 5 used to say "Apply any memory file template updates" — vague.
+   Downstream agents on old skeleton versions had no way to know which
+   CONFIG.md fields were added when. Now Step 5 explicitly tells the
+   agent to diff the project's CONFIG.md against the template, with a
+   hint list of historical field additions (Supported Tools v1.22,
+   Last Skeleton Check v1.23, Atlassian section v1.49.0, External
+   Platform Skills v1.57.0).
+
+2. Step 8 (session reload) only told the agent to re-execute
+   session-start. That's enough for skill/rule/workflow changes
+   (most tools watch those dirs) but not for hook config changes —
+   .cursor/hooks.json, .windsurf/hooks.json, .gemini/settings.json,
+   .claude/settings.json, .codex/hooks.json are loaded once at
+   startup and don't reload live. Step 8 now explicitly says: if
+   sync touched any hook config, tell the user to restart their AI
+   tool. Per-tool restart behavior documented inline.
+
+No logic changes. Memory-only-impact PATCH.
+
 ## 2026-06-07 — v1.63.0: Cartography refresh (MAP + SYMBOLS + RESUME state)
 
 Memory-only refresh. No workflow/code changes. v1.60-v1.62.x cross-tool work

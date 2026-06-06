@@ -4,6 +4,9 @@
 IDLE
 
 ## Last Completed Task
+- v1.63.1: sync-skeleton doc gaps. Step 5 (memory updates) now enumerates historical CONFIG.md field additions (v1.22 Supported Tools, v1.23 Last Skeleton Check, v1.49.0 Atlassian section, v1.57.0 External Platform Skills) so downstream agents know what to add when jumping past releases. Step 8 (session reload) now explicitly says to restart the AI tool when sync touched any hook config, with per-tool restart behavior documented. No logic changes. 472 ok, 0 fail.
+
+## Previously Completed
 - v1.63.0: Cartography refresh — memory-only. MAP.md architecture pattern + module registry updated for v1.60-v1.62.x reality (per-tool entry points enumerated; cursor/gemini/windsurf hook dirs expanded; copilot-hooks removed; new tool-specific stub dirs `.gemini/skills/`, `.cursor/rules/`, `.windsurf/workflows/`, `.github/prompts/`). SYMBOLS.md scripts/validate.py refreshed (5 new functions, 1 removed). RESUME Cartography State: new HEAD, coverage target ~430. `.agent` symlink documented as legacy compat (kept). 472 ok, 0 fail.
 
 ## Previously Completed
