@@ -1,5 +1,25 @@
 # agentskel Changelog
 
+## v1.60.0 — 2026-06-06
+
+### Fix: Claude Code skill discovery — migrate stubs from flat to directory layout
+
+**Root cause of "Claude misses all workflows."** Every project-level `.claude/skills/<name>.md` (flat file) was silently ignored by Claude Code's skill loader. Claude Code's spec requires the directory layout `.claude/skills/<name>/SKILL.md`. agentskel has shipped the flat layout since v1.26 (March 2026) — every Claude session in every downstream project has been blind to agentskel's skills and workflows for ~3 months.
+
+**Diagnosis:** HelpDesk transcript audit (12,639 lines, 33 implementation prompts, ~5 sessions): 0 session-start runs, 1 task-completion run, 0 develop-feature / implement-task / debug-issue invocations. Compared against expected workflow routing — totally missed. Empirically confirmed by creating one test skill in the correct directory layout and watching it appear in `available-skills` immediately (live discovery works); flat files do not.
+
+**What changed:**
+- All 50 skeleton stubs migrated from `.claude/skills/<name>.md` to `.claude/skills/<name>/SKILL.md` (mechanical rename, content unchanged).
+- `setup-skeleton` Step 5b now writes stubs in directory layout.
+- `sync-skeleton` Step 4c gains a pre-step that auto-migrates pre-v1.60.0 flat stubs in downstream projects (uses `git mv` so the rename appears in the PR diff).
+- `scripts/validate.py` `check_stub_parity` updated for the new layout and explicitly flags any legacy flat files as a parity failure so they don't silently regress.
+
+**Side benefit:** with skills now properly discoverable, Claude Code auto-binds each to a slash command — `/debug-issue`, `/develop-feature`, `/session-start`, etc. all become invokable without further work. CSO description matching also works, so "fix this bug" can auto-trigger debug-issue.
+
+**Out of scope (future PATCHes):** auto-firing `session-start` via the `SessionStart` hook event (v1.60.1 candidate); strengthening Stop hook to actually enforce `task-completion` (v1.60.2 candidate). Skill layout fix alone covers discoverability; auto-invocation at session start and post-task is a separate concern.
+
+affected: setup-skeleton, sync-skeleton
+
 ## v1.59.2 — 2026-06-03
 
 ### Fix: suppress misleading `fatal:` git stderr in install-agent.sh and sync-skeleton self-update
