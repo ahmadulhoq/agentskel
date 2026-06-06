@@ -1,5 +1,17 @@
 # agentskel Changelog
 
+## v1.62.1 — 2026-06-07
+
+### Fix: plugin manifest version drift + setup-skeleton clarity
+
+Self-audit of the v1.60.0 / v1.61.0 / v1.62.0 release series surfaced three issues:
+
+- **Plugin manifest versions stale.** v1.61.0 bumped `gemini-extension.json` and `.claude-plugin/plugin.json` to 1.61.0, but v1.62.0 missed bumping them to 1.62.0. Users running `gemini extensions install` or `/plugin install agentskel` would have seen 1.61.0 even though the repo was on 1.62.0. Bumped both to 1.62.1.
+- **Validator didn't catch the drift.** `check_version_consistency` covered README, MASTER_PLAN, and `.memory/CONFIG.md` but not the plugin manifests — which is why the v1.62.0 drift went unnoticed. Extended the check to cover both manifest files. Verified the validator catches the bug by running it against the pre-fix state: it correctly flagged both manifests as `1.61.0 != VERSION 1.62.0` (regression-test in spirit).
+- **setup-skeleton hook-install text was ambiguous.** Windsurf and Codex install steps said "Copy the same 3 hook scripts to `.windsurf/hooks/`" — the reader had to scroll up to figure out which scripts. Replaced with explicit `[SKELETON_PATH]/core/claude-hooks/` source paths + per-script destinations. Also added an honest note that Windsurf and Codex hook I/O contracts haven't been formally verified to match Claude's; if either differs (like Cursor turned out to), those scripts may not block correctly — a `v1.62.x` audit will verify and write tool-specific scripts if needed.
+
+affected: setup-skeleton
+
 ## v1.62.0 — 2026-06-07
 
 ### Cross-tool discoverability + dead-code cleanup for Cursor, Windsurf, Copilot
