@@ -1,0 +1,5 @@
+# /add-team-member
+
+When a single new person joins the team. Use when `.memory/TEAM.md` already exists and you need to append one member (with roles, optional module assignments, and optional Jira account ID) without touching the rest of the roster.
+
+Read and follow the full workflow at `.agents/workflows/add-team-member.md`.

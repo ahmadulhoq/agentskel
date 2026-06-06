@@ -4,14 +4,14 @@
     "pre_run_command": [
       {
         "command": ".windsurf/hooks/pre-commit-check.sh",
-        "matcher": "git commit*"
+        "matcher": "git[[:space:]]+commit"
       },
       {
         "command": ".windsurf/hooks/pre-memory-push.sh",
-        "matcher": "git*push*ai-memory*"
+        "matcher": "git[[:space:]].*push.*ai-memory"
       }
     ],
-    "stop": [
+    "post_cascade_response": [
       {
         "command": ".windsurf/hooks/stop-verify.sh"
       }
