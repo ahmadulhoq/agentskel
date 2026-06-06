@@ -1,5 +1,41 @@
 # agentskel Changelog
 
+## v1.63.0 — 2026-06-07
+
+### Cartography refresh: MAP.md + SYMBOLS.md after the v1.60–v1.62.x cross-tool work
+
+Memory-only refresh. No code or workflow changes. Three releases of structural work compounded into cartography drift; this brings MAP.md, SYMBOLS.md, and RESUME.md Cartography State back in sync with the actual repo.
+
+**MAP.md**
+- Architecture pattern section: replaced single-line "Entry points: CLAUDE.md / GEMINI.md / .agent symlink" with explicit per-tool entry-point list covering every supported AI tool (Claude, Gemini, Cursor, Windsurf, Copilot, Codex). Each tool's native files are enumerated.
+- `.agent` symlink documented as **legacy compat path** (Gemini docs only mention `.agents/` plural; symlink is harmless and stays for any older installs that may still reference it).
+- Module registry now reflects v1.60–v1.62.x reality:
+  - `core/cursor-hooks/`: 5 files (4 Cursor-format scripts + hooks.json) — was 1
+  - `core/gemini-hooks/`: **new directory** in v1.61.0 (4 scripts + settings.json)
+  - `core/windsurf-hooks/`: 5 files (4 Windsurf-format scripts + hooks.json) — was 1
+  - `core/codex-hooks/`: 1 file (hooks.json; scripts sourced from core/claude-hooks/, verified compatible)
+  - `core/copilot-hooks/`: **DELETED in v1.62.0** (Copilot has no hooks concept)
+  - `.gemini/skills/`: new (50 stubs, v1.61.0)
+  - `.cursor/rules/`: 51 .mdc files (1 always-on `agentskel.mdc` + 50 per-name with `alwaysApply: false`, v1.62.0)
+  - `.cursor/hooks.json`: moved from `.cursor/hooks/hooks-cursor.json` (v1.62.0)
+  - `.windsurf/workflows/`: new (33 files, v1.62.0)
+  - `.github/prompts/`: new (33 prompt files, v1.62.0)
+  - `.claude/skills/`: now directory layout `<name>/SKILL.md` (v1.60.0)
+- `scripts/`: validate.py grown to 10 deterministic checks (was 5).
+- New top-level entry: `gemini-extension.json`.
+
+**SYMBOLS.md** — scripts/validate.py updates:
+- Removed: `check_stub_parity` (refactored away in v1.62.0).
+- Added: `_stub_parity_for`, `_flat_stub_parity` (helpers), `check_claude_stub_parity`, `check_gemini_stub_parity`, `check_cursor_rule_parity`, `check_windsurf_workflow_parity`, `check_copilot_prompt_parity`.
+
+**RESUME.md Cartography State** — HEAD SHA + counts refreshed. Coverage target jumped from ~262 to ~430 source files (per-tool stub/workflow/prompt generation across 5 releases).
+
+**Out of scope**
+- `.agent` singular symlink cleanup: decided to keep (harmless, no signal it's truly unused; risk of breaking older installs).
+- Full per-file re-index via cartographer workflow: surgical refresh is sufficient for the current state.
+
+affected: none (memory-only — no workflows/skills touched)
+
 ## v1.62.2 — 2026-06-07
 
 ### Fix: Windsurf hook scripts had wrong I/O contract (silent allow on every commit/push)
