@@ -1,0 +1,6 @@
+---
+name: add-workspace-platform
+description: When adding a new platform (subdir with its own git repo) to an existing workspace dispatcher. Runs setup-skeleton in the subdir and updates the workspace config and dispatcher AGENTS.md.
+---
+
+Read and follow the full workflow at `.agents/workflows/add-workspace-platform.md`.

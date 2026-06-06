@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".gemini/hooks/pre-commit-check.sh",
+            "name": "agentskel-pre-commit",
+            "description": "Block git commit if CHANGELOG/TIME_LOG not updated; lint multi-line YAML descriptions in staged skill/workflow files."
+          },
+          {
+            "type": "command",
+            "command": ".gemini/hooks/pre-memory-push.sh",
+            "name": "agentskel-pre-memory-push",
+            "description": "Auto-pull --rebase before any push to ai-memory to prevent non-fast-forward errors."
+          }
+        ]
+      },
+      {
+        "matcher": "replace|write_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".gemini/hooks/pre-edit-check.sh",
+            "name": "agentskel-pre-edit",
+            "description": "Advisory plan-gate reminder before any file edit."
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".gemini/hooks/stop-verify.sh",
+            "name": "agentskel-stop-verify",
+            "description": "Block stop if uncommitted project or .memory/ changes remain — surfaces task-completion."
+          }
+        ]
+      }
+    ]
+  }
+}

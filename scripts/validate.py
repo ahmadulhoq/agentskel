@@ -192,14 +192,17 @@ def _is_first_party_workflow(name: str) -> bool:
     return (REPO / "roles/dev/workflows" / f"{name}.md").exists()
 
 
-def check_stub_parity() -> Result:
-    r = Result("stub parity")
+def _stub_parity_for(label: str, stubs_dir: Path, tool_name: str) -> Result:
+    """Verify <tool>/skills/<name>/SKILL.md mirrors current .agents/ sources.
+
+    Same parity contract used for both .claude/skills/ and .gemini/skills/.
+    Both tools follow the agentskills.io directory layout."""
+    r = Result(f"{label} parity")
     skills_dir = REPO / ".agents/skills"
     workflows_dir = REPO / ".agents/workflows"
-    stubs_dir = REPO / ".claude/skills"
 
     if not stubs_dir.exists():
-        r.bad(".claude/skills/ directory missing")
+        r.bad(f"{stubs_dir.relative_to(REPO)}/ directory missing")
         return r
 
     # Build two sets:
@@ -240,18 +243,17 @@ def check_stub_parity() -> Result:
             continue
         expected[name] = (path, desc, "workflow")
 
-    # Flag legacy flat-format stubs. Claude Code's loader silently ignores
-    # `.claude/skills/<name>.md` (flat files) — only the directory layout
-    # `.claude/skills/<name>/SKILL.md` is discovered. Surface any flat
-    # stubs as a parity failure so they get migrated.
+    # Flag legacy flat-format stubs. Both tools silently ignore `<name>.md`
+    # (flat files) — only the directory layout `<name>/SKILL.md` is discovered.
+    rel_stubs = stubs_dir.relative_to(REPO)
     for stub in sorted(glob.glob(str(stubs_dir / "*.md"))):
         r.bad(
-            f".claude/skills/{Path(stub).name}: flat-file layout — Claude Code "
-            f"requires directory layout `.claude/skills/<name>/SKILL.md`. "
+            f"{rel_stubs}/{Path(stub).name}: flat-file layout — {tool_name} "
+            f"requires directory layout `{rel_stubs}/<name>/SKILL.md`. "
             f"Migrate via sync-skeleton Step 4c."
         )
 
-    # Check each stub (directory layout: .claude/skills/<name>/SKILL.md)
+    # Check each stub (directory layout: <tool>/skills/<name>/SKILL.md)
     stub_names: set[str] = set()
     for stub in sorted(glob.glob(str(stubs_dir / "*/SKILL.md"))):
         stub_path = Path(stub)
@@ -263,7 +265,7 @@ def check_stub_parity() -> Result:
                 # Third-party skill — has source in .agents/ but not in
                 # core/ or roles/. Skip parity check.
                 continue
-            r.bad(f".claude/skills/{name}/SKILL.md: orphan (no source in .agents/)")
+            r.bad(f"{rel_stubs}/{name}/SKILL.md: orphan (no source in .agents/)")
             continue
 
         source_path, exp_desc, kind = expected[name]
@@ -271,16 +273,16 @@ def check_stub_parity() -> Result:
         stub_fm = FRONTMATTER_RE.match(stub_text)
         stub_desc = _extract_description(stub_fm.group(1)) if stub_fm else None
         if not stub_desc:
-            r.bad(f".claude/skills/{name}/SKILL.md: stub has no `description:`")
+            r.bad(f"{rel_stubs}/{name}/SKILL.md: stub has no `description:`")
             continue
         if stub_desc != exp_desc:
-            r.bad(f".claude/skills/{name}/SKILL.md: description drift from source")
+            r.bad(f"{rel_stubs}/{name}/SKILL.md: description drift from source")
             continue
 
         # Check reference path presence
         rel_source = str(source_path.relative_to(REPO))
         if rel_source not in stub_text:
-            r.bad(f".claude/skills/{name}/SKILL.md: missing reference to {rel_source}")
+            r.bad(f"{rel_stubs}/{name}/SKILL.md: missing reference to {rel_source}")
             continue
         r.ok()
 
@@ -288,9 +290,17 @@ def check_stub_parity() -> Result:
     # is the responsibility of the external pack's installer)
     missing = sorted(set(expected) - stub_names)
     for name in missing:
-        r.bad(f".claude/skills/{name}/SKILL.md: missing (source {expected[name][0].relative_to(REPO)} has no stub)")
+        r.bad(f"{rel_stubs}/{name}/SKILL.md: missing (source {expected[name][0].relative_to(REPO)} has no stub)")
 
     return r
+
+
+def check_claude_stub_parity() -> Result:
+    return _stub_parity_for("claude stub", REPO / ".claude/skills", "Claude Code")
+
+
+def check_gemini_stub_parity() -> Result:
+    return _stub_parity_for("gemini stub", REPO / ".gemini/skills", "Gemini CLI")
 
 
 def check_agents_catalog_parity() -> Result:
@@ -411,7 +421,8 @@ CHECKS = [
     check_frontmatter,
     check_description_length,
     check_version_consistency,
-    check_stub_parity,
+    check_claude_stub_parity,
+    check_gemini_stub_parity,
     check_agents_catalog_parity,
     check_changelog_has_version,
 ]
