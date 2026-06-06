@@ -224,9 +224,7 @@ Domain skills (`developer`, `code-reviewer`, `test-engineer`) contain `<!-- PLAT
 
 **Skip this step if `claude` is not in Supported Tools.**
 
-Claude Code auto-discovers skills from `.claude/skills/`. Generate a lightweight stub
-for each skill and workflow in `.agents/` so Claude Code can see them without loading
-the full file.
+Claude Code auto-discovers project-level skills from `.claude/skills/<name>/SKILL.md` (directory format — each skill is its own directory with `SKILL.md` as the entrypoint). Flat `.claude/skills/<name>.md` files are silently ignored. Generate a lightweight stub for each skill and workflow in `.agents/` in the directory format.
 
 ```bash
 mkdir -p .claude/skills
@@ -235,7 +233,8 @@ mkdir -p .claude/skills
 For each file matching `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`:
 
 1. Read the YAML frontmatter (`name` and `description` fields).
-2. Create a stub at `.claude/skills/[name].md` with this format:
+2. Create the stub directory and SKILL.md: `mkdir -p .claude/skills/[name] && write to .claude/skills/[name]/SKILL.md`.
+3. Stub format:
 
 ```markdown
 ---

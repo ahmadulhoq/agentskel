@@ -240,11 +240,22 @@ def check_stub_parity() -> Result:
             continue
         expected[name] = (path, desc, "workflow")
 
-    # Check each stub
-    stub_names: set[str] = set()
+    # Flag legacy flat-format stubs. Claude Code's loader silently ignores
+    # `.claude/skills/<name>.md` (flat files) — only the directory layout
+    # `.claude/skills/<name>/SKILL.md` is discovered. Surface any flat
+    # stubs as a parity failure so they get migrated.
     for stub in sorted(glob.glob(str(stubs_dir / "*.md"))):
+        r.bad(
+            f".claude/skills/{Path(stub).name}: flat-file layout — Claude Code "
+            f"requires directory layout `.claude/skills/<name>/SKILL.md`. "
+            f"Migrate via sync-skeleton Step 4c."
+        )
+
+    # Check each stub (directory layout: .claude/skills/<name>/SKILL.md)
+    stub_names: set[str] = set()
+    for stub in sorted(glob.glob(str(stubs_dir / "*/SKILL.md"))):
         stub_path = Path(stub)
-        name = stub_path.stem
+        name = stub_path.parent.name
         stub_names.add(name)
 
         if name not in expected:
@@ -252,7 +263,7 @@ def check_stub_parity() -> Result:
                 # Third-party skill — has source in .agents/ but not in
                 # core/ or roles/. Skip parity check.
                 continue
-            r.bad(f".claude/skills/{name}.md: orphan (no source in .agents/)")
+            r.bad(f".claude/skills/{name}/SKILL.md: orphan (no source in .agents/)")
             continue
 
         source_path, exp_desc, kind = expected[name]
@@ -260,16 +271,16 @@ def check_stub_parity() -> Result:
         stub_fm = FRONTMATTER_RE.match(stub_text)
         stub_desc = _extract_description(stub_fm.group(1)) if stub_fm else None
         if not stub_desc:
-            r.bad(f".claude/skills/{name}.md: stub has no `description:`")
+            r.bad(f".claude/skills/{name}/SKILL.md: stub has no `description:`")
             continue
         if stub_desc != exp_desc:
-            r.bad(f".claude/skills/{name}.md: description drift from source")
+            r.bad(f".claude/skills/{name}/SKILL.md: description drift from source")
             continue
 
         # Check reference path presence
         rel_source = str(source_path.relative_to(REPO))
         if rel_source not in stub_text:
-            r.bad(f".claude/skills/{name}.md: missing reference to {rel_source}")
+            r.bad(f".claude/skills/{name}/SKILL.md: missing reference to {rel_source}")
             continue
         r.ok()
 
@@ -277,7 +288,7 @@ def check_stub_parity() -> Result:
     # is the responsibility of the external pack's installer)
     missing = sorted(set(expected) - stub_names)
     for name in missing:
-        r.bad(f".claude/skills/{name}.md: missing (source {expected[name][0].relative_to(REPO)} has no stub)")
+        r.bad(f".claude/skills/{name}/SKILL.md: missing (source {expected[name][0].relative_to(REPO)} has no stub)")
 
     return r
 

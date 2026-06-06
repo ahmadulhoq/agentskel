@@ -175,11 +175,14 @@ for this project's platform (and those should have their comment tags stripped).
 
 After updating `.agents/` sources in Step 4, refresh the derived artifacts so they reflect the new source content. Setup-skeleton generates these on first install; sync must refresh them, or downstream projects keep stale stubs and hooks.
 
-**Refresh `.claude/skills/` stubs** (same logic as setup-skeleton Step 5b):
+**Refresh `.claude/skills/` stubs** (directory layout — `.claude/skills/<name>/SKILL.md`; same logic as setup-skeleton Step 5b):
 
-1. For each `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`, regenerate `.claude/skills/[name].md` with the current frontmatter `description`. Use YAML-aware extraction (handle both single-line values and multi-line folded scalars `>`); normalize to a single line in the stub (join continuation lines with spaces). The `_extract_description()` function in `scripts/validate.py` is the reference implementation.
-2. **Orphan detection:** list existing `.claude/skills/*.md` whose corresponding source was renamed or removed in Step 4. Delete each orphan and report it to the user.
-3. Report the net change: N stubs regenerated, M stubs added, K orphans deleted.
+1. **Pre-step — migrate legacy flat layout if present.** Pre-v1.60.0 stubs lived at `.claude/skills/<name>.md` (flat). Claude Code's loader silently ignores that layout. For each flat `.claude/skills/<name>.md` file (excluding `.gitignore`):
+   - `mkdir -p .claude/skills/<name>` then `git mv .claude/skills/<name>.md .claude/skills/<name>/SKILL.md`
+   - Use `git mv` (not plain `mv`) so the migration is tracked as a rename in the PR diff.
+2. For each `.agents/skills/*/SKILL.md` and `.agents/workflows/*.md`, regenerate `.claude/skills/<name>/SKILL.md` with the current frontmatter `description`. Use YAML-aware extraction (handle both single-line values and multi-line folded scalars `>`); normalize to a single line in the stub (join continuation lines with spaces). The `_extract_description()` function in `scripts/validate.py` is the reference implementation. Stub body: `Read and follow the full [skill|workflow] at \`[source path]\`.`
+3. **Orphan detection:** list existing `.claude/skills/<name>/` directories whose corresponding source was renamed or removed in Step 4 (and which aren't third-party / external pack skills). Delete each orphan directory and report it to the user.
+4. Report the net change: N stubs migrated from flat layout, M stubs regenerated, K stubs added, L orphans deleted.
 
 **Refresh enforcement hooks** — for each tool in Supported Tools, re-copy the latest scripts from `[SKELETON_PATH]/core/*-hooks/`:
 
