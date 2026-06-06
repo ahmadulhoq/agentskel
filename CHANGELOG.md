@@ -4,6 +4,36 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.62.0: Cross-tool discoverability bundle (Cursor, Windsurf, Copilot)
+
+Completes the cross-tool parity series. Audited all four remaining tools
+against current 2026 docs:
+
+- **Cursor**: hooks were silently inactive (wrong path + invented matcher
+  syntax + broken sessionStart). Fixed path (.cursor/hooks.json), matcher
+  (regex per spec), event names (beforeShellExecution). Wrote 4 Cursor-
+  format hook scripts (Cursor's I/O contract: command at top of stdin,
+  JSON {permission,user_message,agent_message} on stdout). Generated 50
+  per-file .cursor/rules/<name>.mdc with alwaysApply:false for
+  agent-requested discoverability.
+- **Windsurf**: stop hook was silent no-op (no `stop` event in Windsurf).
+  Replaced with post_cascade_response. Generated 33 first-class
+  .windsurf/workflows/<name>.md so each workflow is slash-invokable as
+  /<name>.
+- **Copilot**: removed core/copilot-hooks/ entirely — Copilot has no hooks
+  concept; the install was dead code. Generated 33 .github/prompts/<name>.
+  prompt.md slash-invokable prompt files.
+- **Codex**: verified hooks.json events (PreToolUse, Stop) match spec.
+  No changes needed.
+
+Validator: +3 checks (cursor rule, windsurf workflow, copilot prompt
+parity), factored common logic into _flat_stub_parity. 470 ok, 0 fail
+(was 354).
+
+Downstream migration baked into sync-skeleton Step 4c: git mv Cursor
+hooks file, re-copy scripts from core/cursor-hooks/ (was sourcing from
+core/claude-hooks/), fix Windsurf stop event, git rm -rf .github/hooks/.
+
 ## 2026-06-07 — v1.61.0: Gemini CLI / Antigravity parity bundle
 
 Three-item bundle closing the Gemini-side parity gaps to match v1.60.0's

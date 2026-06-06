@@ -4,6 +4,9 @@
 IDLE
 
 ## Last Completed Task
+- v1.62.0: Cross-tool discoverability bundle (Cursor, Windsurf, Copilot, Codex). Audited remaining tools against current 2026 docs. Cursor hooks were silently inactive since v1.22 (wrong path + invented matcher syntax + broken sessionStart) — fixed all three + wrote 4 Cursor-format scripts (Cursor I/O differs from Claude). Generated 50 per-file `.cursor/rules/<name>.mdc` (alwaysApply:false). Windsurf `stop` hook was silent no-op — replaced with `post_cascade_response`; generated 33 `.windsurf/workflows/<name>.md`. Copilot has no hooks concept — deleted `core/copilot-hooks/`; generated 33 `.github/prompts/<name>.prompt.md`. Codex verified working. Validator +3 parity checks (cursor/windsurf/copilot) via factored _flat_stub_parity. 470 ok, 0 fail.
+
+## Previously Completed
 - v1.61.0: Gemini CLI / Antigravity parity bundle (3 items): 50 stubs in `.gemini/skills/<name>/SKILL.md` so workflows are skill-discoverable to Gemini; `gemini-extension.json` + `.claude-plugin/plugin.json` bumped to v1.61.0; new `core/gemini-hooks/` with 4 JSON-contract hook scripts + settings.json template; setup-skeleton + sync-skeleton + validator updated. 354 ok, 0 fail.
 
 ## Previously Completed
@@ -97,4 +100,4 @@ IDLE
 - Note: this was a refresh (not a full re-cartography). SYMBOLS.md scripts section was updated at v1.57.0; other sections unchanged from previous cartography. A full re-index would require reading every workflow and skill source file — deferred to a future cartographer run when justified by significant structural change.
 
 ## Timestamp (UTC)
-- 2026-06-07T10:00Z
+- 2026-06-07T19:00Z
