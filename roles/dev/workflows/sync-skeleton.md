@@ -331,6 +331,11 @@ updated `VERSIONS.md` schema). Then:
    - Update `Last Skeleton Check` to today's date
    - Add any **Skip** entries to the Intentional Deviations section (add this section
      at the bottom of CONFIG.md if it doesn't exist yet)
+   - **Apply field additions from any release the project is jumping past.** Compare the project's existing `.memory/CONFIG.md` row set against `[SKELETON_PATH]/core/memory/CONFIG.md`. Any field in the template that doesn't yet exist in the project's CONFIG.md should be added with its template default. Historical additions to be aware of (the agent should still diff the template, not rely on this list):
+     - v1.22: `Supported Tools`
+     - v1.23: `Last Skeleton Check`
+     - v1.49.0: Atlassian Integration section (`Jira Site`, `Jira Project Key`, `Confluence Space Key`, parents)
+     - v1.57.0: `External Platform Skills`, `Last External Skills Check`
 
 2. Commit and push:
 ```bash
@@ -619,6 +624,16 @@ After sync is complete, re-execute the **`session-start`** skill (full procedure
 Steps 1–8) including a re-read of all `.agents/rules/` files. Rules, skills, and
 workflows may have changed — the agent must internalize the updated versions before
 continuing any other work.
+
+**Tell the user to restart their AI tool** if the sync touched any hook config (`.cursor/hooks.json`, `.windsurf/hooks.json`, `.gemini/settings.json`, `.claude/settings.json`, `.codex/hooks.json`). Most tools load hook configuration once at session start — they don't pick up edits live:
+
+- Cursor: requires session restart for `.cursor/hooks.json` reload.
+- Windsurf: hooks are merged from multiple paths at session start; restart picks up workspace changes.
+- Claude Code: settings.json is read once per session; restart required for hook changes (skill/rule files are watched live).
+- Codex: project hooks load at session start when the repo is trusted.
+- Gemini CLI: settings.json + extension manifest read at startup; user must restart `gemini`.
+
+Skill, workflow, prompt, and rule changes are usually picked up live (Claude Code watches `.claude/skills/`, Gemini supports `/skills reload`, etc.) — only hook config changes hard-require a restart.
 
 ---
 
