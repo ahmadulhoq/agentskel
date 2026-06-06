@@ -4,6 +4,9 @@
 IDLE
 
 ## Last Completed Task
+- v1.62.1: Self-audit follow-up. v1.62.0 forgot to bump gemini-extension.json + .claude-plugin/plugin.json (stayed at 1.61.0). Bumped both to 1.62.1 (matching VERSION). Extended validator check_version_consistency to cover plugin manifests (regression-tested: it caught the drift before fix). Disambiguated setup-skeleton "same 3 hook scripts" text for Windsurf and Codex with explicit source paths + honest disclaimer about unverified I/O contracts. 472 ok, 0 fail.
+
+## Previously Completed
 - v1.62.0: Cross-tool discoverability bundle (Cursor, Windsurf, Copilot, Codex). Audited remaining tools against current 2026 docs. Cursor hooks were silently inactive since v1.22 (wrong path + invented matcher syntax + broken sessionStart) — fixed all three + wrote 4 Cursor-format scripts (Cursor I/O differs from Claude). Generated 50 per-file `.cursor/rules/<name>.mdc` (alwaysApply:false). Windsurf `stop` hook was silent no-op — replaced with `post_cascade_response`; generated 33 `.windsurf/workflows/<name>.md`. Copilot has no hooks concept — deleted `core/copilot-hooks/`; generated 33 `.github/prompts/<name>.prompt.md`. Codex verified working. Validator +3 parity checks (cursor/windsurf/copilot) via factored _flat_stub_parity. 470 ok, 0 fail.
 
 ## Previously Completed

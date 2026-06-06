@@ -4,6 +4,24 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.62.1: Plugin manifest drift + setup-skeleton clarity
+
+Self-audit caught three gaps in the v1.60/v1.61/v1.62 series:
+- gemini-extension.json + .claude-plugin/plugin.json stuck at 1.61.0 (v1.62.0
+  forgot to bump them). Bumped to 1.62.1. Users would have seen the wrong
+  version in `gemini extensions list` / `/plugin list`.
+- Validator's check_version_consistency missed plugin manifests entirely.
+  Extended to cover both. Regression-tested: validator correctly flagged the
+  drift before the fix.
+- setup-skeleton hook-install text "Copy the same 3 hook scripts to
+  .windsurf/hooks/" was ambiguous (same as what?). Replaced with explicit
+  source paths. Added honest disclaimer that Windsurf and Codex I/O
+  contracts haven't been formally verified to match Claude's — if either
+  differs like Cursor did, those scripts may not block correctly.
+
+472 ok, 0 fail on validator. Other gaps (Windsurf/Codex contract verify,
+MAP.md refresh, .agent symlink cleanup) deferred to v1.62.x / v1.63.
+
 ## 2026-06-07 — v1.62.0: Cross-tool discoverability bundle (Cursor, Windsurf, Copilot)
 
 Completes the cross-tool parity series. Audited all four remaining tools
