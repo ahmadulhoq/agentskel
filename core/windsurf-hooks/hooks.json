@@ -11,6 +11,11 @@
         "matcher": "git[[:space:]].*push.*ai-memory"
       }
     ],
+    "pre_write_code": [
+      {
+        "command": ".windsurf/hooks/pre-edit-check.sh"
+      }
+    ],
     "post_cascade_response": [
       {
         "command": ".windsurf/hooks/stop-verify.sh"

@@ -223,7 +223,7 @@ Copilot's prompt files at `.github/prompts/*.prompt.md`.
 | `claude` | `.claude/hooks/` — `pre-commit-check.sh`, `pre-memory-push.sh`, `pre-edit-check.sh`, `stop-verify.sh` | `.claude/settings.json` |
 | `antigravity` | `.gemini/hooks/` — same 4 (Gemini-format: JSON stdin/stdout, `BeforeTool`/`AfterAgent` events) | `.gemini/settings.json` |
 | `cursor` | `.cursor/hooks/` — same 4 (Cursor-format: `command` at stdin root, JSON `{permission,user_message,agent_message}` on stdout) | **`.cursor/hooks.json`** at workspace root (NOT `.cursor/hooks/`) |
-| `windsurf` | `.windsurf/hooks/` — same 3 (no `pre-edit`); uses `post_cascade_response` for stop, not `stop` | `.windsurf/hooks.json` at workspace root |
+| `windsurf` | `.windsurf/hooks/` — 4 scripts from `core/windsurf-hooks/` (Windsurf-format: reads `tool_info.command_line` / `tool_info.file_path` from stdin; exit-code based) | `.windsurf/hooks.json` at workspace root; uses `pre_run_command` / `pre_write_code` / `post_cascade_response` |
 | `copilot` | none — Copilot has no hooks concept | none |
 | `codex` | `.codex/hooks/` — same 3 | `.codex/hooks.json` |
 
@@ -233,6 +233,11 @@ Copilot's prompt files at `.github/prompts/*.prompt.md`.
 - Cursor: re-copy scripts from `core/cursor-hooks/` (not `core/claude-hooks/` — pre-v1.62.0 setup-skeleton sourced from the wrong directory).
 - Windsurf: re-copy `.windsurf/hooks.json` — `stop` event is now `post_cascade_response`. Pre-v1.62.0 `stop` hook was a silent no-op.
 - Copilot: if `.github/hooks/` exists, `git rm` the directory. Copilot has no hooks concept; these files never executed.
+
+**Pre-v1.62.2 Windsurf migration (apply once during sync):**
+
+- Windsurf: re-copy scripts from `core/windsurf-hooks/` (not `core/claude-hooks/`). Pre-v1.62.2 setup-skeleton sourced from `core/claude-hooks/`, which reads `tool_input.command` — but Windsurf sends `tool_info.command_line`. Result: the `COMMAND` variable was always empty, and `pre-commit-check.sh` / `pre-memory-push.sh` silently allowed every commit and push. Force-overwrite the four scripts in `.windsurf/hooks/` with the new versions.
+- Windsurf: re-copy `.windsurf/hooks.json` to pick up the new `pre_write_code` event wiring (`pre-edit-check.sh` plan-gate reminder).
 
 Run `chmod +x` on each copied script. Do not overwrite the per-tool settings/hooks JSON unless adopting the v1.62.0 migration — the user may have merged project-specific entries. If the skeleton's settings template has new fields not in the project copy, merge only the new fields.
 

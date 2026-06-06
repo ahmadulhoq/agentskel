@@ -426,14 +426,18 @@ Cursor hook scripts use Cursor's own I/O contract — `command` at the top level
 ```bash
 mkdir -p .windsurf/hooks
 ```
-1. Copy from `[SKELETON_PATH]/core/claude-hooks/`:
+1. Copy from `[SKELETON_PATH]/core/windsurf-hooks/`:
    - `pre-commit-check.sh` → `.windsurf/hooks/pre-commit-check.sh`
    - `pre-memory-push.sh` → `.windsurf/hooks/pre-memory-push.sh`
+   - `pre-edit-check.sh` → `.windsurf/hooks/pre-edit-check.sh`
    - `stop-verify.sh` → `.windsurf/hooks/stop-verify.sh`
 2. `chmod +x .windsurf/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/windsurf-hooks/hooks.json` → `.windsurf/hooks.json`
 
-Note: Windsurf's `hooks.json` uses `post_cascade_response` (not `stop` — Windsurf has no `stop` event). Pre-v1.62.0 installs referenced `stop` and the hook was silently dead. Scripts are sourced from `core/claude-hooks/` — Windsurf's hook I/O contract has not been formally verified to match Claude's; if Windsurf differs (like Cursor does), these scripts may not block correctly. A `v1.62.x` audit will verify and write Windsurf-format scripts if needed.
+Notes:
+- Windsurf's `hooks.json` uses `post_cascade_response` (not `stop` — Windsurf has no `stop` event). Pre-v1.62.0 installs referenced `stop` and the hook was silently dead.
+- Windsurf scripts read `tool_info.command_line` from stdin (NOT `tool_input.command` like Claude/Codex). Pre-v1.62.2 sourced scripts from `core/claude-hooks/`, which read the wrong JSON key — the COMMAND variable was always empty, and the hooks silently allowed every commit / push regardless of state. Scripts now live in `core/windsurf-hooks/` with the correct contract.
+- `post_cascade_response` is a post-event in Windsurf — per the docs, post-hooks cannot block (exit 2 is pre-hook only). `stop-verify.sh` surfaces warnings via stderr and exits 0.
 
 **Copilot** (if `copilot` in Supported Tools):
 GitHub Copilot does NOT support hooks. The pre-v1.62.0 `.github/hooks/` install was dead code on every Copilot install. No hook installation for Copilot.
@@ -449,7 +453,9 @@ mkdir -p .codex/hooks
 2. `chmod +x .codex/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/codex-hooks/hooks.json` → `.codex/hooks.json`
 
-After install, the user must run `codex` once in the project and accept the trust prompt so `.codex/hooks.json` activates (project hooks load only when the repo is marked trusted). Scripts are sourced from `core/claude-hooks/` because the Codex hook event names (`PreToolUse`, `Stop`) match Claude's — but Codex's stdin/stdout contract has not been formally verified to match Claude's. If a downstream Codex user reports broken hooks, a `v1.62.x` audit will write Codex-format scripts.
+After install, the user must run `codex` once in the project and accept the trust prompt so `.codex/hooks.json` activates (project hooks load only when the repo is marked trusted).
+
+Codex's hook I/O contract is verified to match Claude's: `tool_input.command` for shell commands, exit-code-based blocking (0/2/other), stderr for rejection reason. Sourcing scripts from `core/claude-hooks/` is intentional and supported. If Codex's spec changes in a future release, the audit lives in v1.62.2 CHANGELOG.
 
 Hook scripts are tool-specific because each tool has its own I/O contract. The scripts in each `core/<tool>-hooks/` directory follow that tool's spec. Common enforcement logic (CHANGELOG/TIME_LOG check, ai-memory auto-pull, plan-gate reminder, stop-verify) is mirrored across tools but wrapped in tool-specific JSON I/O.
 
