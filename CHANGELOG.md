@@ -4,6 +4,19 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.63.1 self-sync follow-up: backfill missing CONFIG.md fields
+
+After v1.63.1 shipped, ran the new Step 5 field-diff check against agentskel
+itself. Found 9 missing fields in `.memory/CONFIG.md`:
+- v1.49.0 additions (Atlassian section): Jira Site, Jira Project Key,
+  Confluence Space Key, Confluence Specs/ADRs/Runbooks/Postmortems Parent
+- v1.57.0 additions: External Platform Skills, Last External Skills Check
+
+agentskel had skipped these field additions across two releases — exactly
+the gap the new Step 5 enumeration was designed to catch. Dogfooded our
+own fix, found the bug it predicted, backfilled. Fields filled with
+template defaults / empty (not applicable to the skeleton itself).
+
 ## 2026-06-07 — v1.63.1: sync-skeleton doc gaps (CONFIG field enumeration + restart hint)
 
 Two minor doc gaps from the downstream-migration audit:
