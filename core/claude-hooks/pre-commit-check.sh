@@ -22,12 +22,23 @@ fi
 BRANCH=$(git branch --show-current 2>/dev/null || echo "")
 MEMORY_BRANCH=$(git -C .memory branch --show-current 2>/dev/null || echo "")
 
-if [ "$BRANCH" = "ai-memory" ] || [ "$MEMORY_BRANCH" = "ai-memory" ] || echo "$COMMAND" | grep -q '\.memory'; then
+# Strip -m "..." / -m '...' / --message variants so structural checks below
+# don't accidentally match text inside the commit message (e.g. a message like
+# "fix .memory mount" or "implement merge logic" must not bypass enforcement).
+CMD_STRUCT=$(echo "$COMMAND" | sed -E 's/-m[[:space:]]+"[^"]*"//g; s/-m[[:space:]]+'\''[^'\'']*'\''//g; s/--message[[:space:]]+"[^"]*"//g; s/--message[[:space:]]+'\''[^'\'']*'\''//g')
+
+# Skip when committing inside `.memory/` (the ai-memory worktree branch).
+# Match command structure (e.g. `cd .memory && git commit`, `git -C .memory commit`),
+# NOT the literal string `.memory` appearing in a commit message.
+if [ "$BRANCH" = "ai-memory" ] || [ "$MEMORY_BRANCH" = "ai-memory" ] || \
+   echo "$CMD_STRUCT" | grep -qE '(^|[[:space:];&|])cd[[:space:]]+\.memory(/|[[:space:]]|$)|git[[:space:]]+-C[[:space:]]+\.memory(/|[[:space:]]|$)'; then
     exit 0
 fi
 
-# Skip for merge commits or amends
-if echo "$COMMAND" | grep -qE '\-\-amend|merge'; then
+# Skip merge commits or amends. `--amend` only counts as a flag (preceded by
+# whitespace, followed by space/end). `merge` only counts as the `git merge`
+# command — not the word "merge" inside a commit message.
+if echo "$CMD_STRUCT" | grep -qE '(^|[[:space:]])--amend([[:space:]]|$)|(^|[;&|[:space:]])git[[:space:]]+merge([[:space:]]|$)'; then
     exit 0
 fi
 
@@ -55,8 +66,13 @@ if [ -d ".memory" ]; then
     fi
 fi
 
-# Skeleton-only checks: VERSION must match README and MASTER_PLAN
-if [ -f ".memory/CONFIG.md" ] && grep -q 'Skeleton Path.*\.' .memory/CONFIG.md 2>/dev/null; then
+# Skeleton-only checks: VERSION must match README and MASTER_PLAN.
+# Strict match for the markdown table row `| Skeleton Path | . |` — value
+# column must be literally `.`. Pre-v1.63.2 used `'Skeleton Path.*\.'`
+# which matched any dot anywhere on the line, so downstream projects with
+# Skeleton Path values like `../agentskel`, `~/.agentskel/skeleton`, or
+# `./agentskel` all triggered these checks incorrectly.
+if [ -f ".memory/CONFIG.md" ] && grep -qE '^\|[[:space:]]+Skeleton Path[[:space:]]+\|[[:space:]]+\.[[:space:]]+\|' .memory/CONFIG.md 2>/dev/null; then
     if [ -f "VERSION" ]; then
         SKEL_VERSION=$(cat VERSION | tr -d '[:space:]')
 

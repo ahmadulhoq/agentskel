@@ -1,5 +1,57 @@
 # agentskel Changelog
 
+## v1.63.2 — 2026-06-07
+
+### Fix: 3 silent bugs caught by code-review bot on the Muslim-Pro-Android v1.63.1 sync PR
+
+Code-review bot reviewing the downstream sync PR ([bitsmedia/Muslim-Pro-Android#5296](https://github.com/bitsmedia/Muslim-Pro-Android/pull/5296)) found three bugs that have been latent in shipped agentskel hook scripts and one workflow.
+
+**Bug A — Skeleton-only check regex misfires on every downstream**
+
+`pre-commit-check.sh` had this regex to gate skeleton-only checks (VERSION ↔ README ↔ MASTER_PLAN consistency):
+
+```
+grep -q 'Skeleton Path.*\.' .memory/CONFIG.md
+```
+
+The `\.` in the regex matched ANY dot anywhere after "Skeleton Path" on the line. So `| Skeleton Path | ../agentskel |`, `| Skeleton Path | ~/.agentskel/skeleton |`, `| Skeleton Path | ./agentskel |` ALL matched — meaning every downstream project triggered the skeleton-only checks. Downstream projects don't have agentskel's README/MASTER_PLAN version markers at the project root, so the checks would always fail to find the version, causing… silent confusion at best.
+
+Fix: strict regex anchored on the markdown table row with literal `.` value:
+
+```
+grep -qE '^\|[[:space:]]+Skeleton Path[[:space:]]+\|[[:space:]]+\.[[:space:]]+\|' .memory/CONFIG.md
+```
+
+Test matrix (verified): `.` → match; `../agentskel`, `~/.agentskel/skeleton`, `./agentskel`, `/abs/path`, optional-placeholder → no match.
+
+**Bug B — Commit message text triggers structural skip-clauses**
+
+Two skip-clauses grep'd the full bash command line for sentinel substrings:
+
+- `grep -q '\.memory'` (intent: skip when committing inside `.memory/`) — but `git commit -m "fix .memory mount issue"` ALSO matched, bypassing enforcement.
+- `grep -qE '\-\-amend|merge'` (intent: skip amends and merges) — but `git commit -m "implement merge logic"` matched on "merge", and `git commit -m "--amend was needed"` matched on "--amend".
+
+Innocuous commit messages silently bypassed CHANGELOG/TIME_LOG enforcement.
+
+Fix: strip `-m "..."` / `-m '...'` / `--message "..."` / `--message '...'` from the command via sed before the structural checks. Patterns are then tightened to require the right syntactic context (`cd .memory`, `git -C .memory`, `--amend` as a flag, `git merge` as a command). Verified with 10 test cases including all false positives.
+
+**Bug C — `create-blueprint` Final Step contradicts the workflow's own architecture**
+
+`roles/dev/workflows/create-blueprint.md` Steps 5/6 + Notes explicitly establish: "The blueprint has no ai-memory branch. All persistent agent state lives in each project's own `.memory/`." But the Final Step then instructed the agent to update `RESUME.md`, `TIME_LOG.md`, `SYMBOLS.md`, `MAP.md` — files that don't exist in a blueprint repo. Self-contradiction.
+
+Fix: Final Step now disambiguates that memory updates target the **calling project's** `.memory/`, not the blueprint's. The blueprint itself only gets the files created during the workflow (specs, CHANGELOG.md, etc., which are regular files not memory).
+
+**Scope**
+
+- Bug A + B fixed in all 4 hook scripts: `core/{claude,gemini,cursor,windsurf}-hooks/pre-commit-check.sh`. Self-synced to `.claude/hooks/`.
+- Bug C fixed in `roles/dev/workflows/create-blueprint.md`. Self-synced to `.agents/workflows/`.
+
+**Tests**
+
+Both regex/strip fixes verified empirically before commit. 472 ok, 0 fail on validator (no parity check covers hook script semantics, so the tests were inline shell test cases — recorded in the commit).
+
+affected: create-blueprint
+
 ## v1.63.1 — 2026-06-07
 
 ### Doc: sync-skeleton gains CONFIG.md field-add enumeration + AI tool restart hint
