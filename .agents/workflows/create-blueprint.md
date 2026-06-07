@@ -544,11 +544,13 @@ Report to the user:
 
 ## Final Step — Task Completion Checklist
 
-Before responding to the user or starting the next task, run the Task Completion Checklist
-from `core-behavior.md`. This is not optional.
+**Important — context disambiguation:** the blueprint repo has no `.memory/` and no `ai-memory` branch (established in Step 5 / Notes above). Memory updates target the **calling project's** `.memory/`, not the blueprint's.
 
-At minimum:
-- Update **RESUME.md** with task outcome
-- Write **TIME_LOG.md** entry (if this was an implementation task)
-- Write **CHANGELOG entry** (if any files changed)
-- Update **SYMBOLS.md / MAP.md** (if structure changed)
+create-blueprint is invoked from inside a project's session (the agent has that project's `.memory/` mounted). After the workflow completes, run the standard task-completion checklist for the **calling project**:
+
+- Update the **calling project's** `.memory/RESUME.md` noting "Created blueprint at [BLUEPRINT_PATH]"
+- Write a `.memory/TIME_LOG.md` entry in the **calling project**
+- Update the **calling project's** `.memory/CHANGELOG.md` (and the **blueprint's** own `CHANGELOG.md` at the blueprint root, if you created one — that's a regular file, not memory)
+- `SYMBOLS.md` / `MAP.md` updates are typically not needed since this workflow didn't modify the calling project's code structure
+
+If you're running create-blueprint from a directory that has no `.memory/` of its own (e.g. from inside the blueprint dir after `cd`-ing there), step back to the project root that originated the request before running task-completion.

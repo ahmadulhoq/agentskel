@@ -47,12 +47,18 @@ fi
 # Only check commits on project branch, not ai-memory
 BRANCH=$(git branch --show-current 2>/dev/null || echo "")
 MEMORY_BRANCH=$(git -C .memory branch --show-current 2>/dev/null || echo "")
-if [ "$BRANCH" = "ai-memory" ] || [ "$MEMORY_BRANCH" = "ai-memory" ] || echo "$COMMAND" | grep -q '\.memory'; then
+
+# Strip -m "..." / -m '...' / --message variants so structural checks below
+# don't accidentally match commit message text (see claude-hooks notes).
+CMD_STRUCT=$(echo "$COMMAND" | sed -E 's/-m[[:space:]]+"[^"]*"//g; s/-m[[:space:]]+'\''[^'\'']*'\''//g; s/--message[[:space:]]+"[^"]*"//g; s/--message[[:space:]]+'\''[^'\'']*'\''//g')
+
+if [ "$BRANCH" = "ai-memory" ] || [ "$MEMORY_BRANCH" = "ai-memory" ] || \
+   echo "$CMD_STRUCT" | grep -qE '(^|[[:space:];&|])cd[[:space:]]+\.memory(/|[[:space:]]|$)|git[[:space:]]+-C[[:space:]]+\.memory(/|[[:space:]]|$)'; then
     allow
 fi
 
-# Skip merge commits or amends
-if echo "$COMMAND" | grep -qE '\-\-amend|merge'; then
+# Skip merge commits or amends (flag/command match only — not message text)
+if echo "$CMD_STRUCT" | grep -qE '(^|[[:space:]])--amend([[:space:]]|$)|(^|[;&|[:space:]])git[[:space:]]+merge([[:space:]]|$)'; then
     allow
 fi
 
@@ -73,8 +79,9 @@ if [ -d ".memory" ]; then
     fi
 fi
 
-# Skeleton-only checks
-if [ -f ".memory/CONFIG.md" ] && grep -q 'Skeleton Path.*\.' .memory/CONFIG.md 2>/dev/null; then
+# Skeleton-only checks. Strict match for `| Skeleton Path | . |` —
+# pre-v1.63.2 used a loose regex that false-positived on any path with a dot.
+if [ -f ".memory/CONFIG.md" ] && grep -qE '^\|[[:space:]]+Skeleton Path[[:space:]]+\|[[:space:]]+\.[[:space:]]+\|' .memory/CONFIG.md 2>/dev/null; then
     if [ -f "VERSION" ]; then
         SKEL_VERSION=$(cat VERSION | tr -d '[:space:]')
         if [ -f "README.md" ]; then
