@@ -4,6 +4,28 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.64.0: Fast Execution Mode + PR-link presentation + mandatory post-merge cleanup
+
+Three user-requested behavior rules:
+
+1. **Fast Execution Mode** — new CONFIG.md field, off by default. When on
+   (or `fast:` prefix on user request), skip branch + PR ceremony,
+   commit/push directly to default branch. Plan-first + task-completion
+   still apply. FAST MODE ACTIVE banner required before any commit.
+   Refusal heuristics for changes to logic / .agents/ / sacred behaviors.
+
+2. **PR-link presentation** — each PR URL on its own line in end-of-turn
+   summary. No comma-separated inline lists.
+
+3. **Mandatory post-merge cleanup** — when user confirms merge, run the
+   cleanup procedure (checkout default, pull, branch -d, remote prune,
+   RESUME update) BEFORE next task. Gate: don't begin next task until
+   git branch -a shows only default + legit long-lived branches.
+
+Encoded in core-behavior.md (source + claude-rules copy), git-flow skill
+(Fast Mode Bypass + strengthened cleanup), CONFIG.md template +
+agentskel's own .memory/CONFIG.md. 472 ok, 0 fail.
+
 ## 2026-06-07 — v1.63.2: 3 silent bugs surfaced by code-review bot on downstream sync PR
 
 Claude code-reviewer on Muslim-Pro-Android v1.63.1 sync PR

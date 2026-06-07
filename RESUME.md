@@ -4,6 +4,9 @@
 IDLE
 
 ## Last Completed Task
+- v1.64.0: 3 user-requested behavior rules. (1) Fast Execution Mode — new CONFIG.md flag (off default) + `fast:` prefix override; skips branch+PR ceremony for trivial work; FAST MODE ACTIVE banner before commit; refuses on .agents/sacred/logic touches. (2) PR-link presentation — each URL on own line. (3) Mandatory post-merge cleanup — runs before next task, gated on `git branch -a` clean. Encoded in core-behavior (source + claude-rules), git-flow skill, CONFIG.md template + agentskel's own .memory/CONFIG.md. 472 ok.
+
+## Previously Completed
 - v1.63.2: 3 silent bugs caught by code-review bot on Muslim-Pro-Android v1.63.1 sync PR. (A) `Skeleton Path.*\.` regex matched any dot in the value — all downstream projects triggered skeleton-only checks. Fixed: strict markdown table row match. (B) `.memory` / `--amend` / `merge` greps matched commit message text. `git commit -m "fix .memory mount"` silently bypassed enforcement. Fixed: strip `-m '...'` before structural checks, tighten patterns to syntactic context. (C) create-blueprint Final Step instructed updating .memory/ files that don't exist in a blueprint. Fixed: clarified memory updates target calling project's .memory/. A+B fixed across all 4 hook scripts. 472 ok.
 
 ## Previously Completed
