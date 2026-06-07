@@ -4,6 +4,9 @@
 IDLE
 
 ## Last Completed Task
+- v1.63.2: 3 silent bugs caught by code-review bot on Muslim-Pro-Android v1.63.1 sync PR. (A) `Skeleton Path.*\.` regex matched any dot in the value — all downstream projects triggered skeleton-only checks. Fixed: strict markdown table row match. (B) `.memory` / `--amend` / `merge` greps matched commit message text. `git commit -m "fix .memory mount"` silently bypassed enforcement. Fixed: strip `-m '...'` before structural checks, tighten patterns to syntactic context. (C) create-blueprint Final Step instructed updating .memory/ files that don't exist in a blueprint. Fixed: clarified memory updates target calling project's .memory/. A+B fixed across all 4 hook scripts. 472 ok.
+
+## Previously Completed
 - v1.63.1: sync-skeleton doc gaps. Step 5 (memory updates) now enumerates historical CONFIG.md field additions (v1.22 Supported Tools, v1.23 Last Skeleton Check, v1.49.0 Atlassian section, v1.57.0 External Platform Skills) so downstream agents know what to add when jumping past releases. Step 8 (session reload) now explicitly says to restart the AI tool when sync touched any hook config, with per-tool restart behavior documented. No logic changes. 472 ok, 0 fail.
 
 ## Previously Completed

@@ -4,6 +4,35 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-07 — v1.63.2: 3 silent bugs surfaced by code-review bot on downstream sync PR
+
+Claude code-reviewer on Muslim-Pro-Android v1.63.1 sync PR
+(bitsmedia/Muslim-Pro-Android#5296) found three latent bugs:
+
+A. **Skeleton-only check regex misfires on every downstream.** Old regex
+   `'Skeleton Path.*\.'` matched any dot in the value, so all downstream
+   projects (`../agentskel`, `~/.agentskel/skeleton`, `./agentskel`)
+   triggered the skeleton-only checks. Fixed with strict markdown table
+   row match `'^\|[[:space:]]+Skeleton Path[[:space:]]+\|[[:space:]]+\.[[:space:]]+\|'`.
+
+B. **Commit message text triggers structural skip-clauses.** Old code
+   grep'd full command for `.memory`, `--amend`, `merge` — but matched
+   commit message text. `git commit -m "fix .memory mount"` silently
+   bypassed enforcement. Fixed: strip `-m "..."` / `-m '...'` / `--message`
+   variants via sed before structural checks, then tighten patterns to
+   require correct syntactic context (cd .memory, git -C .memory, --amend
+   as flag, git merge as command). 10 test cases verified.
+
+C. **create-blueprint Final Step contradicts the workflow's architecture.**
+   Workflow Steps 5/6 + Notes establish "blueprint has no ai-memory branch.
+   All persistent agent state lives in each project's own .memory/." But
+   Final Step instructed updating RESUME/TIME_LOG/SYMBOLS/MAP — files that
+   don't exist in a blueprint repo. Fixed by clarifying memory updates
+   target the CALLING project's .memory/, not the blueprint's.
+
+A+B fixed in all 4 hook scripts: claude/gemini/cursor/windsurf. C fixed
+in create-blueprint workflow. Self-synced + validator 472 ok.
+
 ## 2026-06-07 — v1.63.1 self-sync follow-up: backfill missing CONFIG.md fields
 
 After v1.63.1 shipped, ran the new Step 5 field-diff check against agentskel
