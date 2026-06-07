@@ -137,5 +137,6 @@
 | check_windsurf_workflow_parity | function | scripts/validate.py |
 | check_copilot_prompt_parity | function | scripts/validate.py |
 | check_agents_catalog_parity | function | scripts/validate.py |
+| check_inline_rules_propagation | function | scripts/validate.py |
 | check_changelog_has_version | function | scripts/validate.py |
 | main | function | scripts/validate.py |
