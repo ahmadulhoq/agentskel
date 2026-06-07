@@ -1,5 +1,41 @@
 # agentskel Changelog
 
+## v1.64.0 — 2026-06-07
+
+### Three new behavior rules: Fast Execution Mode + PR-link presentation + mandatory post-merge cleanup
+
+User-requested. Encoded across `core-behavior.md` (both source + Claude-rules copy), `git-flow` skill, and `CONFIG.md` template.
+
+**Fast Execution Mode (new toggle).** `.memory/CONFIG.md` gains a `Fast Execution Mode` field (default `off`). When `on`, the agent skips the branch + PR ceremony and commits / pushes directly to `[Default Branch]`. Everything else stays: plan-first approval, task-completion checklist (CHANGELOG/TIME_LOG/RESUME/memory commit), validator, sacred-behaviors check. Surfaces a `FAST MODE ACTIVE — committing directly to <branch> (no PR).` banner before any commit so ceremony-skipping is visible.
+
+- Persistent toggle: edit the CONFIG field.
+- One-shot: prefix a request with `fast:` (e.g. `fast: bump dep X`) — flag stays off, just that one task is fast.
+- Refusal cases: change touches `.agents/`/`core/`/`roles/`/skills/workflows/rules logic, sacred behaviors, >~3 files, or non-trivial logic → agent says `Refusing fast mode — change touches X; switching to full flow.` and falls back to normal flow.
+
+The `git-flow` skill gains a `Fast Mode Bypass` section with the procedure and refusal heuristics.
+
+**PR-link presentation rule.** When a turn opens multiple PRs (common: memory branch + main branch), each URL goes on its own line in the end-of-turn summary, format `PR #N: <url>`. No comma-separated inline lists. The user needs to click each one independently.
+
+**Mandatory post-merge cleanup.** Strengthens the existing `git-flow` Post-Merge Cleanup section: when the user confirms a merge ("merged", "done", or equivalent), the cleanup procedure (checkout default, pull, `git branch -d`, `git remote prune`, RESUME update) is non-optional and runs BEFORE any next task. New gate: do not begin the next task until `git branch -a` is clean (only default + legitimate long-lived branches like `ai-memory`).
+
+**Self-sync:** rule added to both `core/rules/core-behavior.md` and `core/claude-rules/core-behavior.md` so Claude Code's native auto-load picks it up. CONFIG.md template gets the field; agentskel's own `.memory/CONFIG.md` backfilled. git-flow skill copied to `.agents/`.
+
+**Cross-tool propagation (gap fix).** The three rules above were initially landed in only two places (`core/rules/core-behavior.md` + `.claude/rules/core-behavior.md`). Audit caught the gap: 5 other tool integrations carry their own inline rule files that wouldn't have seen the new rules — same drift class as the v1.61.0/v1.62.0 stub regeneration issue.
+
+Updated all 5 inline-rule templates + their installed copies:
+
+- `core/AGENTS.md.template` + `AGENTS.md` (Codex/universal entry point)
+- `core/GEMINI.md.template` + `GEMINI.md` (Gemini CLI / Antigravity)
+- `core/cursor-rule.mdc.template` + `.cursor/rules/agentskel.mdc`
+- `core/windsurf-rule.md.template` + `.windsurf/rules/agentskel.md`
+- `core/copilot-instructions.md.template` + `.github/copilot-instructions.md`
+
+Condensed rules added as a `## Git Discipline` section in the four condensed templates (Gemini/Cursor/Windsurf/Copilot). `AGENTS.md.template` got the rules appended as bullets under the existing `Core Behavior (always active)` block.
+
+**Validator hardening.** New check `inline rules propagation` in `scripts/validate.py` (now 11 checks, 482 ok). Verifies that each v1.64.0 git-discipline rule fingerprint (`Fast Execution Mode`, `PR URL on its own line`, `Post-merge cleanup is mandatory`) appears in all 10 inline-rule files. Coarse but catches the "forgot to propagate" class going forward — when a future rule joins the propagation guard, append its phrase to `REQUIRED_PHRASES`.
+
+affected: core-behavior, git-flow, AGENTS.md template + 4 tool-specific rule templates, validator
+
 ## v1.63.2 — 2026-06-07
 
 ### Fix: 3 silent bugs caught by code-review bot on the Muslim-Pro-Android v1.63.1 sync PR

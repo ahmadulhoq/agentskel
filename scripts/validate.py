@@ -6,14 +6,20 @@ Runs deterministic checks against the skeleton repo state. Exits 0 when
 every check passes, 1 when any check fails. Intended for pre-push and CI.
 
 Checks:
-  1. frontmatter shape    — every skill/workflow has valid YAML frontmatter
-                            with `description:` (and `name:` for SKILL.md)
-  2. description length   — descriptions do not exceed 1024 characters
-                            (multi-line YAML folded scalars are supported)
-  3. version consistency  — VERSION matches README, MASTER_PLAN, CONFIG
-  4. stub parity          — .claude/skills/ stubs match sources byte-for-byte
-                            in description + reference path; no orphans
-  5. changelog presence   — CHANGELOG.md has a section for the current VERSION
+  1.  frontmatter shape    — every skill/workflow has valid YAML frontmatter
+                             with `description:` (and `name:` for SKILL.md)
+  2.  description length   — descriptions do not exceed 1024 characters
+                             (multi-line YAML folded scalars are supported)
+  3.  version consistency  — VERSION matches README, MASTER_PLAN, manifests
+  4.  claude stub parity   — .claude/skills/ stubs match sources
+  5.  gemini stub parity   — .gemini/skills/ stubs match sources
+  6.  cursor rule parity   — .cursor/rules/*.mdc match sources
+  7.  windsurf parity      — .windsurf/workflows/*.md match sources
+  8.  copilot parity       — .github/prompts/*.prompt.md match sources
+  9.  AGENTS.md catalog    — skills/workflows tables match sources
+  10. inline rules propag. — v1.64.0 git-discipline rule fingerprints appear
+                             in all 5 inline-rule templates + installed copies
+  11. changelog presence   — CHANGELOG.md has a section for the current VERSION
 
 Usage:
   scripts/validate.py            # run all checks; exit 1 on any failure
@@ -546,6 +552,52 @@ def check_agents_catalog_parity() -> Result:
     return r
 
 
+def check_inline_rules_propagation() -> Result:
+    """Behavior rules are inline-duplicated across 5 tool-specific files (Codex
+    via AGENTS.md, Gemini via GEMINI.md, Cursor, Windsurf, Copilot). Each has
+    a template under core/ that downstream projects scaffold from, plus an
+    installed copy at the repo root. When core/rules/core-behavior.md changes,
+    all 10 files need updating — and nothing else catches the drift.
+
+    This check enforces that v1.64.0 git-discipline rule fingerprints appear
+    in all 10 files. Coarse but reliable: catches "forgot to propagate" without
+    requiring exact phrasing parity across condensed vs full forms.
+
+    To add a future rule under this guard, append its unique phrase to
+    REQUIRED_PHRASES below.
+    """
+    r = Result("inline rules propagation")
+    REQUIRED_PHRASES = (
+        "Fast Execution Mode",
+        "PR URL on its own line",
+        "Post-merge cleanup is mandatory",
+    )
+    targets = [
+        "core/AGENTS.md.template",
+        "core/GEMINI.md.template",
+        "core/cursor-rule.mdc.template",
+        "core/windsurf-rule.md.template",
+        "core/copilot-instructions.md.template",
+        "AGENTS.md",
+        "GEMINI.md",
+        ".cursor/rules/agentskel.mdc",
+        ".windsurf/rules/agentskel.md",
+        ".github/copilot-instructions.md",
+    ]
+    for rel in targets:
+        path = REPO / rel
+        if not path.exists():
+            r.bad(f"{rel}: file missing")
+            continue
+        text = _read(path)
+        missing = [p for p in REQUIRED_PHRASES if p not in text]
+        if missing:
+            r.bad(f"{rel}: missing rule phrase(s): {', '.join(missing)}")
+            continue
+        r.ok()
+    return r
+
+
 def check_changelog_has_version() -> Result:
     r = Result("changelog has current version entry")
     version_path = REPO / "VERSION"
@@ -572,6 +624,7 @@ CHECKS = [
     check_windsurf_workflow_parity,
     check_copilot_prompt_parity,
     check_agents_catalog_parity,
+    check_inline_rules_propagation,
     check_changelog_has_version,
 ]
 
