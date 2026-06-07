@@ -45,6 +45,11 @@ When implementation is complete:
   - **Body:** what changed, why, how to test, risk level
 - [ ] **Do NOT merge** — a human reviewer must approve.
 - [ ] Squash merge policy applies to feature/bug/chore branches.
+- [ ] **Present each PR URL on its own line** in the end-of-turn summary — one URL per line, format `PR #N: <url>` or just `<url>`. Never comma-separate or pack into a paragraph; the user needs to click each independently. When a turn opens multiple PRs (memory branch + main branch is the common case), list both:
+  ```
+  PR #42 (memory): https://github.com/.../pull/42
+  PR #43 (main):   https://github.com/.../pull/43
+  ```
 
 ## Rules
 
@@ -55,9 +60,34 @@ When implementation is complete:
 - When implementation is authorised, execute the full flow end-to-end
   (branch → implement → commit → PR) without pausing for additional approval.
 
+## Fast Mode Bypass
+
+Fast Execution Mode in `.memory/CONFIG.md` (or a one-shot `fast:` prefix on the user's request) skips the branch + PR ceremony for trivial work.
+
+**When fast mode is active:**
+
+- [ ] Surface a banner BEFORE any commit: `FAST MODE ACTIVE — committing directly to [DEFAULT_BRANCH] (no PR).` Surfacing is non-optional — ceremony-skipping must be visible.
+- [ ] Verify the work is genuinely trivial. Fast mode is for typo fixes, version markers, lockfile bumps, dependency-version pins where review value is near zero. Anything touching logic, security, schema, or sacred behaviors → fast mode does NOT apply; fall back to the full flow and inform the user.
+- [ ] Commit directly to `[DEFAULT_BRANCH]` (no feature branch).
+- [ ] Push directly to origin (no PR opened).
+- [ ] Task-completion checklist still runs in full: CHANGELOG, TIME_LOG, RESUME, memory commit. Validator still runs.
+- [ ] Plan-first still applies — the user must still approve the change before any Edit/Write tool call.
+
+**Toggling:**
+- Persistent: edit `.memory/CONFIG.md` `Fast Execution Mode` field to `on` or `off`.
+- One-shot: user prefixes a single request with `fast:` (e.g. `fast: bump python in versions.md`). The flag stays off; only that one task is fast.
+
+**When to refuse fast mode:**
+- The change touches `.agents/`, `core/`, `roles/`, or any skill/workflow/rule logic — these need review.
+- The change touches `.memory/SACRED.md`-listed behavior.
+- More than ~3 files modified.
+- Any non-trivial logic change.
+
+If the user invokes fast mode for one of these, surface a one-line objection: `Refusing fast mode — change touches X; switching to full flow.` and proceed with the normal branch + PR flow.
+
 ## Post-Merge Cleanup
 
-When the user notifies the agent that a PR has been merged:
+When the user confirms a PR has been merged (says "merged", "done", or equivalent), the agent **must** execute cleanup BEFORE starting any next task. This is non-optional — leaving stale local/remote branches around accumulates and breaks the next branch creation.
 
 - [ ] Confirm the branch name (check RESUME.md Next Task or current `git branch`
       output — never guess).
@@ -78,6 +108,9 @@ When the user notifies the agent that a PR has been merged:
   ```
 - [ ] Update RESUME.md: clear Next Task if it matches the merged branch, set
       Status to IDLE (or pull next P0 from BACKLOG.md if present).
+- [ ] Verify the final state: `git branch -a` should show only the default branch and any other legitimate long-lived branches (e.g. `ai-memory`). No leftover feature branches.
+
+**Gate:** do not begin the next task until the cleanup completes and `git branch -a` is clean.
 
 ## Git Worktrees (for long or parallel runs)
 
