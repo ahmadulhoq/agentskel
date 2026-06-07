@@ -24,7 +24,35 @@ Three user-requested behavior rules:
 
 Encoded in core-behavior.md (source + claude-rules copy), git-flow skill
 (Fast Mode Bypass + strengthened cleanup), CONFIG.md template +
-agentskel's own .memory/CONFIG.md. 472 ok, 0 fail.
+agentskel's own .memory/CONFIG.md.
+
+**Cross-tool propagation gap fix (folded into the same PR pre-merge).**
+First pass landed the rules only in core-behavior.md (2 of 7 places).
+Audit caught that the 5 other tool integrations carry inline rule files
+that would have silently missed the new rules — same drift class as the
+v1.61.0/v1.62.0 stub regeneration issue. Propagated the rules into all
+5 inline-rule templates + their installed copies (10 files total):
+core/AGENTS.md.template + AGENTS.md, core/GEMINI.md.template + GEMINI.md,
+core/cursor-rule.mdc.template + .cursor/rules/agentskel.mdc,
+core/windsurf-rule.md.template + .windsurf/rules/agentskel.md,
+core/copilot-instructions.md.template + .github/copilot-instructions.md.
+Condensed `## Git Discipline` section in the four condensed templates;
+appended bullets in AGENTS.md.template's "Core Behavior" block.
+
+**Validator hardening.** New `inline rules propagation` check in
+scripts/validate.py (now 11 checks, 482 ok / 0 fail). Verifies the 3
+v1.64.0 rule fingerprints (`Fast Execution Mode`, `PR URL on its own line`,
+`Post-merge cleanup is mandatory`) appear in all 10 inline-rule files.
+Append to REQUIRED_PHRASES when adding future rules under propagation guard.
+
+Decision after the in-conversation audit: keep the validator as the
+single protection mechanism. Considered options (skill, hook, manifest,
+markers, code generation) but every alternative added maintenance cost
+disproportionate to the ~3-6/year incident rate. Revisit if a second
+drift occurrence shows up.
+
+Also cleaned up 3 stale merged remote branches retroactively per the
+new mandatory-cleanup rule.
 
 ## 2026-06-07 — v1.63.2: 3 silent bugs surfaced by code-review bot on downstream sync PR
 
