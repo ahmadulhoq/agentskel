@@ -20,7 +20,21 @@ The `git-flow` skill gains a `Fast Mode Bypass` section with the procedure and r
 
 **Self-sync:** rule added to both `core/rules/core-behavior.md` and `core/claude-rules/core-behavior.md` so Claude Code's native auto-load picks it up. CONFIG.md template gets the field; agentskel's own `.memory/CONFIG.md` backfilled. git-flow skill copied to `.agents/`.
 
-affected: core-behavior, git-flow
+**Cross-tool propagation (gap fix).** The three rules above were initially landed in only two places (`core/rules/core-behavior.md` + `.claude/rules/core-behavior.md`). Audit caught the gap: 5 other tool integrations carry their own inline rule files that wouldn't have seen the new rules — same drift class as the v1.61.0/v1.62.0 stub regeneration issue.
+
+Updated all 5 inline-rule templates + their installed copies:
+
+- `core/AGENTS.md.template` + `AGENTS.md` (Codex/universal entry point)
+- `core/GEMINI.md.template` + `GEMINI.md` (Gemini CLI / Antigravity)
+- `core/cursor-rule.mdc.template` + `.cursor/rules/agentskel.mdc`
+- `core/windsurf-rule.md.template` + `.windsurf/rules/agentskel.md`
+- `core/copilot-instructions.md.template` + `.github/copilot-instructions.md`
+
+Condensed rules added as a `## Git Discipline` section in the four condensed templates (Gemini/Cursor/Windsurf/Copilot). `AGENTS.md.template` got the rules appended as bullets under the existing `Core Behavior (always active)` block.
+
+**Validator hardening.** New check `inline rules propagation` in `scripts/validate.py` (now 11 checks, 482 ok). Verifies that each v1.64.0 git-discipline rule fingerprint (`Fast Execution Mode`, `PR URL on its own line`, `Post-merge cleanup is mandatory`) appears in all 10 inline-rule files. Coarse but catches the "forgot to propagate" class going forward — when a future rule joins the propagation guard, append its phrase to `REQUIRED_PHRASES`.
+
+affected: core-behavior, git-flow, AGENTS.md template + 4 tool-specific rule templates, validator
 
 ## v1.63.2 — 2026-06-07
 

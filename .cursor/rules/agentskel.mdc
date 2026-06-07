@@ -24,6 +24,12 @@ SYMBOLS/MAP, RESUME, memory commit. Do not respond before completing it.
 ## No Changes During Discussion
 Wait for "go ahead" / "do it" / "implement this" before editing files.
 
+## Git Discipline
+- Complete the git flow once started: branch → implement → commit → PR without pausing.
+- **Fast Execution Mode**: when `Fast Execution Mode` in `.memory/CONFIG.md` is `on`, or the user prefixed the request with `fast:`, skip the branch + PR ceremony and commit/push directly to the default branch. Plan-first + task-completion still apply. Surface a `FAST MODE ACTIVE — committing directly to <branch> (no PR).` banner before any commit.
+- Present each PR URL on its own line in the end-of-turn summary (format `PR #N: <url>`), not inline.
+- Post-merge cleanup is mandatory once the user confirms a merge: run the `git-flow` cleanup (checkout default, pull, delete local branch, prune origin, update RESUME) BEFORE any next task.
+
 ## Use Your Memory
 Consult `.memory/MAP.md` and `.memory/SYMBOLS.md` before grepping.
 
