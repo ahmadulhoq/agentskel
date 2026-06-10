@@ -4,6 +4,38 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-10 — v1.65.0: Agent rigor improvements (architecture survey + commit granularity + ticket workflow rigor)
+
+Three internal-team-feedback items bundled in one PR (4 logical
+commits, dogfooding Fix 2's commit-granularity rule):
+
+**Fix 1 — Architecture awareness.** New mandatory Architecture Survey
+sub-step in develop-feature + implement-task Phase 1. Agent reads
+2-3 nearest existing implementations, lists patterns to follow,
+surfaces architectural concerns as `FLAG: architecture concern`
+in the plan. Skip-if-trivial carve-out for typo / version / dep
+pin / one-line edits. `developer` skill Design Philosophy gains
+matching rule.
+
+**Fix 2 — Commit granularity persistence.** New `## Commit
+Granularity` section in git-flow skill. Default: one commit per
+logical change. User instruction ("smaller commits" / "atomic" /
+"per file") persists for the entire workflow, not just the next
+commit. New `core-behavior.md` bullet propagated to all 10 inline
+rule files (per v1.64.0 discipline). Validator REQUIRED_PHRASES
+extended with `Honor user-specified commit granularity`.
+
+**Fix 3 — JIRA ticket rigor (highest-impact).** implement-from-ticket
+Phase 2 expanded from one 5-line step to 4 mandatory sub-steps:
+existing-impl review (2.1), edge case enumeration (2.2),
+significant-change gate (2.3 — separate confirmation required if
+>30 lines of existing logic / public API / sacred touch), draft +
+present (2.4 — includes 1+2 result). Tickets are not the whole
+truth; the workflow now forces the agent to verify before
+implementing.
+
+482 ok / 0 fail on validator.
+
 ## 2026-06-07 — v1.64.0: Fast Execution Mode + PR-link presentation + mandatory post-merge cleanup
 
 Three user-requested behavior rules:
