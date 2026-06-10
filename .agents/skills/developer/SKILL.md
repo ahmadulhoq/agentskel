@@ -24,6 +24,13 @@ Every code decision must consider its impact on the end user.
   requests extensibility or future-proofing. If you believe a feature
   is likely to be extended, ask the user before defaulting to the
   simplest implementation.
+- **Match existing architecture by default.** Before writing new code, read 2-3
+  nearest existing implementations of the same kind and follow their patterns
+  (file layout, naming, abstraction level, error-handling style). Deviation needs
+  a reason. **If existing architecture looks wrong, do not silently work around
+  it** — surface the concern as a `FLAG: architecture concern — <description>`
+  line in the plan so the user can decide whether to fix or proceed. Silent
+  deviation produces drift; flagged deviation produces an informed decision.
 
 ## SOLID Principles
 - **Single Responsibility:** Each module or function does one thing only.

@@ -53,13 +53,54 @@ status at each lifecycle event, and hands the ticket off to QA on merge.
 
 ## Phase 2 — Plan
 
+A Jira ticket describes *what* the user thinks should be built, not the *whole truth* of what the change touches. Tickets are written by humans who may not know the existing implementation, may miss edge cases, or may not realize they're requesting a significant logic change. **Do not implement the ticket text verbatim.** Walk through the three sub-steps below before drafting the plan.
+
+### Step 2.1 — Existing implementation review (mandatory)
+
+- [ ] Invoke the `codebase-navigator` skill to locate relevant files using MAP.md and SYMBOLS.md rather than re-scanning the tree.
+- [ ] For each area the ticket would touch: read the current code. **Summarize the existing behavior in the plan** — what it does today, what assumptions it makes, what callers depend on it.
+- [ ] Note any pre-existing bugs, dead code, or comments suggesting prior intent. Do not "fix" them as a side effect — flag them separately.
+
+If the ticket conflicts with existing behavior (e.g. "add feature X" but X is partially implemented and broken), STOP and surface the conflict to the user before continuing. Do not silently extend broken code.
+
+### Step 2.2 — Edge case enumeration (mandatory)
+
+- [ ] From each acceptance criterion, derive edge cases. At minimum cover:
+  - **Empty / null / missing inputs.** What happens when the input is absent?
+  - **Boundary values.** Min, max, zero, negative, off-by-one.
+  - **Error paths.** What can fail? What happens to in-flight state?
+  - **Concurrency / races** (if the area touches shared state, async work, or DB writes).
+  - **Backwards-compatibility.** Existing data, existing API consumers, in-flight sessions.
+- [ ] List each edge case in the plan with the intended handling (`handled` / `not applicable` / `out of scope — flagged`).
+- [ ] If the ticket has no acceptance criteria, **STOP** — add a comment to the ticket asking for them via `addCommentToJiraIssue` and wait.
+
+### Step 2.3 — Significant-change gate (mandatory)
+
+A change is **significant** if any of these are true:
+- Alters **>30 lines** of existing logic (not counting whitespace / comment / pure-add lines).
+- Removes or replaces a **documented behavior** (described in a doc comment, README, or wiki).
+- Changes a **public API signature** (function exported across modules, REST endpoint, schema).
+- Touches anything listed in `.memory/SACRED.md`.
+
+For each significant change identified, write a `SIGNIFICANT CHANGE: <one-line description>` row in the plan with: what changes, what depends on the old behavior, and the migration / rollout plan if any.
+
+After presenting the plan, **wait for a separate explicit confirmation** of any `SIGNIFICANT CHANGE` row before proceeding to implementation. Initial plan approval does **not** authorize significant changes — they require their own gate. This is intentional friction: the most common failure mode is shipping a ticket-driven change that quietly broke an unrelated contract.
+
+If the user says "proceed as planned" without specifically acknowledging the SIGNIFICANT CHANGE rows, re-prompt: "Confirming the significant change to `<X>` — proceed?"
+
+### Step 2.4 — Draft and present the plan
+
 - [ ] Invoke the `task-planner` skill to draft the plan.
-- [ ] Invoke the `codebase-navigator` skill to locate relevant files using MAP.md
-      and SYMBOLS.md rather than re-scanning the tree.
-- [ ] Write a plan that explicitly references each acceptance criterion from the
-      ticket.
-- [ ] Present the plan to the user and wait for explicit approval. This is
-      mandatory — do not proceed without a "go ahead" or equivalent instruction.
+- [ ] Write a plan that explicitly references each acceptance criterion from the ticket.
+- [ ] Plan must include:
+  - Existing implementation summary (from 2.1)
+  - Edge case list (from 2.2)
+  - `SIGNIFICANT CHANGE` rows if any (from 2.3)
+  - Files to modify
+  - Test strategy
+  - **Architecture survey result** (from `develop-feature` Phase 1 Step 5a)
+  - **Commit granularity** (default `one commit per logical change`, or per user instruction)
+- [ ] Present the plan to the user and wait for explicit approval. Mandatory — do not proceed without "go ahead" or equivalent, and confirm significant changes separately per 2.3.
 - [ ] Record the start time for the TIME_LOG entry in Phase 7.
 
 ## Phase 3 — Branch and transition

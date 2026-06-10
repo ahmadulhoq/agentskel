@@ -26,6 +26,20 @@ If this task originated from a Jira ticket (user mentioned a ticket key like `PR
 use the `implement-from-ticket` workflow instead. If not from a ticket, continue.
 
 ## Phase 1: Plan
+
+### Step 5a: Architecture Survey (mandatory unless task is obviously trivial)
+
+Before writing the plan, survey existing implementations of the same kind. The goal is to match the project's prevailing architecture by default, and to surface places where it looks wrong rather than silently working around them.
+
+- Use `codebase-navigator` skill (MAP.md / SYMBOLS.md) to locate **2-3 nearest existing implementations** of the same kind (same module, same layer, or same feature category).
+- Read each. Note: file layout, naming, abstraction level, error-handling style, test pattern.
+- In the plan, write:
+  - **Patterns to follow:** the conventions you observed and will mirror (1-3 lines).
+  - **Architecture concerns (if any):** any pattern that looks wrong, dated, or inconsistent — surface as `FLAG: architecture concern — <description>` in the plan. The user decides whether to fix or proceed.
+
+**Skip-if-trivial carve-out:** for genuinely trivial work (typo fix, version-marker bump, dependency pin, one-line copy edit) you may skip the survey. Note in the plan: `Architecture survey: skipped — trivial change`. When in doubt, do not skip.
+
+### Step 6: Plan
 6. Use the `task-planner` skill to decompose the work.
    Use `codebase-navigator` skill to find relevant code via MAP.md/SYMBOLS.md before planning.
    Write a plan with checkable items. Include:
@@ -34,6 +48,8 @@ use the `implement-from-ticket` workflow instead. If not from a ticket, continue
    - Testing approach
    - Any SACRED.md entries that might be affected
    - **Estimated human effort** (how long a senior dev would take manually)
+   - **Architecture survey result** (from Step 5a — patterns to follow + any flagged concerns)
+   - **Commit granularity** (`default = one commit per logical change`, or per user instruction — see `git-flow` skill)
 7. For large features with independent subtasks, use `subagent-dispatch` to parallelize implementation.
 8. Present the plan to the user. Wait for explicit approval before proceeding to Phase 2.
    **Concerns and tradeoffs alone are not a plan.** A plan must state: (1) proposed

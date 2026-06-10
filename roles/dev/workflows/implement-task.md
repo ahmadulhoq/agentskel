@@ -21,6 +21,20 @@ description: Generic wrapper for any ad-hoc implementation request that doesn't 
 4. Understand the request fully. Ask clarifying questions if needed.
 
 ## Phase 1: Plan
+
+### Step 4a: Architecture Survey (mandatory unless task is obviously trivial)
+
+Before writing the plan, survey existing implementations of the same kind. Match the project's prevailing architecture by default; surface places where it looks wrong rather than silently working around them.
+
+- Use `codebase-navigator` skill (MAP.md / SYMBOLS.md) to locate **2-3 nearest existing implementations** of the same kind.
+- Read each. Note file layout, naming, abstraction level, error-handling style.
+- In the plan, write:
+  - **Patterns to follow:** the conventions you observed and will mirror.
+  - **Architecture concerns (if any):** any pattern that looks wrong — surface as `FLAG: architecture concern — <description>`. The user decides whether to fix or proceed.
+
+**Skip-if-trivial carve-out:** typo fix, version bump, dependency pin, one-line copy edit may skip the survey. Note `Architecture survey: skipped — trivial change` in the plan. When in doubt, do not skip.
+
+### Step 5: Plan
 5. Use `codebase-navigator` skill to find relevant code via MAP.md/SYMBOLS.md.
    For multi-step tasks with independent steps, use `subagent-dispatch` to parallelize.
 6. Write a plan (scale it to the task — one paragraph for small changes,
@@ -28,7 +42,9 @@ description: Generic wrapper for any ad-hoc implementation request that doesn't 
    - Files to modify
    - Approach and risks
    - **Estimated human effort** (how long a senior dev would take)
-6. Present the plan to the user. **Wait for explicit approval before
+   - **Architecture survey result** (from Step 4a — patterns to follow + any flagged concerns)
+   - **Commit granularity** (`default = one commit per logical change`, or per user instruction — see `git-flow` skill)
+7. Present the plan to the user. **Wait for explicit approval before
    writing any code.** No exceptions — every task requires approval.
    **Concerns and tradeoffs alone are not a plan.** A plan must state: (1) proposed
    approach, (2) files to modify, (3) open decision points.
