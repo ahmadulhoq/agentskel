@@ -1,5 +1,39 @@
 # agentskel Changelog
 
+## v1.65.0 — 2026-06-10
+
+### Agent rigor improvements (3 internal-team-feedback items, one PR)
+
+Internal team feedback surfaced three recurring failure patterns in agent behavior. Each addressed at the workflow / skill / rule level. Bundled into one PR but committed in 4 logical commits (architecture survey, commit granularity, ticket rigor, version + memory) — dogfooding Fix 2's commit-granularity rule.
+
+**Fix 1 — Architecture awareness.** Agents shipped without considering existing architecture and silently worked around patterns that looked wrong.
+
+- `develop-feature.md` and `implement-task.md`: new mandatory **Architecture Survey** sub-step before Phase 1's plan write-up. Agent reads 2-3 nearest existing implementations of the same kind, lists patterns to follow, and surfaces any architectural concern as `FLAG: architecture concern — <description>` in the plan. The user decides whether to fix or proceed — silent deviation is the failure mode being prevented.
+- Skip-if-trivial carve-out for typo fixes, version bumps, dependency pins, and one-line copy edits. Plan must state `Architecture survey: skipped — trivial change` when skipping.
+- `developer` skill Design Philosophy: new rule "Match existing architecture by default; deviation needs a reason; if existing architecture looks wrong, surface as a FLAG."
+- Plan template line added: `Architecture survey result`.
+
+**Fix 2 — Commit granularity instructions persist for the workflow.** Agents treated "smaller commits" as a one-shot instruction and reverted to one-giant-commit on the next step.
+
+- New `## Commit Granularity` section in `git-flow` skill: default is one commit per logical change; user instruction ("smaller commits", "atomic", "per file") applies to **every commit until the workflow ends**, not just the next one. Ambiguous instructions trigger one clarification ask. Plan template line added: `Commit granularity`.
+- New bullet in `core-behavior.md` (canonical sources) propagated to all 10 inline-rule files (per v1.64.0 propagation discipline): canonical × 2 + AGENTS.md template & copy + GEMINI.md template & copy + Cursor / Windsurf / Copilot templates & copies.
+- Validator's `REQUIRED_PHRASES` extended with fingerprint `Honor user-specified commit granularity`. 482 ok / 0 fail.
+
+**Fix 3 — JIRA ticket rigor.** Agents implemented ticket text verbatim without reviewing existing implementation, enumerating edge cases, or flagging significant logic changes.
+
+`implement-from-ticket.md` Phase 2 (Plan) expanded from one 5-line step into four mandatory sub-steps with a "tickets are not the whole truth" preamble:
+
+- **2.1 Existing implementation review** — for each area the ticket would touch, read current code, summarize behavior in the plan, flag pre-existing bugs / conflicts. STOP if the ticket conflicts with existing behavior.
+- **2.2 Edge case enumeration** — empty / null / missing inputs, boundary values, error paths, concurrency, backwards-compatibility. List each with intended handling (`handled` / `not applicable` / `out of scope — flagged`). STOP if the ticket has no acceptance criteria — comment on Jira asking for them.
+- **2.3 Significant-change gate** — if the planned change alters >30 lines of existing logic, removes a documented behavior, changes a public API signature, or touches `SACRED.md`, write `SIGNIFICANT CHANGE: <description>` in the plan. Initial plan approval does **not** authorize significant changes — they require a **separate explicit confirmation** ("Confirming the significant change to `<X>` — proceed?"). Intentional friction.
+- **2.4 Draft and present the plan** — includes existing-impl summary, edge case list, SIGNIFICANT CHANGE rows, architecture survey result (from Fix 1), commit granularity (from Fix 2).
+
+This is the highest-impact fix — ticket-driven workflows are where most production-affecting agent work happens.
+
+**Files touched:** ~25 (3 workflows + 1 skill + 6 canonical/inline rule files + 5 templates + 5 installed copies + validator + version markers + memory).
+
+affected: develop-feature, implement-task, implement-from-ticket, git-flow, developer, core-behavior
+
 ## v1.64.0 — 2026-06-07
 
 ### Three new behavior rules: Fast Execution Mode + PR-link presentation + mandatory post-merge cleanup
