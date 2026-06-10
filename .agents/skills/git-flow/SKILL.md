@@ -32,6 +32,13 @@ Before writing any code, create a branch:
 - Commits must describe the change clearly.
 - No empty commits. No WIP commits on shared branches.
 
+## Commit Granularity
+
+- **Default:** one commit per logical change. A "logical change" is a single coherent unit that could stand on its own in `git log` — one bug fix, one new function, one refactor pass, one doc update. Not one giant end-of-workflow commit.
+- **Honor user-specified commit granularity** for the duration of the workflow. If the user says "smaller commits", "atomic commits", "commit per file", "commit per logical unit", or equivalent, that granularity persists until the workflow ends — it is not a one-shot instruction for the next commit only. The workflow plan must include a `Commit granularity:` line stating the chosen strategy so it stays visible across steps.
+- When user instruction is ambiguous ("smaller" — smaller than what?), ask once for clarification before the first commit. Don't guess.
+- Defer to existing conventions in the project's GIT_WORKFLOW.md when there is a conflict, but only after surfacing the conflict to the user.
+
 ## Opening a PR
 
 When implementation is complete:

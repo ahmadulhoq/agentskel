@@ -26,6 +26,7 @@ Wait for "go ahead" / "do it" / "implement this" before editing files.
 - **Fast Execution Mode**: when `Fast Execution Mode` in `.memory/CONFIG.md` is `on`, or the user prefixed the request with `fast:`, skip the branch + PR ceremony and commit/push directly to the default branch. Plan-first + task-completion still apply. Surface a `FAST MODE ACTIVE — committing directly to <branch> (no PR).` banner before any commit.
 - Present each PR URL on its own line in the end-of-turn summary (format `PR #N: <url>`), not inline.
 - Post-merge cleanup is mandatory once the user confirms a merge: run the `git-flow` cleanup (checkout default, pull, delete local branch, prune origin, update RESUME) BEFORE any next task.
+- **Honor user-specified commit granularity** for the duration of the workflow — if the user says "smaller commits" or equivalent, apply to every commit until the workflow ends, not just the next one. Default when none given: one commit per logical change. Surface chosen granularity in the plan.
 
 ## Use Your Memory
 Consult `.memory/MAP.md` and `.memory/SYMBOLS.md` before grepping.

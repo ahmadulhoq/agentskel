@@ -43,6 +43,7 @@ and functions. See the `codebase-navigator` skill for guidance. Do not grep for 
 - **Fast Execution Mode** — when `Fast Execution Mode` in `.memory/CONFIG.md` is `on`, or the user prefixed the current request with `fast:`, skip the branch + PR ceremony and commit/push directly to the default branch. Plan-first + task-completion still apply. Surface a `FAST MODE ACTIVE — committing directly to <branch> (no PR).` banner before any commit.
 - **Present each PR URL on its own line** in the end-of-turn summary (one per line, format `PR #N: <url>`), not inline/comma-separated.
 - **Post-merge cleanup is mandatory** once the user confirms a merge — run the `git-flow` cleanup procedure (checkout default, pull, delete local branch, prune origin, update RESUME) BEFORE any next task.
+- **Honor user-specified commit granularity** for the duration of the workflow — if the user says "smaller commits" / "atomic commits" / "commit per file", apply to every commit until the workflow ends, not just the next one. Default when none given: one commit per logical change. Surface chosen granularity in the plan.
 
 ## Security — Non-Negotiable
 
