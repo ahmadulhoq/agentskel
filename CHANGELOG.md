@@ -1,5 +1,27 @@
 # agentskel Changelog
 
+## v1.65.1 — 2026-06-16
+
+### Rename: Fast Execution Mode → Direct-Commit Mode
+
+"Fast Execution Mode" was ambiguous — "fast" could mean any kind of speed (fast model, fast response, fast typing) rather than the specific behavior of the mode. The mode skips the **branch + PR ceremony** and commits directly to the default branch. New name maps 1:1 to that behavior.
+
+**Renames:**
+- CONFIG.md field: `Fast Execution Mode` → `Direct-Commit Mode`
+- `core-behavior.md` rule bullet (both canonical sources + 10 inline-rule files per v1.64.0 propagation discipline)
+- `git-flow` skill section heading: `Fast Mode Bypass` → `Direct-Commit Mode` (dropped "Bypass" — direct-commit *is* the bypass)
+- Banner text: `FAST MODE ACTIVE` → `DIRECT-COMMIT MODE ACTIVE`
+- One-shot prefix: `fast:` → `direct:`
+- Refusal message: `Refusing fast mode` → `Refusing Direct-Commit Mode`
+
+**Files touched (16):** core-behavior ×4 (source + .agents/ for both rule families) + 5 inline templates + 5 installed copies + `git-flow` skill ×2 (source + .agents/) + `core/memory/CONFIG.md` + agentskel's own `.memory/CONFIG.md` + validator `REQUIRED_PHRASES` + sync-skeleton migration step (Step 5j) + 5 version markers.
+
+**Downstream migration:** `sync-skeleton` Step 5j renames the CONFIG.md field in projects synced at v1.64.0 / v1.65.0 (preserves the existing `on`/`off` value). Projects pre-v1.64.0 add the field directly from the template via existing field-additions logic — no rename needed.
+
+**No behavior change.** Mode behavior is identical to v1.64.0–v1.65.0; only naming changed.
+
+482 ok / 0 fail on validator.
+
 ## v1.65.0 — 2026-06-10
 
 ### Agent rigor improvements (3 internal-team-feedback items, one PR)
