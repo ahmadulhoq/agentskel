@@ -67,30 +67,32 @@ When implementation is complete:
 - When implementation is authorised, execute the full flow end-to-end
   (branch → implement → commit → PR) without pausing for additional approval.
 
-## Fast Mode Bypass
+## Direct-Commit Mode
 
-Fast Execution Mode in `.memory/CONFIG.md` (or a one-shot `fast:` prefix on the user's request) skips the branch + PR ceremony for trivial work.
+Direct-Commit Mode in `.memory/CONFIG.md` (or a one-shot `direct:` prefix on the user's request) skips the branch + PR ceremony for trivial work.
 
-**When fast mode is active:**
+> Previously called "Fast Execution Mode" in v1.64.0–v1.65.0. Renamed in v1.65.1 — "fast" was ambiguous (could mean any kind of speed); "direct-commit" describes exactly what the mode does.
 
-- [ ] Surface a banner BEFORE any commit: `FAST MODE ACTIVE — committing directly to [DEFAULT_BRANCH] (no PR).` Surfacing is non-optional — ceremony-skipping must be visible.
-- [ ] Verify the work is genuinely trivial. Fast mode is for typo fixes, version markers, lockfile bumps, dependency-version pins where review value is near zero. Anything touching logic, security, schema, or sacred behaviors → fast mode does NOT apply; fall back to the full flow and inform the user.
+**When Direct-Commit Mode is active:**
+
+- [ ] Surface a banner BEFORE any commit: `DIRECT-COMMIT MODE ACTIVE — committing directly to [DEFAULT_BRANCH] (no PR).` Surfacing is non-optional — ceremony-skipping must be visible.
+- [ ] Verify the work is genuinely trivial. Direct-Commit Mode is for typo fixes, version markers, lockfile bumps, dependency-version pins where review value is near zero. Anything touching logic, security, schema, or sacred behaviors → Direct-Commit Mode does NOT apply; fall back to the full flow and inform the user.
 - [ ] Commit directly to `[DEFAULT_BRANCH]` (no feature branch).
 - [ ] Push directly to origin (no PR opened).
 - [ ] Task-completion checklist still runs in full: CHANGELOG, TIME_LOG, RESUME, memory commit. Validator still runs.
 - [ ] Plan-first still applies — the user must still approve the change before any Edit/Write tool call.
 
 **Toggling:**
-- Persistent: edit `.memory/CONFIG.md` `Fast Execution Mode` field to `on` or `off`.
-- One-shot: user prefixes a single request with `fast:` (e.g. `fast: bump python in versions.md`). The flag stays off; only that one task is fast.
+- Persistent: edit `.memory/CONFIG.md` `Direct-Commit Mode` field to `on` or `off`.
+- One-shot: user prefixes a single request with `direct:` (e.g. `direct: bump python in versions.md`). The flag stays off; only that one task uses Direct-Commit Mode.
 
-**When to refuse fast mode:**
+**When to refuse Direct-Commit Mode:**
 - The change touches `.agents/`, `core/`, `roles/`, or any skill/workflow/rule logic — these need review.
 - The change touches `.memory/SACRED.md`-listed behavior.
 - More than ~3 files modified.
 - Any non-trivial logic change.
 
-If the user invokes fast mode for one of these, surface a one-line objection: `Refusing fast mode — change touches X; switching to full flow.` and proceed with the normal branch + PR flow.
+If the user invokes Direct-Commit Mode for one of these, surface a one-line objection: `Refusing Direct-Commit Mode — change touches X; switching to full flow.` and proceed with the normal branch + PR flow.
 
 ## Post-Merge Cleanup
 
