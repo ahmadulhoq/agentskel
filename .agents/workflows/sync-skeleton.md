@@ -534,6 +534,24 @@ If `.memory/BACKLOG.md` does not exist:
 
 ---
 
+## Step 5j — Migration: v1.65.0 to v1.65.1 (Fast Execution Mode → Direct-Commit Mode rename)
+
+Skip this step if the project is already on skeleton v1.65.1+.
+
+In v1.64.0 a CONFIG.md field `Fast Execution Mode` was introduced. In v1.65.1 it was renamed to `Direct-Commit Mode` (the original name was ambiguous — "fast" could mean any kind of speed, not specifically the branch+PR bypass). The mode's behavior is unchanged.
+
+If the project's recorded skeleton version is between v1.64.0 and v1.65.0 inclusive (so they have the old field name):
+
+1. In `.memory/CONFIG.md`, rename the row:
+   - `| Fast Execution Mode | <value> |` → `| Direct-Commit Mode | <value> |`
+   Preserve the existing value (`on` / `off`) — only the field name changes.
+2. Search the project for any references to `fast:` as a one-shot prefix (project notes, RESUME.md, internal docs). Replace with `direct:`.
+3. Include in the Step 5 memory commit.
+
+If the project's recorded skeleton version is pre-v1.64.0 the field never existed — the field-additions logic in Step 5 will add `Direct-Commit Mode` directly from the template; no rename needed.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new
