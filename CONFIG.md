@@ -27,7 +27,7 @@ Update to `active` once the cartographer workflow finishes.
 | Field | Value |
 |-------|-------|
 | Default Branch | main |
-| Skeleton Version | 1.65.0 |
+| Skeleton Version | 1.65.1 |
 | Skeleton Path | . |
 | Blueprint Path | |
 | Last Blueprint Sync | |
@@ -37,7 +37,7 @@ Update to `active` once the cartographer workflow finishes.
 | Last Skeleton Check | 2026-04-11T19:01Z |
 | External Platform Skills | (empty) |
 | Last External Skills Check | |
-| Fast Execution Mode | off |
+| Direct-Commit Mode | off |
 
 **Supported Tools** — comma-separated list of tools with native configs installed. Valid values: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. `AGENTS.md` is always installed regardless. Only tools listed here get native config files created/updated during setup and sync.
 **Skeleton Path** — points to `.` (repo root) because this repo IS the skeleton. `sync-skeleton` reads templates from `core/` and `roles/` within the same repo.

@@ -4,6 +4,36 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-16 — v1.65.1: Rename Fast Execution Mode → Direct-Commit Mode
+
+"Fast" was ambiguous — could mean any kind of speed (fast model,
+fast response, fast typing). The mode skips the **branch + PR
+ceremony**; new name names exactly that. User feedback noted
+the original name "can mean anything today."
+
+Renamed across:
+- CONFIG.md field name (`Fast Execution Mode` → `Direct-Commit Mode`)
+- core-behavior.md rule bullet (both canonical sources + 10 inline
+  rule files per v1.64.0 propagation discipline)
+- git-flow skill: section heading `Fast Mode Bypass` → `Direct-Commit
+  Mode` (dropped "Bypass" — direct-commit IS the bypass)
+- Banner text: `FAST MODE ACTIVE` → `DIRECT-COMMIT MODE ACTIVE`
+- One-shot prefix: `fast:` → `direct:`
+- Refusal message updated
+
+Downstream migration: sync-skeleton Step 5j renames the CONFIG
+field for projects synced at v1.64.0/v1.65.0 (preserves existing
+on/off value). Projects pre-v1.64.0 get the field added directly
+from the template via the existing field-additions logic.
+
+No behavior change — mode behavior identical to v1.64.0–v1.65.0,
+only naming changed.
+
+4 logical commits (one per area): rules+inline (14 files), git-flow
+skill (2), CONFIG+sync-skeleton (3), validator+version+CHANGELOG (7).
+
+482 ok / 0 fail on validator.
+
 ## 2026-06-10 — v1.65.0: Agent rigor improvements (architecture survey + commit granularity + ticket workflow rigor)
 
 Three internal-team-feedback items bundled in one PR (4 logical
