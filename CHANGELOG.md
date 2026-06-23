@@ -4,6 +4,44 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-06-23 — v1.66.0: Autopilot Mode + Direct-Commit Mode rename (consolidated)
+
+Originally scoped v1.65.1 PATCH (just the rename); expanded to v1.66.0
+MINOR when Autopilot Mode joined the PR.
+
+**Autopilot Mode (new).** When `Autopilot Mode | on` in CONFIG.md, after
+plan approval the agent proceeds within plan scope without per-step
+approval prompts. Always pauses for: significant changes (per v1.65.0
+gate), destructive ops, out-of-project paths, dependency changes,
+scope deviations. Persistent toggle only — no one-shot prefix.
+Composable with Direct-Commit Mode (orthogonal friction axes:
+mid-workflow vs end-of-workflow). `session-start` banner each session.
+
+**Rename: Fast Execution Mode → Direct-Commit Mode.** Ambiguity fix —
+"fast" could mean any speed; "direct-commit" names the actual
+behavior. Renamed across CONFIG.md field, banner text, one-shot
+prefix (`fast:` → `direct:`), refusal text, section headings.
+
+**New canonical doc: docs/AUTONOMY-MODES.md.** Both modes documented
+side-by-side. Boundary definitions, refusal cases, mode-combination
+matrix. Linked from CONFIG.md + core-behavior. git-flow skill
+condensed to summary + link.
+
+**Default permissions.allow allowlist** ships in
+core/claude-hooks/settings.json template — read-only Bash patterns
+(ls, cat, grep, find, git log/status/diff/show/branch/remote)
+pre-approved so harness stops prompting on near-zero-risk commands.
+
+**session-start banner.** Step 3 reads both mode flags and surfaces
+one-line banner per mode when on.
+
+**sync-skeleton Step 5j** extended: handles rename (v1.64-65 → v1.65.1+)
++ Autopilot field add (pre-v1.66.0) + permissions.allow merge into
+.claude/settings.json (preserves user-edited entries).
+
+5 logical commits dogfooding v1.65.0 commit-granularity discipline.
+482 ok / 0 fail on validator.
+
 ## 2026-06-16 — v1.65.1: Rename Fast Execution Mode → Direct-Commit Mode
 
 "Fast" was ambiguous — could mean any kind of speed (fast model,
