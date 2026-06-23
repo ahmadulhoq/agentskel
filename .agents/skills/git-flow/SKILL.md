@@ -67,32 +67,20 @@ When implementation is complete:
 - When implementation is authorised, execute the full flow end-to-end
   (branch → implement → commit → PR) without pausing for additional approval.
 
-## Direct-Commit Mode
+## Autonomy Modes (Direct-Commit, Autopilot)
 
-Direct-Commit Mode in `.memory/CONFIG.md` (or a one-shot `direct:` prefix on the user's request) skips the branch + PR ceremony for trivial work.
+agentskel has two modes that reduce friction during agent work, toggled in `.memory/CONFIG.md`:
 
-> Previously called "Fast Execution Mode" in v1.64.0–v1.65.0. Renamed in v1.65.1 — "fast" was ambiguous (could mean any kind of speed); "direct-commit" describes exactly what the mode does.
+- **Direct-Commit Mode** — skips the branch + PR ceremony for trivial work. Agent commits directly to `[DEFAULT_BRANCH]`. One-shot prefix `direct:` available.
+- **Autopilot Mode** — after a plan is approved, agent proceeds within the plan's scope without per-step approval prompts. Significant changes, destructive ops, and out-of-scope work still pause.
 
-**When Direct-Commit Mode is active:**
+Both modes are independent and composable. **See [`docs/AUTONOMY-MODES.md`](../../../docs/AUTONOMY-MODES.md) for the full procedure, boundary definitions, refusal cases, and how the two modes interact.**
 
-- [ ] Surface a banner BEFORE any commit: `DIRECT-COMMIT MODE ACTIVE — committing directly to [DEFAULT_BRANCH] (no PR).` Surfacing is non-optional — ceremony-skipping must be visible.
-- [ ] Verify the work is genuinely trivial. Direct-Commit Mode is for typo fixes, version markers, lockfile bumps, dependency-version pins where review value is near zero. Anything touching logic, security, schema, or sacred behaviors → Direct-Commit Mode does NOT apply; fall back to the full flow and inform the user.
-- [ ] Commit directly to `[DEFAULT_BRANCH]` (no feature branch).
-- [ ] Push directly to origin (no PR opened).
-- [ ] Task-completion checklist still runs in full: CHANGELOG, TIME_LOG, RESUME, memory commit. Validator still runs.
-- [ ] Plan-first still applies — the user must still approve the change before any Edit/Write tool call.
-
-**Toggling:**
-- Persistent: edit `.memory/CONFIG.md` `Direct-Commit Mode` field to `on` or `off`.
-- One-shot: user prefixes a single request with `direct:` (e.g. `direct: bump python in versions.md`). The flag stays off; only that one task uses Direct-Commit Mode.
-
-**When to refuse Direct-Commit Mode:**
-- The change touches `.agents/`, `core/`, `roles/`, or any skill/workflow/rule logic — these need review.
-- The change touches `.memory/SACRED.md`-listed behavior.
-- More than ~3 files modified.
-- Any non-trivial logic change.
-
-If the user invokes Direct-Commit Mode for one of these, surface a one-line objection: `Refusing Direct-Commit Mode — change touches X; switching to full flow.` and proceed with the normal branch + PR flow.
+When Direct-Commit Mode is active for the current task, the agent MUST surface a banner BEFORE any commit:
+```
+DIRECT-COMMIT MODE ACTIVE — committing directly to [DEFAULT_BRANCH] (no PR).
+```
+Surfacing is non-optional — ceremony-skipping must be visible.
 
 ## Post-Merge Cleanup
 
