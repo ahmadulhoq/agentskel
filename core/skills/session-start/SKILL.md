@@ -65,6 +65,15 @@ This step makes external skills available without the teammate having to remembe
       before starting any work.
 - [ ] If `NEEDS_REVIEW.md` has entries (detected by line count in Step 2), tell the
       user: "N items pending triage in NEEDS_REVIEW.md — classify as SACRED or TECH_DEBT."
+- [ ] **Autonomy mode banners.** Read `.memory/CONFIG.md`. For each mode that is `on`,
+      surface a one-line banner so the user is reminded the mode is active (they can
+      toggle it off before starting work if they've changed their mind):
+      - `Direct-Commit Mode | on` →
+        `Direct-Commit Mode is ON. Commits go directly to [Default Branch] (no PR) for trivial work.`
+      - `Autopilot Mode | on` →
+        `Autopilot Mode is ON. Agent will proceed within the approved plan without per-step approvals. Significant changes, destructive ops, and out-of-scope work still pause.`
+      Both banners must appear if both modes are on. Skip silently if both are off.
+      See `docs/AUTONOMY-MODES.md` for full mode definitions.
 
 ## Step 4 — Check skeleton version
 

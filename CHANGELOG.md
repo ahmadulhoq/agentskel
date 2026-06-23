@@ -1,5 +1,67 @@
 # agentskel Changelog
 
+## v1.66.0 — 2026-06-23
+
+### Autopilot Mode + Direct-Commit Mode rename (autonomy modes consolidated)
+
+Two changes folded into one PR — initially scoped as v1.65.1 PATCH (just the rename) and expanded to v1.66.0 MINOR when the new Autopilot Mode joined.
+
+**1. Autopilot Mode (new).** When `Autopilot Mode | on` in `.memory/CONFIG.md`, after a plan has been approved, the agent proceeds within the plan's scope without per-step approval prompts. Reduces interruptions that hamper flow once the user has already signed off on the approach.
+
+**Always pauses for** (reuses v1.65.0 significant-change definition; *substantive* gates preserved):
+- Significant changes (>30 lines of existing logic / public API change / documented-behavior removal / sacred touch)
+- Destructive ops (rm -rf, git push --force, git reset --hard, branch -D)
+- Out-of-project paths
+- Dependency changes
+- Scope deviations beyond the approved plan
+
+Persistent toggle only — no one-shot prefix (per-task autopilot wasn't useful). `session-start` surfaces a one-line banner each session when the mode is on so the user is reminded. Composable with Direct-Commit Mode (orthogonal axes: Autopilot = mid-workflow friction; Direct-Commit = end-of-workflow ceremony).
+
+**2. Rename: Fast Execution Mode → Direct-Commit Mode.** Original name was ambiguous ("fast" could mean any kind of speed). New name describes the actual behavior — direct commits to default branch instead of branch + PR ceremony.
+
+Renamed across:
+- CONFIG.md field `Fast Execution Mode` → `Direct-Commit Mode`
+- Banner: `FAST MODE ACTIVE` → `DIRECT-COMMIT MODE ACTIVE`
+- One-shot prefix: `fast:` → `direct:`
+- Refusal text + section heading in git-flow skill
+
+**3. New doc: `docs/AUTONOMY-MODES.md`.** Canonical reference for both modes — definitions, boundaries, procedure, refusal cases, mode-combination matrix. Linked from CONFIG.md and core-behavior. Replaces the previous duplicated docs in git-flow skill — the skill now keeps a condensed summary + link.
+
+**4. Default `permissions.allow` in settings.json template.** Read-only Bash patterns (`ls`, `cat`, `grep`, `find`, `git log/status/diff/show/branch/remote/ls-files`, etc.) pre-approved so the harness stops prompting on near-zero-risk commands. Applies regardless of which agentskel mode is on; baseline friction reduction.
+
+**5. session-start banner step.** Step 3 (alerts) now reads both mode flags and surfaces a one-line banner when either is on. Both banners appear if both modes are on.
+
+**Validator hardening.** `REQUIRED_PHRASES` extended with `Autopilot Mode` fingerprint (alongside renamed `Direct-Commit Mode`). All 10 inline-rule files verified to contain both phrases. 482 ok / 0 fail.
+
+**Downstream migration.** `sync-skeleton` Step 5j extended:
+- Renames `Fast Execution Mode` → `Direct-Commit Mode` (preserves value) for projects synced at v1.64.0 / v1.65.0
+- Adds `Autopilot Mode | off` field for any pre-v1.66.0 project
+- Merges `permissions.allow` block into `.claude/settings.json` if missing (preserves user-edited entries)
+
+**Files touched (~22):** 4 core-behavior + 10 inline rule files + 2 git-flow + 2 sync-skeleton + 2 session-start + new docs/AUTONOMY-MODES.md + CONFIG template + agentskel's own CONFIG + settings.json template + .claude/settings.json + validator + 5 version markers + top-level CHANGELOG.
+
+affected: core-behavior, git-flow, session-start, sync-skeleton
+
+## v1.65.0 — 2026-06-10
+
+"Fast Execution Mode" was ambiguous — "fast" could mean any kind of speed (fast model, fast response, fast typing) rather than the specific behavior of the mode. The mode skips the **branch + PR ceremony** and commits directly to the default branch. New name maps 1:1 to that behavior.
+
+**Renames:**
+- CONFIG.md field: `Fast Execution Mode` → `Direct-Commit Mode`
+- `core-behavior.md` rule bullet (both canonical sources + 10 inline-rule files per v1.64.0 propagation discipline)
+- `git-flow` skill section heading: `Fast Mode Bypass` → `Direct-Commit Mode` (dropped "Bypass" — direct-commit *is* the bypass)
+- Banner text: `FAST MODE ACTIVE` → `DIRECT-COMMIT MODE ACTIVE`
+- One-shot prefix: `fast:` → `direct:`
+- Refusal message: `Refusing fast mode` → `Refusing Direct-Commit Mode`
+
+**Files touched (16):** core-behavior ×4 (source + .agents/ for both rule families) + 5 inline templates + 5 installed copies + `git-flow` skill ×2 (source + .agents/) + `core/memory/CONFIG.md` + agentskel's own `.memory/CONFIG.md` + validator `REQUIRED_PHRASES` + sync-skeleton migration step (Step 5j) + 5 version markers.
+
+**Downstream migration:** `sync-skeleton` Step 5j renames the CONFIG.md field in projects synced at v1.64.0 / v1.65.0 (preserves the existing `on`/`off` value). Projects pre-v1.64.0 add the field directly from the template via existing field-additions logic — no rename needed.
+
+**No behavior change.** Mode behavior is identical to v1.64.0–v1.65.0; only naming changed.
+
+482 ok / 0 fail on validator.
+
 ## v1.65.0 — 2026-06-10
 
 ### Agent rigor improvements (3 internal-team-feedback items, one PR)

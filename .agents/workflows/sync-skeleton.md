@@ -534,6 +534,45 @@ If `.memory/BACKLOG.md` does not exist:
 
 ---
 
+## Step 5j — Migration: v1.65.0 → v1.65.1 → v1.66.0 (autonomy modes)
+
+Skip this step if the project is already on skeleton v1.66.0+.
+
+**v1.65.1 rename: Fast Execution Mode → Direct-Commit Mode.**
+
+In v1.64.0 a CONFIG.md field `Fast Execution Mode` was introduced. In v1.65.1 it was renamed to `Direct-Commit Mode` (the original name was ambiguous — "fast" could mean any kind of speed, not specifically the branch+PR bypass). The mode's behavior is unchanged.
+
+If the project's recorded skeleton version is between v1.64.0 and v1.65.0 inclusive (so they have the old field name):
+
+1. In `.memory/CONFIG.md`, rename the row:
+   - `| Fast Execution Mode | <value> |` → `| Direct-Commit Mode | <value> |`
+   Preserve the existing value (`on` / `off`) — only the field name changes.
+2. Search the project for any references to `fast:` as a one-shot prefix (project notes, RESUME.md, internal docs). Replace with `direct:`.
+
+If the project's recorded skeleton version is pre-v1.64.0 the field never existed — the field-additions logic in Step 5 will add `Direct-Commit Mode` directly from the template; no rename needed.
+
+**v1.66.0 addition: Autopilot Mode.**
+
+v1.66.0 introduces a second autonomy mode — `Autopilot Mode` — for reducing per-step approval friction once a plan is approved (orthogonal to Direct-Commit Mode, which skips branch + PR ceremony). Reduce-friction-mid-task vs reduce-friction-at-end-of-task.
+
+If the project's recorded skeleton version is pre-v1.66.0:
+
+1. In `.memory/CONFIG.md`, add the row directly after `Direct-Commit Mode`:
+   - `| Autopilot Mode | off |`
+2. The field-additions logic in Step 5 would catch this on its own, but explicitly call it out here so the agent knows the new mode exists and can mention it to the user.
+3. Read [`docs/AUTONOMY-MODES.md`](../docs/AUTONOMY-MODES.md) from the skeleton — this is the canonical doc for both modes. Make sure it's accessible from the project (no copy needed; it lives in the skeleton).
+
+**v1.66.0 addition: settings.json permission allowlist.**
+
+v1.66.0 ships a default `permissions.allow` block in `core/claude-hooks/settings.json` for read-only Bash patterns (`ls`, `grep`, `find`, `git log`, `git status`, `git diff`, etc.) so the harness stops prompting on near-zero-risk commands. If the project's `.claude/settings.json` exists but has no `permissions` block:
+
+1. Merge the `permissions.allow` array from `[SKELETON_PATH]/core/claude-hooks/settings.json` into the project's `.claude/settings.json`. Preserve any existing `permissions` block — only add missing entries.
+2. If the project's settings.json file has user-edited `permissions.allow` entries that go beyond the skeleton defaults, preserve them.
+
+Include all of the above in the Step 5 memory commit.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new

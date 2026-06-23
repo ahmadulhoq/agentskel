@@ -568,7 +568,8 @@ def check_inline_rules_propagation() -> Result:
     """
     r = Result("inline rules propagation")
     REQUIRED_PHRASES = (
-        "Fast Execution Mode",
+        "Direct-Commit Mode",
+        "Autopilot Mode",
         "PR URL on its own line",
         "Post-merge cleanup is mandatory",
         "Honor user-specified commit granularity",

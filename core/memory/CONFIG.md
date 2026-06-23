@@ -37,7 +37,8 @@ Update to `active` once the cartographer workflow finishes.
 | Last Skeleton Check | YYYY-MM-DDTHH:MMZ |
 | External Platform Skills | (empty) |
 | Last External Skills Check | YYYY-MM-DDTHH:MMZ |
-| Fast Execution Mode | off |
+| Direct-Commit Mode | off |
+| Autopilot Mode | off |
 
 **Supported Tools** — comma-separated list of tools with native configs installed (e.g. `claude, cursor, copilot`). Valid values: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. `AGENTS.md` is always installed regardless. Only tools listed here get native config files created/updated during setup and sync.
 **Skeleton Path** — optional. If set, `sync-skeleton` and `check-skeleton` workflows read the skeleton from this local path instead of fetching from GitHub. Leave blank if no local clone is available.
@@ -48,7 +49,9 @@ Update to `active` once the cartographer workflow finishes.
 **Last Skeleton Check** — updated by `check-skeleton` workflow on completion.
 **External Platform Skills** — `(empty)`, `installed`, or `declined`. Records whether the user has installed externally-published platform skill packs (e.g. [android/skills](https://github.com/android/skills)). Set during `setup-skeleton` for relevant platforms. `declined` suppresses re-prompting on sync. See [docs/PLATFORM-SKILLS.md](../docs/PLATFORM-SKILLS.md).
 **Last External Skills Check** — updated when external platform skills are installed or refreshed. 30-day cadence; sync-skeleton suggests refresh when overdue.
-**Fast Execution Mode** — `off` (default) or `on`. When `on`, agentskel skips the branch + PR ceremony for the next task: the agent commits and pushes directly to `[Default Branch]`. Everything else stays: plan-first approval gate, task-completion checklist (CHANGELOG/TIME_LOG/RESUME/memory commit), validator, sacred-behaviors check. Use for trivial work where ceremony exceeds the change (typo fixes, version markers, dependency bumps in lockfiles). For one-shot use, prefix a request with `fast:` (e.g. `fast: bump dep X`) instead of flipping the flag. The agent must surface "FAST MODE ACTIVE" before any commit while the flag is on. See [`git-flow` skill](../.agents/skills/git-flow/SKILL.md) for the bypass procedure.
+**Direct-Commit Mode** — `off` (default) or `on`. When `on`, agentskel skips the branch + PR ceremony for the next task: the agent commits and pushes directly to `[Default Branch]`. Everything else stays: plan-first approval gate, task-completion checklist (CHANGELOG/TIME_LOG/RESUME/memory commit), validator, sacred-behaviors check. Use for trivial work where ceremony exceeds the change (typo fixes, version markers, dependency bumps in lockfiles). For one-shot use, prefix a request with `direct:` (e.g. `direct: bump dep X`) instead of flipping the flag. The agent must surface "DIRECT-COMMIT MODE ACTIVE" before any commit while the flag is on. See [`docs/AUTONOMY-MODES.md`](../docs/AUTONOMY-MODES.md) for full procedure and how this mode composes with Autopilot Mode. (Renamed from "Fast Execution Mode" in v1.65.1.)
+
+**Autopilot Mode** — `off` (default) or `on`. When `on`, after a plan has been approved, the agent proceeds within the plan's scope without per-step approval prompts. **Pauses preserved:** significant changes (per the v1.65.0 gate — >30 lines of existing logic / public API change / documented-behavior removal / sacred touch), destructive ops (rm -rf, git push --force, git reset --hard, branch -D), out-of-project paths, dependency changes, scope deviations beyond the approved plan. `session-start` surfaces a one-line banner when the mode is on. Persistent only — no one-shot prefix. Composable with Direct-Commit Mode. See [`docs/AUTONOMY-MODES.md`](../docs/AUTONOMY-MODES.md) for the full boundary definition and behavior under each mode combination.
 
 ---
 
