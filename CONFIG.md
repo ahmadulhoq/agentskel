@@ -38,7 +38,7 @@ Update to `active` once the cartographer workflow finishes.
 | External Platform Skills | (empty) |
 | Last External Skills Check | |
 | Direct-Commit Mode | off |
-| Autopilot Mode | off |
+| Autopilot Mode | on |
 
 **Supported Tools** — comma-separated list of tools with native configs installed. Valid values: `claude`, `antigravity`, `cursor`, `copilot`, `windsurf`, `codex`. `AGENTS.md` is always installed regardless. Only tools listed here get native config files created/updated during setup and sync.
 **Skeleton Path** — points to `.` (repo root) because this repo IS the skeleton. `sync-skeleton` reads templates from `core/` and `roles/` within the same repo.
