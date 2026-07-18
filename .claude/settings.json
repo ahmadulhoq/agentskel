@@ -1,5 +1,6 @@
 {
   "permissions": {
+    "_note": "Read-only patterns and safe project-scoped write/git ops. Destructive patterns (--force, --hard, rm -rf, branch -D, checkout -- <file>) are matched but blocked by pre-bash-safety.sh regardless of this allowlist. See docs/AUTONOMY-MODES.md.",
     "allow": [
       "Bash(ls *)",
       "Bash(ls)",
@@ -24,7 +25,21 @@
       "Bash(git remote*)",
       "Bash(git ls-files*)",
       "Bash(git rev-parse*)",
-      "Bash(git config --get *)"
+      "Bash(git config --get *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull*)",
+      "Bash(git fetch*)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git stash*)",
+      "Bash(git worktree*)",
+      "Bash(gh pr *)",
+      "Bash(gh issue *)",
+      "Bash(gh api *)",
+      "Edit(**)",
+      "Write(**)"
     ]
   },
   "hooks": {
@@ -32,6 +47,10 @@
       {
         "matcher": "Bash",
         "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-bash-safety.sh"
+          },
           {
             "type": "command",
             "if": "Bash(git commit*)",
