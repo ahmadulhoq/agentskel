@@ -4,6 +4,48 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-07-18 — v1.66.1: Wire Direct-Commit + Autopilot Mode enforcement (v1.66.0 shipped prose-only)
+
+Bug fix. v1.66.0 introduced both autonomy modes as documented rules
+with no procedural enforcement — flipping the flag did nothing.
+Root cause: workflow procedures didn't check the flag; harness
+allowlist only covered read-only Bash. User feedback surfaced
+that the modes "don't work."
+
+**Direct-Commit Mode wiring:** git-flow skill Branch Creation +
+Opening a PR now check the flag up-front. If on + qualifying →
+skip section, stay on default branch, surface banner. If
+disqualified → refusal + continue. implement-task.md Phase 1b and
+develop-feature.md Pre-Flight now route through the mode-aware
+git-flow procedure.
+
+**Autopilot Mode wiring — two layers:**
+- Layer 1: expanded permissions.allow with safe write patterns
+  (Edit(**), Write(**)) + safe git/gh ops (add, commit, push,
+  pull, fetch, checkout, merge, stash, worktree, gh pr/issue/api).
+- Layer 2: new pre-bash-safety.sh hook that blocks destructive
+  patterns regardless of what allowlist accepts. Blocks --force,
+  --hard, branch -D, checkout -- <file>, checkout ., clean -f,
+  recursive force delete, worktree remove --force. 14 automated
+  test cases verify block/allow accuracy.
+
+**Rule scope narrowed** per user correction: Autopilot Mode is
+about harness prompts for safe ops, NOT bypassing plan approval /
+decisions / concerns. Wording updated in canonical + 10 inline
+rule files.
+
+**docs/AUTONOMY-MODES.md rewritten** with correct two-layer model,
+what stays paused, false-positive recovery, cross-tool coverage,
+session-restart requirement.
+
+**sync-skeleton Step 5k (new):** merges expanded allowlist +
+installs safety hook + wires into PreToolUse for downstream on
+pre-v1.66.1. Cross-tool coverage instructions +
+session-restart hint at the end.
+
+5 logical commits dogfooding v1.65.0 commit granularity.
+482 ok / 0 fail on validator.
+
 ## 2026-06-23 — v1.66.0: Autopilot Mode + Direct-Commit Mode rename (consolidated)
 
 Originally scoped v1.65.1 PATCH (just the rename); expanded to v1.66.0
