@@ -11,7 +11,13 @@ Full spec: see `GIT_WORKFLOW.md` in the project's standards (`.agents/` or skele
 
 ## Branch Creation
 
-Before writing any code, create a branch:
+Before writing any code, create a branch.
+
+**Direct-Commit Mode check (first):** Read `.memory/CONFIG.md`. If `Direct-Commit Mode | on`, OR the user's current request is prefixed with `direct:`, verify the change qualifies (see refusal list in `docs/AUTONOMY-MODES.md`):
+- If it qualifies → **skip this section entirely**. Stay on `[DEFAULT_BRANCH]`. Surface the `DIRECT-COMMIT MODE ACTIVE — committing directly to [DEFAULT_BRANCH] (no PR).` banner. Jump to Commit Messages.
+- If it does NOT qualify → surface `Refusing Direct-Commit Mode — <reason>; switching to full flow.` and continue with branch creation as normal.
+
+Otherwise (mode off, or user did not prefix `direct:`) — proceed with branch creation:
 
 - [ ] Switch to `[DEFAULT_BRANCH]` and pull latest:
   ```
@@ -41,7 +47,15 @@ Before writing any code, create a branch:
 
 ## Opening a PR
 
-When implementation is complete:
+When implementation is complete.
+
+**Direct-Commit Mode check (first):** If Direct-Commit Mode was active for this task (verified in Branch Creation), **skip this entire section**. The commit was made directly to `[DEFAULT_BRANCH]`; there is no feature branch to push and no PR to open. Push directly:
+```
+git push origin [DEFAULT_BRANCH]
+```
+Then jump to the end-of-turn summary. Task-completion still runs in full.
+
+Otherwise — proceed with the PR flow:
 
 - [ ] Push the feature branch:
   ```

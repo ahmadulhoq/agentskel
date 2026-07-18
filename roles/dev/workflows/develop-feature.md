@@ -14,12 +14,14 @@ description: When the user asks to implement a new feature end-to-end requiring 
    read the release notes for the target version before planning.
    Follow the project's dependency management standard
    for upgrade tier rules and approval requirements.
-5. Create the branch before writing any code:
-   - Ticket given: `TICKET-XXXX-kebab-description`
-   - Tech debt fix: `debt-id-kebab-description`
-   ```
-   git checkout development && git pull && git checkout -b <branch-name>
-   ```
+5. Create the branch before writing any code (or skip, per Direct-Commit Mode). Follow the **`git-flow`** skill's Branch Creation section — it handles the Direct-Commit Mode check up front:
+   - If `Direct-Commit Mode | on` in `.memory/CONFIG.md` (or user prefixed request with `direct:`) AND the change qualifies → git-flow skips branch creation; stay on the default branch and surface the `DIRECT-COMMIT MODE ACTIVE` banner. Skip to Phase 2.
+   - Otherwise → git-flow creates the branch:
+     - Ticket given: `TICKET-XXXX-kebab-description`
+     - Tech debt fix: `debt-id-kebab-description`
+     ```
+     git checkout development && git pull && git checkout -b <branch-name>
+     ```
 
 ## Phase 0: Ticket Routing
 If this task originated from a Jira ticket (user mentioned a ticket key like `PROJ-1234`),
