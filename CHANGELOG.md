@@ -1,5 +1,61 @@
 # agentskel Changelog
 
+## v1.66.1 — 2026-07-18
+
+### Wire Direct-Commit + Autopilot Mode enforcement (v1.66.0 shipped modes as prose-only)
+
+Bug fix. v1.66.0 introduced both autonomy modes as documented rules with **no procedural enforcement**. Result: flipping the flag did nothing. This release wires both modes into workflow procedures + harness settings so the flag actually changes behavior.
+
+**What was broken in v1.66.0:**
+- `git-flow` Branch Creation section was unconditional — never checked Direct-Commit Mode flag. Same for Opening a PR.
+- `implement-task.md` Phase 1b and `develop-feature.md` Pre-Flight unconditionally created branches.
+- `.claude/settings.json` `permissions.allow` only covered read-only Bash. Writes, safe git ops, and safe gh commands still prompted regardless of Autopilot Mode.
+- Autopilot Mode's rule wording implied it bypassed workflow approval gates (plan/decisions/concerns) — user clarified it does NOT.
+
+**Direct-Commit Mode wiring:**
+- `git-flow` skill Branch Creation: prepends a Direct-Commit Mode check. If flag on OR request prefixed `direct:` AND change qualifies → skip section entirely, stay on default branch, surface banner. If disqualified → surface refusal + continue full flow.
+- `git-flow` skill Opening a PR: same check — if Direct-Commit Mode was active, skip section entirely; push directly to default branch instead.
+- `implement-task.md` Phase 1b: rewritten to route through git-flow's mode-aware Branch Creation.
+- `develop-feature.md` Pre-Flight step 5: same routing.
+
+**Autopilot Mode wiring — two layers:**
+- **Layer 1 — expanded `permissions.allow` allowlist.** Added safe write patterns (`Edit(**)`, `Write(**)`) and safe git/gh ops (`git add / commit / push / pull / fetch / checkout / merge / stash / worktree`, `gh pr / issue / api`). Now the harness stops prompting on the routine operations that constitute the bulk of an implementation session.
+- **Layer 2 — new `pre-bash-safety.sh` hook.** Because glob matchers (`Bash(git push *)`) also match destructive variants (`git push --force`), a safety hook enforces the "always pause" boundary explicitly. Blocks: `--force` / `-f` / `--force-with-lease` on push; `--hard` on reset; `-D` on branch; `--` and `.` on checkout (file discard); `-f` on clean; recursive-force rm; `--force` on worktree remove. Blocks with exit code 2 + a clear stderr message. 14 automated test cases verify block/allow accuracy including that patterns inside commit message strings don't false-positive.
+
+**Autopilot rule scope narrowed** (per user correction):
+- v1.66.0 wording: "agent proceeds within plan's scope without per-step approvals" — implied bypassing workflow approval gates.
+- v1.66.1 wording: "harness auto-approves safe operations (reads, project writes, non-destructive git/gh) via expanded permissions.allow + pre-bash-safety.sh hook — so trivial permission prompts don't interrupt work. Does NOT bypass plan approval, decisions, or concerns."
+- Propagated to canonical `core-behavior.md` + all 10 inline rule files.
+
+**docs/AUTONOMY-MODES.md rewritten** for Autopilot section with the correct model — two-layer harness enforcement, what stays paused, recovery from false-positives, cross-tool coverage, session-restart requirement to load new settings.
+
+**Downstream migration — sync-skeleton Step 5k (new):**
+- Merges expanded `permissions.allow` into project's `.claude/settings.json` (preserves user-edited entries).
+- Installs `pre-bash-safety.sh` to `.claude/hooks/`.
+- Wires the hook into `PreToolUse.Bash.hooks` before the existing pre-commit / pre-memory-push hooks.
+- Cross-tool coverage instructions for Gemini/Cursor/Windsurf/Codex/Copilot.
+- Session-restart hint at the end.
+
+**Cross-tool coverage:**
+- Claude Code: full support (allowlist + hook).
+- Gemini/Cursor/Windsurf: hook script contract compatible per v1.62.x fixes.
+- Codex: same script format as Claude.
+- Copilot: no hooks — behavioral rule only.
+
+**Files touched (~16):**
+- git-flow skill ×2 (source + .agents/)
+- implement-task workflow ×2
+- develop-feature workflow ×2
+- 4 core-behavior copies (canonical ×2 + .agents mirror + .claude mirror)
+- 10 inline rule files (5 templates + 5 installed copies)
+- new `core/claude-hooks/pre-bash-safety.sh` + `.claude/hooks/pre-bash-safety.sh`
+- `core/claude-hooks/settings.json` + `.claude/settings.json`
+- sync-skeleton workflow ×2 (new Step 5k)
+- `docs/AUTONOMY-MODES.md`
+- version markers (5) + top-level CHANGELOG
+
+affected: git-flow, implement-task, develop-feature, core-behavior, sync-skeleton
+
 ## v1.66.0 — 2026-06-23
 
 ### Autopilot Mode + Direct-Commit Mode rename (autonomy modes consolidated)

@@ -62,77 +62,106 @@ and proceed with the normal branch + PR flow.
 
 ### What it does
 
-After a plan has been approved, the agent **proceeds within the plan's scope without per-step approval prompts**. Reduces interruptions that hamper flow once the user has already signed off on the approach.
+Reduces **harness-level permission prompts** for safe, routine operations. When Autopilot Mode is on, the tool (Claude Code / Cursor / etc.) stops asking you "Approve `git status`? Y/N" and "Edit this file? Y/N" for near-zero-risk commands. Trivial permission friction disappears; substantive gates stay.
 
-### What stays paused (even in Autopilot)
+### What Autopilot Mode does NOT do
 
-The mode reduces *procedural* friction without removing *substantive* gates. The agent **always pauses** for:
+Autopilot Mode **does not bypass**:
 
-1. **Significant change** (per v1.65.0 gate) — any of:
-   - More than 30 lines of existing logic altered (not counting whitespace, comments, or pure-additions)
-   - Public API signature change (exported function, REST endpoint, schema)
-   - Documented behavior removed or replaced
-   - `.memory/SACRED.md`-listed behavior touched
-2. **Destructive operations** — `rm -rf`, `git push --force`, `git reset --hard`, `git branch -D`, DB drop, `--no-verify`
-3. **Out-of-project paths** — anything outside the project's repo root (parent dirs, `/tmp`, system dirs)
-4. **Dependency changes** — toolchain or library version bumps (existing rule)
-5. **Scope deviations** — work the approved plan didn't cover. If the agent realises it needs to do something the plan didn't anticipate, that's a re-plan, not autopilot work.
+- **Plan approval.** Every workflow still requires the user to approve a plan before implementation starts. Plan-first is unchanged.
+- **Design decisions.** Any real decision the user has to make is still surfaced. Concerns raised by the agent (architecture flags, potential-conflict warnings) are still presented for user response.
+- **Significant-change gate.** The v1.65.0 gate for `SIGNIFICANT CHANGE` rows still fires: >30 lines of existing logic altered / public API change / documented behavior removal / sacred behavior touch → separate explicit confirmation required.
+- **Concerns.** If the agent has doubts or discovers something the plan didn't anticipate, the agent stops and asks.
 
-For each pause, the agent surfaces a one-line `PAUSE: <reason>` and waits for explicit confirmation before proceeding.
+The mode is about eliminating **the "approve every tool call" tax**, not about eliminating **the "approve every decision" gate**.
 
-### Procedure when active
+### How it works
 
-1. **Plan-first still applies.** Autopilot Mode does **not** skip the planning phase. The agent still drafts a plan and waits for approval before any Edit/Write tool call. Autopilot kicks in *after* the plan is approved.
-2. The plan should explicitly enumerate the scope (files to modify, behaviors to change). This is what defines "in-scope" for autopilot execution.
-3. While executing the approved plan:
-   - Routine ops within scope → proceed without prompting
-   - Out-of-scope work or any of the pause categories above → pause and confirm
-4. Task-completion checklist still runs in full at the end.
-5. Validator still runs.
+Two-layer enforcement lives inside `.claude/settings.json`:
+
+**Layer 1 — expanded `permissions.allow` allowlist:**
+
+The template ships pre-approvals for read-only ops (already in v1.66.0) plus safe writes and safe git operations:
+
+- Reads: `ls`, `cat`, `grep`, `find`, `git log`, `git status`, `git diff`, etc.
+- Writes: `Edit(**)`, `Write(**)` — file edits within the project
+- Git: `git add`, `git commit`, `git push`, `git pull`, `git fetch`, `git checkout`, `git merge`, `git stash`, `git worktree`
+- GitHub CLI: `gh pr *`, `gh issue *`, `gh api *`
+
+**Layer 2 — `pre-bash-safety.sh` hook (installed to `.claude/hooks/`):**
+
+Blocks destructive patterns with exit code 2 + a stderr message, **regardless of what the allowlist accepts**. The allowlist uses glob matchers (`Bash(git push *)` would match `git push --force`), so the safety hook enforces the block explicitly.
+
+Blocked patterns:
+- `git push --force` / `-f` / `--force-with-lease`
+- `git reset --hard`
+- `git branch -D` (force-delete)
+- `git checkout -- <file>` (discards uncommitted changes)
+- `git checkout .` (discards all uncommitted)
+- `git clean -f` (force-remove untracked)
+- `rm -rf` / `-fr` / `-Rf` (recursive force delete)
+- `git worktree remove --force`
+
+Verified with 14 automated test cases (see PR #54 for the test matrix). Correctly allows `git branch -d` (safe delete), `git checkout main` (branch switch), `git status`, `git commit -m "reset --hard state"` (string in message, not a command).
+
+### What still pauses
+
+Even in Autopilot, these keep the agent honest:
+
+1. **Anything the safety hook blocks** (list above).
+2. **Out-of-project paths.** Writes outside the repo root (parent dirs, `/tmp`, system dirs) aren't in `Edit(**)`/`Write(**)` scope — harness prompts.
+3. **Dependency upgrades.** Behavioral rule — the agent asks before running `pip install`, `npm install`, `bundle update`, etc.
+4. **Sacred behaviors.** Behavioral rule — the agent never modifies `.memory/SACRED.md`-listed behavior without explicit human approval.
+5. **Significant changes** (per v1.65.0 gate) — see above.
+6. **Plan approval + concerns** — see above.
 
 ### Toggling
 
 - **Persistent only:** edit `.memory/CONFIG.md` `Autopilot Mode` field to `on` or `off`.
-- **No one-shot prefix.** Per-task autopilot didn't seem useful — autopilot is a sustained working style, not a one-off ask.
+- **No one-shot prefix.** Autopilot is a sustained working style.
+- **Toggling the flag does NOT reload the harness.** The `permissions.allow` allowlist and the safety hook are always active whenever this settings.json is loaded. The flag is a **posture indicator** — reminds you what mode you're in, surfaces the session-start banner, informs behavioral rule application. Whether the harness prompts you is determined by settings.json at session start, not by the flag at runtime.
+
+If you flip the flag from `off` to `on` mid-session and want the harness prompts to actually change, restart your tool.
 
 ### Session-start banner
 
-When Autopilot Mode is `on`, `session-start` surfaces a one-line banner at the start of every session so the user is reminded:
+When Autopilot Mode is `on`, `session-start` surfaces a one-line banner at the start of every session:
 
 ```
-Autopilot Mode is ON. Agent will proceed within the approved plan without per-step approvals. Significant changes, destructive ops, and out-of-scope work still pause.
+Autopilot Mode is ON. Harness auto-approves safe operations (reads, project writes, non-destructive git). Destructive ops, out-of-project paths, dependency upgrades, sacred behaviors, and significant changes still pause. See docs/AUTONOMY-MODES.md.
 ```
 
-If the user has changed their mind, they can toggle it off before starting work.
+### Cross-tool coverage
 
-### When to refuse
+- **Claude Code:** full support — allowlist + hook.
+- **Gemini CLI / Antigravity:** the same hook script contract is honored (Gemini format at `core/gemini-hooks/`); allowlist not applicable.
+- **Cursor, Windsurf:** hooks work (per v1.62.x fixes); safety hook installs to their respective hook dirs. Allowlist syntax varies per tool.
+- **Copilot:** no hooks. Autopilot Mode relies on behavioral rules alone — agent self-refuses destructive patterns per the core-behavior rule bullet.
 
-Autopilot Mode is automatically suspended (not refused outright — only suspended for the current step) when the agent encounters any of the "always pauses" categories. The flag stays `on`; the next routine step resumes autopilot behavior.
+### Recovering from a false-positive block
 
-If the user explicitly invokes Autopilot Mode for a project that has no `.memory/CONFIG.md` file yet, or where the plan has not been approved, surface an objection:
-```
-Refusing Autopilot Mode — no approved plan in scope. Autopilot requires plan approval first.
-```
+If the safety hook blocks a command you genuinely want to run:
+1. Read the stderr message — it names which pattern was matched.
+2. Rewrite the command in a safer form (e.g. `git branch -d` instead of `-D`, `git checkout main` instead of `git checkout -- <file>`).
+3. If the destructive form is genuinely needed, run it manually outside the agent session.
+
+The hook is deliberately strict — false-positives on legitimate destructive intent are the correct trade-off. The alternative (blindly allowing) is unsafe.
 
 ---
 
 ## Composing the two modes
 
+The two modes are **orthogonal** — they address different friction axes:
+- **Direct-Commit Mode** = end-of-workflow ceremony (branch + PR)
+- **Autopilot Mode** = mid-workflow harness prompts
+
 Combined use case: **trivial-but-multi-step work**, e.g. "bump 5 dependencies across N projects."
 
 - Direct-Commit Mode skips the PR ceremony for each.
-- Autopilot Mode skips the per-step approval for each.
-- Together: user approves the overall plan once, agent executes all 5 bumps + commits directly + reports.
+- Autopilot Mode auto-approves the routine `git add / commit / push` prompts along the way.
+- Together: user approves the overall plan once, agent executes all 5 bumps + commits directly + reports — no per-step prompts, no per-commit PR.
 
-The combination remains bounded by the same gates — any significant change (e.g. a dependency bump that requires source changes) still pauses, regardless of mode.
-
----
-
-## Harness-side complement (Claude Code, Cursor, etc.)
-
-The harness layer (`.claude/settings.json` permission allowlist) is separate from agentskel's modes but complements them. Agentskel ships a recommended default `permissions.allow` list for read-only Bash patterns (`ls`, `grep`, `find`, `git log`, `git status`, `git diff`, etc.) so the harness stops prompting on near-zero-risk commands. This applies regardless of which agentskel mode is on; it's a baseline.
-
-For write operations and shell commands not in the default allowlist, the harness will still prompt — agentskel's modes don't override the harness's permission model. Users wanting *minimum* harness prompts can run their session with `--permission-mode acceptEdits` (Claude Code) or equivalent in their tool, but that's a per-session decision, not an agentskel setting.
+The combination remains bounded by the same substantive gates — any significant change (e.g. a dependency bump that requires source changes) still pauses regardless of mode, and any destructive command is blocked by the safety hook regardless of mode.
 
 ---
 
@@ -141,3 +170,4 @@ For write operations and shell commands not in the default allowlist, the harnes
 - **v1.64.0** — introduced "Fast Execution Mode" (renamed below).
 - **v1.65.1** — renamed Fast Execution Mode → Direct-Commit Mode for clarity ("fast" was ambiguous).
 - **v1.66.0** — introduced Autopilot Mode + consolidated both modes into this document.
+- **v1.66.1** — wired both modes into workflow procedures. v1.66.0 shipped the modes as documented rules with no procedural enforcement: workflow steps unconditionally created branches (broke Direct-Commit) and unconditionally prompted for tool calls (broke Autopilot). Fixed by: (a) git-flow skill now checks the Direct-Commit flag at Branch Creation + Opening a PR and skips those sections when active + qualifying; (b) settings.json ships expanded `permissions.allow` covering safe writes + git ops plus `pre-bash-safety.sh` hook that blocks destructive patterns regardless of allowlist. Also narrowed Autopilot Mode's rule scope — v1.66.0 wording implied it bypassed workflow approval gates (plan/decisions/concerns); it does not. Autopilot is strictly about harness prompt friction for safe operations.

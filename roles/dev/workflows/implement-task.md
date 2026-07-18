@@ -49,12 +49,13 @@ Before writing the plan, survey existing implementations of the same kind. Match
    **Concerns and tradeoffs alone are not a plan.** A plan must state: (1) proposed
    approach, (2) files to modify, (3) open decision points.
 
-## Phase 1b: Branch
-7. Create the branch following the **`git-flow`** skill before writing
-   any code:
-   ```
-   git checkout [DEFAULT_BRANCH] && git pull && git checkout -b <branch-name>
-   ```
+## Phase 1b: Branch (or skip, per Direct-Commit Mode)
+7. Follow the **`git-flow`** skill's Branch Creation section. It handles the Direct-Commit Mode check up front:
+   - If `Direct-Commit Mode | on` in `.memory/CONFIG.md` (or user prefixed request with `direct:`) AND the change qualifies → git-flow skips branch creation; stay on `[DEFAULT_BRANCH]` and surface the `DIRECT-COMMIT MODE ACTIVE` banner.
+   - Otherwise → git-flow creates the branch as normal:
+     ```
+     git checkout [DEFAULT_BRANCH] && git pull && git checkout -b <branch-name>
+     ```
 
 ## Phase 2: Implement
 8. Follow `developer` skill standards for all code.
