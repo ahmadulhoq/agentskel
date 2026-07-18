@@ -138,6 +138,45 @@ Autopilot Mode is ON. Harness auto-approves safe operations (reads, project writ
 - **Cursor, Windsurf:** hooks work (per v1.62.x fixes); safety hook installs to their respective hook dirs. Allowlist syntax varies per tool.
 - **Copilot:** no hooks. Autopilot Mode relies on behavioral rules alone — agent self-refuses destructive patterns per the core-behavior rule bullet.
 
+### Composition with Claude Code's built-in auto mode
+
+Claude Code shipped its own **Auto Mode** starting in v2.1.183 (June 19, 2026), extended in v2.1.193 / v2.1.195 / v2.1.207. It provides overlapping-but-not-identical protection to agentskel's Autopilot Mode. Both can be on simultaneously — they compose as defense in depth.
+
+**Comparison:**
+
+| Property | agentskel Autopilot Mode + `pre-bash-safety.sh` | Claude Code Auto Mode |
+|---|---|---|
+| **Enforcement mechanism** | Static `permissions.allow` allowlist + a PreToolUse hook that regex-matches destructive patterns and returns exit 2 | Runtime classifier that routes shell/PowerShell through decision layer + hardcoded block list for known-destructive commands (`git reset --hard`, `git checkout -- .`, `terraform destroy`, etc.) |
+| **Scope** | Cross-tool — works for Claude Code, Gemini, Cursor, Windsurf, Codex (behavioral for Copilot) | Claude Code only |
+| **What it blocks** | Specific regex-matched patterns: `--force`, `--hard`, `-D`, `checkout --`, `checkout .`, `clean -f`, `rm -rf`, `worktree remove --force` | Destructive git, terraform, pulumi, cdk commands + broader classifier judgments on shell input |
+| **How to toggle** | `.memory/CONFIG.md` `Autopilot Mode` field (posture); allowlist + hook always active when installed | Claude Code `/config` toggle or `claude auto-mode reset`; `autoMode.classifyAllShell` setting routes all Bash |
+| **Signals when blocked** | stderr message from hook naming the matched pattern + exit 2 | Denial reason in transcript, denial toast, `/permissions` recent denials list |
+| **Configurability** | Edit the hook (bash regex); add patterns as needed | Managed via Claude Code settings; classifier not user-modifiable |
+
+**How they compose:**
+
+- Claude Code Auto Mode fires **first** (before the PreToolUse hook chain) — if it blocks or prompts, our hook never runs.
+- If Claude Code Auto Mode allows the command, our `pre-bash-safety.sh` hook then runs and can still block on our specific patterns.
+- Net effect: **strictest of the two wins.** A command must pass BOTH to execute in Autopilot.
+
+**When to disable one:**
+
+- If you're **Claude-only** and want to rely purely on the built-in system: you can leave our hook installed (it doesn't conflict) or comment it out of `.claude/settings.json` PreToolUse for cleaner logs. Recommend leaving it — near-zero cost, one extra layer of specific pattern coverage.
+- If you're **cross-tool** (Gemini/Cursor/Windsurf too): keep our hook — Claude Code Auto Mode won't cover those tools.
+- If you want to **loosen** protection (e.g., allow `git branch -D` for a specific task): temporarily disable Autopilot Mode + use Claude Code's `--dangerously-skip-permissions` for that command only. Do not remove patterns from the hook globally.
+
+**When agentskel's coverage is broader:**
+
+- `git worktree remove --force` — not in Claude Code Auto Mode's default block list.
+- `git checkout -- <file>` (file discard, not `.` bulk) — Claude Code covers `.` variant; our hook covers both.
+
+**When Claude Code's coverage is broader:**
+
+- Terraform / Pulumi / CDK destroy — outside our scope (agentskel doesn't ship infra tooling patterns).
+- Runtime classifier judgments on novel shell input — our hook only catches known regex patterns.
+
+**Denial-message parity:** Claude Code's denial reasons appear in `/permissions recent denials` (v2.1.193+). Our hook writes to stderr but doesn't feed that list. Users switching between the two systems will see denials in different places — that's expected.
+
 ### Recovering from a false-positive block
 
 If the safety hook blocks a command you genuinely want to run:
