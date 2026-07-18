@@ -573,6 +573,37 @@ Include all of the above in the Step 5 memory commit.
 
 ---
 
+## Step 5k — Migration: v1.66.0 → v1.66.1 (wire Autopilot Mode enforcement)
+
+Skip this step if the project is already on skeleton v1.66.1+.
+
+v1.66.0 shipped Autopilot Mode as a documented rule with no procedural enforcement — the harness kept prompting on every write/git operation because the `permissions.allow` list only covered read-only Bash. v1.66.1 fixes this with expanded allowlist + safety hook.
+
+For any project whose recorded skeleton version is between v1.66.0 and v1.66.0 (or that has Autopilot Mode marked `on` but still sees per-step prompts):
+
+1. **Merge expanded `permissions.allow` into `.claude/settings.json`.** Read `[SKELETON_PATH]/core/claude-hooks/settings.json` and identify the entries under `permissions.allow` (safe write patterns + safe git/gh ops added in v1.66.1). For each entry not already present in the project's `.claude/settings.json`, append it. Preserve any user-edited entries that go beyond the skeleton defaults — don't remove them.
+
+2. **Install `pre-bash-safety.sh`.** Copy `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` to `.claude/hooks/pre-bash-safety.sh`. Ensure it is executable (`chmod +x`).
+
+3. **Wire the hook into `.claude/settings.json` `PreToolUse.Bash.hooks`.** Add an unconditional entry at the top of the Bash hooks array:
+   ```json
+   { "type": "command", "command": ".claude/hooks/pre-bash-safety.sh" }
+   ```
+   It must run BEFORE the existing `pre-commit-check.sh` and `pre-memory-push.sh` hooks so destructive patterns are blocked regardless of which subsequent hook would run.
+
+4. **Cross-tool coverage** (if the project has other AI tool configs installed):
+   - Gemini/Antigravity: also copy the safety hook to `core/gemini-hooks/` equivalent + wire into `.gemini/settings.json`.
+   - Cursor: also copy to `.cursor/hooks/` + wire into `.cursor/hooks.json`.
+   - Windsurf: also copy to `.windsurf/hooks/` + wire into `.windsurf/hooks.json`.
+   - Codex: same script format as Claude (compatible per v1.62.2 verification).
+   - Copilot: no hooks — skip. Autopilot enforcement is behavioral only for Copilot users.
+
+5. **Session-restart hint.** After sync, tell the user: "You must restart your AI tool for the new `permissions.allow` allowlist and hooks to take effect. The `Autopilot Mode | on` flag will now actually reduce harness prompts, subject to the safety-hook boundaries."
+
+Include all of the above in the Step 5 memory commit.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new
