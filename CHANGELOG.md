@@ -56,6 +56,18 @@ Bug fix. v1.66.0 introduced both autonomy modes as documented rules with **no pr
 
 affected: git-flow, implement-task, develop-feature, core-behavior, sync-skeleton
 
+## v1.67.1 — 2026-08-05
+
+### Two new dev-role skills: `database-migration` and `data-model-mapping`
+
+**1. `database-migration` (new).** Advisory skill covering safe schema-migration practices across any tool (Alembic, Rails, Prisma, Room, Core Data, Flyway, Liquibase, raw SQL). Requires locating the project's existing migration convention before writing a new one, mandatory tested reversibility (up/down), zero-downtime sequencing (additive first — never rename/drop a column in the same migration that introduces its replacement), an explicit-confirmation gate on destructive operations, backfill-before-`NOT NULL` ordering, and a hard rule against editing an already-applied migration.
+
+**2. `data-model-mapping` (new).** Advisory skill targeting a specific recurring failure: a field added to one side of a mapping (model, DTO, DB/ORM entity, cross-platform counterpart) but never propagated to the others, so it's silently dropped. Requires locating every mapped side before editing a model, propagating the change to all of them in the same edit, updating Blueprint parity/domain specs for cross-platform models, tracing the field end-to-end to confirm it survives serialization, and adding a round-trip mapping test.
+
+Both are dev-role skills (`roles/dev/skills/`), same pattern as `developer` / `test-driven-development` — loaded when the triggering scenario applies, not at every session.
+
+affected: database-migration, data-model-mapping
+
 ## v1.66.0 — 2026-06-23
 
 ### Autopilot Mode + Direct-Commit Mode rename (autonomy modes consolidated)
