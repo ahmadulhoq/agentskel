@@ -56,7 +56,7 @@ Bug fix. v1.66.0 introduced both autonomy modes as documented rules with **no pr
 
 affected: git-flow, implement-task, develop-feature, core-behavior, sync-skeleton
 
-## v1.67.1 — 2026-08-05
+## v1.67.0 — 2026-08-05
 
 ### Two new dev-role skills: `database-migration` and `data-model-mapping`
 
