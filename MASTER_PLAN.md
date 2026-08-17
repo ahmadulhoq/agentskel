@@ -1,6 +1,6 @@
 # agentskel — Architecture Decision Record (ADR)
 
-> Corresponds to: agentskel v1.66.1
+> Corresponds to: agentskel v1.67.0
 
 ---
 
@@ -736,6 +736,18 @@ Prohibits guess-and-check debugging: no `console.log` without a stated hypothesi
 Manages isolated sibling-directory execution environments for long feature runs or parallel branch work. Sibling directories only — nesting inside the repo causes IDE re-indexing loops and nested-git errors. Covers: worktree creation, entering the worktree before any build/test commands, read-only main repo rule during active worktree session, and cleanup after PR merge. Decision table for when to use (long runs, parallel comparison, full test suite) vs. when not to (quick hotfix, single-file change). Referenced from `git-flow` skill.
 
 **Source:** `roles/dev/skills/using-git-worktrees/SKILL.md`
+
+#### .agents/skills/database-migration/SKILL.md (v1.67.0)
+
+Enforces safe database schema migration practices across any tool (Alembic, Rails, Prisma, Room, Core Data, Flyway, Liquibase, raw SQL). Requires locating the existing migration convention before creating a new one, mandatory reversibility (tested up/down), zero-downtime sequencing (additive first, never rename/drop in the same migration as the replacement), an explicit-confirmation gate on destructive operations, backfill-before-constrain ordering, and a hard rule against editing already-applied migrations. Includes a 5-entry rationalization table.
+
+**Source:** `roles/dev/skills/database-migration/SKILL.md`
+
+#### .agents/skills/data-model-mapping/SKILL.md (v1.67.0)
+
+Prevents the "field added on one side, never propagated" failure mode: before editing a model, locate every mapped counterpart (API/DTO, DB/ORM entity, serializer, cross-platform equivalent via the Blueprint's parity matrix), then requires every field change to land on all of them, an end-to-end trace to confirm nothing is silently dropped, explicit default/nullability decisions per side, and a round-trip mapping test. Includes a 4-entry rationalization table.
+
+**Source:** `roles/dev/skills/data-model-mapping/SKILL.md`
 
 ### 7.2b Procedural Skills (v4.0)
 
