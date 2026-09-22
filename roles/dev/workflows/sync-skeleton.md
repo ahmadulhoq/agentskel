@@ -604,6 +604,50 @@ Include all of the above in the Step 5 memory commit.
 
 ---
 
+## Step 5l — Migration: v1.66.1 → v1.67.1 (close destructive-command gaps in pre-bash-safety)
+
+**Do NOT skip this step for projects already on v1.66.1 or v1.67.0 — those are precisely the affected projects.** Skip only if the project is already on skeleton v1.67.1+, or has never installed `pre-bash-safety.sh` (pre-v1.66.1 projects get the fixed version through Step 5k instead).
+
+v1.66.1 paired a broad `permissions.allow` with `pre-bash-safety.sh`. The hook was wired correctly and blocked everything it claimed to, but the allowlist granted several destructive commands the hook never inspected — so they were auto-approved with no prompt and no block:
+
+| Command | Effect |
+|---|---|
+| `gh api -X DELETE /repos/:owner/:repo` | deletes the repository |
+| `gh api -X DELETE .../branches/main/protection` | removes branch protection |
+| `git push origin :main` / `git push --delete` | deletes the remote branch |
+| `git checkout -f` | discards all uncommitted work |
+| `git stash drop` / `git stash clear` | destroys stashed work |
+| `find . -delete` / `find . -exec rm` | bulk delete |
+
+Two rule bypasses were also fixed: `git -C <path> <cmd>` evaded every git rule (they required `git` immediately followed by the subcommand), and the `rm` rule only matched bundled flags, so `rm -r -f` and `rm --recursive --force` walked through.
+
+`Bash(gh api *)` is the serious one — `gh api` is a general-purpose authenticated GitHub client, so allowing it wholesale allows anything the token can do.
+
+1. **Replace `pre-bash-safety.sh`.** Copy `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` over `.claude/hooks/pre-bash-safety.sh` — overwrite, don't merge. Ensure it stays executable (`chmod +x`). The new patterns are strictly additive: nothing that was allowed before is blocked now except the destructive commands listed above.
+
+2. **Narrow `Bash(gh api *)` in `.claude/settings.json`.** Find the `permissions.allow` entry `Bash(gh api *)` and replace that single entry with the two read-only forms:
+   ```
+   "Bash(gh api --method GET *)",
+   "Bash(gh api -X GET *)"
+   ```
+   If the project has no `Bash(gh api *)` entry, nothing to do here. Leave every other allowlist entry untouched — the hook, not the allowlist, is what blocks the remaining destructive variants.
+
+3. **Verify the hook actually blocks.** Copy `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.test.sh` into the project (or run it from the skeleton against the installed script) and run it:
+   ```bash
+   bash core/claude-hooks/pre-bash-safety.test.sh
+   ```
+   Expect `39 passed, 0 failed`. These rules **fail open** — a broken regex does not error, it silently stops blocking, and that stays invisible until the day it matters. Do not mark this step done on a visual diff alone.
+
+4. **Cross-tool coverage** (if the project has other AI tool configs installed): the Gemini, Cursor, Windsurf, and Codex copies of the safety hook need the same replacement. Copilot has no hooks — behavioral rule only.
+
+5. **Session-restart hint.** After sync, tell the user: "Restart your AI tool for the narrowed `permissions.allow` and updated safety hook to take effect."
+
+**Known gap, not fixed in v1.67.1:** `Bash(echo *)` still permits `echo "" > file` to truncate a file through shell redirection. Blocking redirection generically is a larger change than this release.
+
+Include all of the above in the Step 5 memory commit.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new
