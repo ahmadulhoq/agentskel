@@ -139,4 +139,6 @@
 | check_agents_catalog_parity | function | scripts/validate.py |
 | check_inline_rules_propagation | function | scripts/validate.py |
 | check_changelog_has_version | function | scripts/validate.py |
+| _git | function | scripts/validate.py |
+| check_no_unreleased_skeleton_changes | function | scripts/validate.py |
 | main | function | scripts/validate.py |

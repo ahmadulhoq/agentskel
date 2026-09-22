@@ -54,7 +54,7 @@
 | `.github/copilot-instructions.md` | Always-loaded Copilot instructions | Inline rules: Session Start, Workflow routing, Plan First, Task Completion. |
 | `.github/prompts/` | 33 Copilot slash-invokable prompt files — `/<name>.prompt.md` | One per `.agents/workflows/` file. Copilot has no hooks concept (v1.62.0). |
 | `docs/` | Setup and coordination docs for users | ATLASSIAN-SETUP.md, INSTALL-MODES.md, PLATFORM-SKILLS.md, TEAM-COORDINATION.md |
-| `scripts/` | Developer onboarding + validation | install-agent.sh (mount memory worktree + link external skills); validate.py (10 deterministic checks: frontmatter, descriptions, version consistency across 5 files, parity for 4 tool stub dirs, AGENTS.md catalog parity, CHANGELOG presence) |
+| `scripts/` | Developer onboarding + validation | install-agent.sh (mount memory worktree + link external skills); validate.py (11 deterministic checks: frontmatter, descriptions, version consistency across 5 files, parity for 4 tool stub dirs, AGENTS.md catalog parity, inline-rule propagation, CHANGELOG presence, and — new in v1.67.1 — no unreleased skeleton changes, which diffs core/roles/scripts/.agents against the last VERSION-touching commit and fails on shallow clones rather than passing on an empty diff) |
 | `gemini-extension.json` | Gemini CLI extension manifest at repo root (tracks agentskel version) | Lets users run `gemini extensions install <repo-url>` |
 | `root` | Project identity, versioning, ADR, maintenance docs | VERSION, CHANGELOG.md, README.md, MASTER_PLAN.md (ADR), MAINTAIN_MASTER_PLAN.md (gitignored), AGENTS.md, CLAUDE.md, GEMINI.md, CONTRIBUTING.md, INSTALL.md, LICENSE |
 
