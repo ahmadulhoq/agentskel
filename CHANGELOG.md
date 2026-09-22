@@ -4,6 +4,91 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-09-22 — v1.67.1: Retroactive release for PR #56 + downstream delivery + validator gate
+
+PR #56 closed real destructive-command gaps in pre-bash-safety.sh
+and merged to main having run none of the release protocol: no
+VERSION bump, no changelog entry, no version markers, no downstream
+migration step. The skeleton checklist is explicit that every
+skeleton file change requires a version bump, no exceptions.
+
+**The hook fix, now versioned.** v1.67.0 paired a broad
+permissions.allow with pre-bash-safety.sh. The hook blocked
+everything it claimed to, but the allowlist granted commands the
+hook never inspected — auto-approved, no prompt, no block:
+`gh api -X DELETE /repos/:owner/:repo` (deletes the repository),
+branch-protection removal, `git push origin :main` / `--delete`,
+`git checkout -f`, `git stash drop`/`clear`, `find . -delete` /
+`-exec rm`. Also fixed: `git -C <path> <cmd>` evaded every git rule,
+and the rm rule matched only bundled flags so `rm -r -f` walked
+through. 39-case test suite, all passing.
+
+**sync-skeleton Step 5l (new).** PR #56 claimed repos would pick the
+fix up on their next sync. They would not have. Step 5k, the only
+step installing this hook, opens with "Skip if already on v1.66.1+"
+— so every project at v1.66.1/v1.67.0 skipped it and kept the
+wide-open allowlist. Those are precisely the affected projects,
+since the vulnerable config shipped in v1.66.1. Step 5l inverts the
+guard, and requires running the test suite rather than eyeballing a
+diff.
+
+**New validator check `no unreleased skeleton changes`.** Root cause.
+The existing version checks are self-referential — `version
+consistency` compares the five markers to each other, `changelog has
+current version entry` asserts the CHANGELOG mentions whatever
+VERSION says. Neither can express "files changed, version didn't":
+498 ok / 0 fail on a repo carrying an unversioned hook fix. The new
+check diffs core/, roles/, scripts/, .agents/ between HEAD and the
+commit that last touched VERSION. Shallow clones FAIL rather than
+pass on an empty diff; CI's actions/checkout was at default depth 1,
+which would have made the check a silent no-op, so validate.yml now
+sets fetch-depth: 0.
+
+**Changelog hygiene (pre-existing).** v1.66.1 sat above v1.67.0 in
+CHANGELOG.md; the entry headed v1.65.0 — 2026-06-10 was actually the
+v1.65.1 rename of 2026-06-16, giving two v1.65.0 headings. Both
+fixed, no content removed.
+
+**Known gap, not fixed:** `Bash(echo *)` still permits
+`echo "" > file` truncation via shell redirection.
+
+Files: roles/dev/workflows/sync-skeleton.md + .agents/ copy,
+scripts/validate.py, .github/workflows/validate.yml, CHANGELOG.md,
+5 version markers, .memory/ (CONFIG, CHANGELOG, TIME_LOG, RESUME,
+LESSONS).
+
+affected: sync-skeleton
+
+## 2026-08-05 — v1.67.0: Two new dev-role skills (database-migration + data-model-mapping)
+
+Backfilled 2026-09-22 — this release shipped (PR #55) without a
+memory-side CHANGELOG or TIME_LOG entry. External contribution by
+Farooq Ahmad (farooqbitsmedia).
+
+**database-migration (new).** Advisory dev-role skill for safe
+schema migrations across any tool (Alembic, Rails, Prisma, Room,
+Core Data, Flyway, Liquibase, raw SQL). Requires locating the
+project's existing migration convention first, tested reversibility
+(up/down), zero-downtime sequencing (additive first — never
+rename/drop a column in the migration that introduces its
+replacement), an explicit-confirmation gate on destructive
+operations, backfill-before-NOT NULL ordering, and a hard rule
+against editing an already-applied migration.
+
+**data-model-mapping (new).** Targets a recurring silent-drop
+failure: a field added to one side of a mapping (model, DTO,
+DB/ORM entity, cross-platform counterpart) but never propagated to
+the others. Requires locating every mapped side before editing a
+model, propagating in the same edit, updating Blueprint
+parity/domain specs for cross-platform models, tracing the field
+end-to-end through serialization, and adding a round-trip test.
+
+Review history: CHANGES_REQUESTED on missing Gemini/Cursor stubs +
+plugin manifest bumps; author fixed in one iteration and renamed
+v1.67.1 → v1.67.0. CI green: 497 ok, 0 fail.
+
+affected: database-migration, data-model-mapping
+
 ## 2026-07-18 — v1.66.1: Wire Direct-Commit + Autopilot Mode enforcement (v1.66.0 shipped prose-only)
 
 Bug fix. v1.66.0 introduced both autonomy modes as documented rules
