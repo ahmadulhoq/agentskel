@@ -1,7 +1,7 @@
 # Session Resume
 
 ## Status: IDLE | IN_PROGRESS
-IDLE — v1.67.1 merged (PR #57, 2026-09-23), branch deleted, origin pruned. feat/v1.68.0-batch rebased onto v1.67.1 and holds 2 finished doc commits; see BL-001 before touching it.
+IDLE — v1.67.1 merged (PR #57, 2026-09-23), branch deleted, origin pruned. feat/v1.68.0-batch rebased onto v1.67.1 and holds 3 finished doc commits (item 3 added 2026-09-23, closes BL-002); remote still on pre-rebase history, so it needs a force-with-lease. See BL-001 before touching it.
 
 ## Last Completed Task
 - v1.67.1 (merged 2026-09-23, PR #57): retroactive release for PR #56, which merged 2026-09-22 having run none of the release protocol despite changing `core/claude-hooks/`. Three parts. (1) **Versioned the hook fix** that shipped unversioned — v1.66.1's broad `permissions.allow` granted `gh api -X DELETE` (repo deletion, branch-protection removal), `git push origin :main`, `git checkout -f`, `git stash drop/clear`, `find -delete` with no prompt and no block; `git -C <path>` evaded every git rule; `rm -r -f` bypassed the bundled-flag rule. 39-case suite passing. (2) **sync-skeleton Step 5l (new)** — PR #56 claimed downstream would pick the fix up on next sync; false, because Step 5k skips at v1.66.1+, which is exactly the affected population. Step 5l inverts the guard and mandates running the test suite rather than eyeballing a diff. (3) **New validator check `no unreleased skeleton changes`** — the root cause: both existing version checks are self-referential and reported 498 ok / 0 fail on a repo carrying an unreleased change. New check diffs core/roles/scripts/.agents against the last VERSION-touching commit; fails loudly on shallow clones; CI gained `fetch-depth: 0` so it isn't a silent no-op there. Also fixed pre-existing CHANGELOG hygiene (v1.66.1 ordered above v1.67.0; a v1.65.1 entry mislabelled v1.65.0) and backfilled v1.67.0 into `.memory/CHANGELOG.md` + `TIME_LOG.md`, which PR #55 had skipped. 5 logical commits. Lesson 009 written. 498 ok / 0 fail.
@@ -135,4 +135,4 @@ IDLE — v1.67.1 merged (PR #57, 2026-09-23), branch deleted, origin pruned. fea
 - Note: this was a v1.63.0 cartography refresh that updates module registry + cartography state after the v1.60-v1.62.x cross-tool work (5 releases of structural changes). SYMBOLS.md scripts/validate.py section also updated (5 new functions, 1 removed). Not a full per-file re-index — deferred to a future cartographer run when justified.
 
 ## Timestamp (UTC)
-- 2026-09-23T02:05Z
+- 2026-09-23T02:40Z
