@@ -1,5 +1,39 @@
 # agentskel Changelog
 
+## v1.67.1 — 2026-09-22
+
+### Retroactive release for PR #56 (destructive-command gaps) + downstream delivery + a validator gate
+
+PR #56 closed real gaps in `pre-bash-safety.sh` and merged to `main` without any of the release protocol running — no `VERSION` bump, no changelog entry, no version markers, no downstream migration step. The skeleton checklist is explicit that *every skeleton file change requires a version bump, no exceptions*. This release is that bump, plus the two things the missing protocol would have caught.
+
+**1. The hook fix, now versioned (shipped in PR #56, released here).** v1.67.0 paired a broad `permissions.allow` with `pre-bash-safety.sh`. The hook was wired correctly and blocked everything it claimed to, but the allowlist granted commands the hook never inspected — auto-approved, no prompt, no block: `gh api -X DELETE /repos/:owner/:repo` (deletes the repository), `gh api -X DELETE .../branches/main/protection`, `git push origin :main` / `--delete`, `git checkout -f`, `git stash drop` / `clear`, and `find . -delete` / `-exec rm`. `Bash(gh api *)` was the serious one — `gh api` is a general-purpose authenticated GitHub client, so allowing it wholesale allowed anything the token could do; it is now narrowed to explicit GET, with the hook blocking any writing method. Two rule bypasses were also fixed: `git -C <path> <cmd>` evaded every git rule, and the `rm` rule matched only bundled flags so `rm -r -f` walked through. Test suite `core/claude-hooks/pre-bash-safety.test.sh` covers 39 cases, all passing.
+
+**2. `sync-skeleton` Step 5l (new) — downstream projects can now actually receive the fix.** PR #56 stated repos would pick this up on their next sync. They would not have. Step 5k, the only step that installs this hook, opens with *"Skip this step if the project is already on skeleton v1.66.1+"* — so every project at v1.66.1 or v1.67.0 skipped it and kept the wide-open allowlist indefinitely. Those are precisely the affected projects, since the vulnerable configuration shipped in v1.66.1. Step 5l inverts the guard: it must NOT be skipped for v1.66.1/v1.67.0, and skips only at v1.67.1+ or where the hook was never installed. It overwrites the hook script, replaces the single `Bash(gh api *)` entry with the two read-only GET forms, requires running the 39-case suite rather than eyeballing a diff, covers the Gemini/Cursor/Windsurf/Codex copies, and ends with the session-restart hint.
+
+**3. New validator check: `no unreleased skeleton changes`.** The root cause of the miss. The two existing version checks are self-referential — `version consistency` compares the five markers to each other (all consistently 1.67.0, so: pass) and `changelog has current version entry` asserts the CHANGELOG mentions whatever VERSION says (v1.67.0 had a section, so: pass). Neither can express "files changed, version didn't", and the repo reported 498 ok / 0 fail while carrying an unversioned hook fix. The new check diffs `core/`, `roles/`, `scripts/` and `.agents/` between HEAD and the commit that last touched `VERSION`, failing if anything moved — those four paths being exactly what downstream projects receive on sync. It degrades honestly: a non-git checkout or a repo with no VERSION history passes, but a **shallow clone fails** with an explanatory message rather than passing on an empty diff. CI used `actions/checkout` at its default depth of 1, which would have made the check a silent no-op, so `validate.yml` now sets `fetch-depth: 0`.
+
+**Changelog hygiene (pre-existing, found during the audit).** v1.66.1 (2026-07-18) sat above v1.67.0 (2026-08-05), breaking reverse-chronological order — reordered. The entry headed `## v1.65.0 — 2026-06-10` was in fact the v1.65.1 rename that shipped 2026-06-16, producing two `## v1.65.0` headings and leaving v1.65.1 absent from this file though `.memory/CHANGELOG.md` and `TIME_LOG.md` both recorded it — relabelled, with the `###` title its siblings carry restored. No content was removed.
+
+**Known gap, not fixed here:** `Bash(echo *)` still permits `echo "" > file` to truncate a file through shell redirection. Blocking redirection generically is a larger change than this release.
+
+**Files touched:** `roles/dev/workflows/sync-skeleton.md` + `.agents/` copy (Step 5l), `scripts/validate.py` (check 12 + `subprocess` import), `.github/workflows/validate.yml` (fetch-depth), `CHANGELOG.md`, and the 5 version markers (`VERSION`, `README.md`, `MASTER_PLAN.md`, `gemini-extension.json`, `.claude-plugin/plugin.json`) + `.memory/CONFIG.md`.
+
+**MASTER_PLAN:** one trigger matched (install/setup path — `sync-skeleton` gained a step), but line 835 documents the Step 5x *mechanism* rather than enumerating individual migration steps, and Step 5l follows that mechanism. Content already accurate; `Corresponds to:` marker bumped only.
+
+affected: sync-skeleton
+
+## v1.67.0 — 2026-08-05
+
+### Two new dev-role skills: `database-migration` and `data-model-mapping`
+
+**1. `database-migration` (new).** Advisory skill covering safe schema-migration practices across any tool (Alembic, Rails, Prisma, Room, Core Data, Flyway, Liquibase, raw SQL). Requires locating the project's existing migration convention before writing a new one, mandatory tested reversibility (up/down), zero-downtime sequencing (additive first — never rename/drop a column in the same migration that introduces its replacement), an explicit-confirmation gate on destructive operations, backfill-before-`NOT NULL` ordering, and a hard rule against editing an already-applied migration.
+
+**2. `data-model-mapping` (new).** Advisory skill targeting a specific recurring failure: a field added to one side of a mapping (model, DTO, DB/ORM entity, cross-platform counterpart) but never propagated to the others, so it's silently dropped. Requires locating every mapped side before editing a model, propagating the change to all of them in the same edit, updating Blueprint parity/domain specs for cross-platform models, tracing the field end-to-end to confirm it survives serialization, and adding a round-trip mapping test.
+
+Both are dev-role skills (`roles/dev/skills/`), same pattern as `developer` / `test-driven-development` — loaded when the triggering scenario applies, not at every session.
+
+affected: database-migration, data-model-mapping
+
 ## v1.66.1 — 2026-07-18
 
 ### Wire Direct-Commit + Autopilot Mode enforcement (v1.66.0 shipped modes as prose-only)
@@ -56,18 +90,6 @@ Bug fix. v1.66.0 introduced both autonomy modes as documented rules with **no pr
 
 affected: git-flow, implement-task, develop-feature, core-behavior, sync-skeleton
 
-## v1.67.0 — 2026-08-05
-
-### Two new dev-role skills: `database-migration` and `data-model-mapping`
-
-**1. `database-migration` (new).** Advisory skill covering safe schema-migration practices across any tool (Alembic, Rails, Prisma, Room, Core Data, Flyway, Liquibase, raw SQL). Requires locating the project's existing migration convention before writing a new one, mandatory tested reversibility (up/down), zero-downtime sequencing (additive first — never rename/drop a column in the same migration that introduces its replacement), an explicit-confirmation gate on destructive operations, backfill-before-`NOT NULL` ordering, and a hard rule against editing an already-applied migration.
-
-**2. `data-model-mapping` (new).** Advisory skill targeting a specific recurring failure: a field added to one side of a mapping (model, DTO, DB/ORM entity, cross-platform counterpart) but never propagated to the others, so it's silently dropped. Requires locating every mapped side before editing a model, propagating the change to all of them in the same edit, updating Blueprint parity/domain specs for cross-platform models, tracing the field end-to-end to confirm it survives serialization, and adding a round-trip mapping test.
-
-Both are dev-role skills (`roles/dev/skills/`), same pattern as `developer` / `test-driven-development` — loaded when the triggering scenario applies, not at every session.
-
-affected: database-migration, data-model-mapping
-
 ## v1.66.0 — 2026-06-23
 
 ### Autopilot Mode + Direct-Commit Mode rename (autonomy modes consolidated)
@@ -110,7 +132,9 @@ Renamed across:
 
 affected: core-behavior, git-flow, session-start, sync-skeleton
 
-## v1.65.0 — 2026-06-10
+## v1.65.1 — 2026-06-16
+
+### Rename `Fast Execution Mode` → `Direct-Commit Mode`
 
 "Fast Execution Mode" was ambiguous — "fast" could mean any kind of speed (fast model, fast response, fast typing) rather than the specific behavior of the mode. The mode skips the **branch + PR ceremony** and commits directly to the default branch. New name maps 1:1 to that behavior.
 

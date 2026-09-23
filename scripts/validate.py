@@ -20,6 +20,7 @@ Checks:
   10. inline rules propag. — v1.64.0 git-discipline rule fingerprints appear
                              in all 5 inline-rule templates + installed copies
   11. changelog presence   — CHANGELOG.md has a section for the current VERSION
+  12. unreleased changes   — no skeleton file changed since VERSION last moved
 
 Usage:
   scripts/validate.py            # run all checks; exit 1 on any failure
@@ -30,6 +31,7 @@ from __future__ import annotations
 
 import glob
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -616,6 +618,71 @@ def check_changelog_has_version() -> Result:
     return r
 
 
+# Directories whose contents are the skeleton itself. A change to any of these
+# is a change downstream projects will receive on their next sync, so it must
+# ship under a version they can compare against.
+RELEASE_TRACKED_PATHS = ("core/", "roles/", "scripts/", ".agents/")
+
+
+def _git(*args: str) -> str | None:
+    """Run a git command in REPO. Returns stdout, or None if git can't answer."""
+    try:
+        proc = subprocess.run(
+            ("git", "-C", str(REPO), *args),
+            capture_output=True, text=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return proc.stdout.strip() if proc.returncode == 0 else None
+
+
+def check_no_unreleased_skeleton_changes() -> Result:
+    """Fail when skeleton files moved but VERSION did not.
+
+    The other version checks are self-referential: `version consistency` only
+    compares the five markers to each other, and `changelog has current
+    version entry` only asserts the CHANGELOG mentions whatever VERSION says.
+    Both pass trivially on a repo where someone edited core/ and never bumped
+    anything — which is how PR #56 shipped a hook fix as an unversioned change
+    that downstream projects had no way to detect. This check is the one that
+    notices.
+    """
+    r = Result("no unreleased skeleton changes")
+
+    if not (REPO / ".git").exists() or _git("rev-parse", "--git-dir") is None:
+        r.ok()  # not a git checkout (tarball, vendored copy) — nothing to compare
+        return r
+
+    # A shallow clone cannot see the commit that last touched VERSION, and the
+    # diff would come back empty — a false pass. Say so instead.
+    if _git("rev-parse", "--is-shallow-repository") == "true":
+        r.bad("shallow clone: cannot verify. CI needs actions/checkout fetch-depth: 0")
+        return r
+
+    last_bump = _git("log", "-1", "--format=%H", "--", "VERSION")
+    if not last_bump:
+        r.ok()  # no VERSION history (fresh repo) — nothing to compare against
+        return r
+
+    changed = _git("diff", "--name-only", f"{last_bump}..HEAD", "--", *RELEASE_TRACKED_PATHS)
+    if changed is None:
+        r.bad(f"could not diff {last_bump[:8]}..HEAD")
+        return r
+
+    files = [f for f in changed.split("\n") if f]
+    if not files:
+        r.ok()
+        return r
+
+    version = _read(REPO / "VERSION").strip() if (REPO / "VERSION").exists() else "?"
+    shown = ", ".join(files[:5]) + (f" (+{len(files) - 5} more)" if len(files) > 5 else "")
+    r.bad(
+        f"{len(files)} skeleton file(s) changed since VERSION last moved to {version} "
+        f"in {last_bump[:8]}: {shown}. Bump VERSION and add a CHANGELOG entry."
+    )
+    return r
+
+
 CHECKS = [
     check_frontmatter,
     check_description_length,
@@ -628,6 +695,7 @@ CHECKS = [
     check_agents_catalog_parity,
     check_inline_rules_propagation,
     check_changelog_has_version,
+    check_no_unreleased_skeleton_changes,
 ]
 
 
