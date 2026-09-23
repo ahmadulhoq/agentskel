@@ -161,14 +161,28 @@ Domain-specific skills, API contracts, business logic, cross-platform specs. Don
 
 ## Validation
 
-Run `python3 scripts/validate.py` before opening a PR. It runs six deterministic checks:
+Run `python3 scripts/validate.py` before opening a PR. It runs twelve deterministic checks:
 
-- **frontmatter shape** — every SKILL.md and workflow has valid YAML with `description:` (and `name:` on skills)
-- **single-line descriptions** — descriptions don't fold across YAML lines (required for stub and catalog generation)
-- **version consistency** — VERSION matches README, MASTER_PLAN, and `.memory/CONFIG.md`
-- **stub parity** (Claude-specific) — `.claude/skills/*.md` stubs reflect current `.agents/` sources (no orphans, no missing, no description drift)
-- **AGENTS.md catalog parity** (universal) — the Skills/Workflows tables in `AGENTS.md` reflect current `.agents/` sources. Feeds every non-Claude tool (Cursor, Copilot, Windsurf, Codex, Gemini).
-- **changelog entry** — `CHANGELOG.md` has a section for the current VERSION
+| # | Check | What it enforces |
+|---|-------|------------------|
+| 1 | **frontmatter shape** | Every SKILL.md and workflow has valid YAML with `description:` (and `name:` on skills) |
+| 2 | **description length** | Descriptions stay within 1024 characters. Multi-line YAML folded scalars **are** supported — see below |
+| 3 | **version consistency** | `VERSION` matches all five markers: `README.md`, `MASTER_PLAN.md`, `.memory/CONFIG.md`, `gemini-extension.json`, `.claude-plugin/plugin.json` |
+| 4 | **claude stub parity** | `.claude/skills/<name>/SKILL.md` reflects current `.agents/` sources (no orphans, no missing, no description drift) |
+| 5 | **gemini stub parity** | `.gemini/skills/<name>/SKILL.md` likewise |
+| 6 | **cursor rule parity** | `.cursor/rules/<name>.mdc` likewise |
+| 7 | **windsurf workflow parity** | `.windsurf/workflows/<name>.md` likewise |
+| 8 | **copilot prompt parity** | `.github/prompts/<name>.prompt.md` likewise |
+| 9 | **AGENTS.md catalog parity** | The Skills/Workflows tables in `AGENTS.md` reflect current `.agents/` sources. Feeds every non-Claude tool |
+| 10 | **inline rules propagation** | The git-discipline rule fingerprints appear in all five inline-rule templates *and* their installed copies |
+| 11 | **changelog entry** | `CHANGELOG.md` has a section for the current `VERSION` |
+| 12 | **no unreleased skeleton changes** | Nothing under `core/`, `roles/`, `scripts/` or `.agents/` has changed since `VERSION` last moved. See below |
+
+**On multi-line descriptions (check 2).** This section previously said descriptions must not fold across YAML lines. That stopped being true in v1.54.0, which added folded-scalar support precisely so long descriptions could wrap. Write them on one line or fold them — only the 1024-character limit is enforced.
+
+**On unreleased changes (check 12).** Every skeleton file change requires a `VERSION` bump — no exceptions. Those four directories are what downstream projects receive on sync, so a change there must ship under a version they can compare against. If this check fails, bump `VERSION`, add a `CHANGELOG.md` entry, and update the five markers from check 3.
+
+The check walks back to the commit that last touched `VERSION`, so it needs real history: a shallow clone **fails** with an explanatory message rather than passing on an empty diff. CI sets `fetch-depth: 0` for this reason. If you work in a shallow clone, run `git fetch --unshallow` first.
 
 CI runs the same validator on every push and PR. A green local run should mean a green CI run.
 
