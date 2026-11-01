@@ -380,14 +380,19 @@ If `.agents/rules/repo-rules.md` exists (project-specific rules), also copy it t
 
 ## Step 5b3 — Install enforcement hooks
 
-Enforcement hooks deterministically block commits that skip task-completion and
-auto-pull before ai-memory pushes. Install for each supported tool:
+Enforcement hooks block commits whose skill/workflow descriptions exceed the
+1024-char spec limit, block destructive shell commands (Claude Code), and
+auto-pull before ai-memory pushes. Install for each supported tool.
+
+Every tool's `pre-commit-check.sh` calls `check-skill-descriptions.py` from its
+own directory, so that file is copied next to it for **every** tool below. One
+source: `[SKELETON_PATH]/core/claude-hooks/check-skill-descriptions.py`.
 
 **Claude Code** (if `claude` in Supported Tools):
 ```bash
 mkdir -p .claude/hooks
 ```
-1. Copy `[SKELETON_PATH]/core/claude-hooks/pre-commit-check.sh` → `.claude/hooks/pre-commit-check.sh`
+1. Copy `[SKELETON_PATH]/core/claude-hooks/pre-commit-check.sh` and `check-skill-descriptions.py` → `.claude/hooks/`
 2. Copy `[SKELETON_PATH]/core/claude-hooks/pre-memory-push.sh` → `.claude/hooks/pre-memory-push.sh`
 3. Copy `[SKELETON_PATH]/core/claude-hooks/pre-edit-check.sh` → `.claude/hooks/pre-edit-check.sh`
 4. Copy `[SKELETON_PATH]/core/claude-hooks/stop-verify.sh` → `.claude/hooks/stop-verify.sh`
@@ -399,7 +404,7 @@ mkdir -p .claude/hooks
 ```bash
 mkdir -p .gemini/hooks
 ```
-1. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-commit-check.sh` → `.gemini/hooks/pre-commit-check.sh`
+1. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-commit-check.sh` → `.gemini/hooks/pre-commit-check.sh`, and `[SKELETON_PATH]/core/claude-hooks/check-skill-descriptions.py` → `.gemini/hooks/`
 2. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-memory-push.sh` → `.gemini/hooks/pre-memory-push.sh`
 3. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-edit-check.sh` → `.gemini/hooks/pre-edit-check.sh`
 4. Copy `[SKELETON_PATH]/core/gemini-hooks/stop-verify.sh` → `.gemini/hooks/stop-verify.sh`
@@ -413,7 +418,7 @@ Gemini hooks use a different I/O contract than Claude's (JSON stdin/stdout, diff
 ```bash
 mkdir -p .cursor/hooks
 ```
-1. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-commit-check.sh` → `.cursor/hooks/pre-commit-check.sh`
+1. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-commit-check.sh` → `.cursor/hooks/pre-commit-check.sh`, and `[SKELETON_PATH]/core/claude-hooks/check-skill-descriptions.py` → `.cursor/hooks/`
 2. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-memory-push.sh` → `.cursor/hooks/pre-memory-push.sh`
 3. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-edit-check.sh` → `.cursor/hooks/pre-edit-check.sh`
 4. Copy `[SKELETON_PATH]/core/cursor-hooks/stop-verify.sh` → `.cursor/hooks/stop-verify.sh`
@@ -431,6 +436,7 @@ mkdir -p .windsurf/hooks
    - `pre-memory-push.sh` → `.windsurf/hooks/pre-memory-push.sh`
    - `pre-edit-check.sh` → `.windsurf/hooks/pre-edit-check.sh`
    - `stop-verify.sh` → `.windsurf/hooks/stop-verify.sh`
+   - and `[SKELETON_PATH]/core/claude-hooks/check-skill-descriptions.py` → `.windsurf/hooks/`
 2. `chmod +x .windsurf/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/windsurf-hooks/hooks.json` → `.windsurf/hooks.json`
 
@@ -450,6 +456,7 @@ mkdir -p .codex/hooks
    - `pre-commit-check.sh` → `.codex/hooks/pre-commit-check.sh`
    - `pre-memory-push.sh` → `.codex/hooks/pre-memory-push.sh`
    - `stop-verify.sh` → `.codex/hooks/stop-verify.sh`
+   - `check-skill-descriptions.py` → `.codex/hooks/check-skill-descriptions.py`
 2. `chmod +x .codex/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/codex-hooks/hooks.json` → `.codex/hooks.json`
 
@@ -457,7 +464,9 @@ After install, the user must run `codex` once in the project and accept the trus
 
 Codex's hook I/O contract is verified to match Claude's: `tool_input.command` for shell commands, exit-code-based blocking (0/2/other), stderr for rejection reason. Sourcing scripts from `core/claude-hooks/` is intentional and supported. If Codex's spec changes in a future release, the audit lives in v1.62.2 CHANGELOG.
 
-Hook scripts are tool-specific because each tool has its own I/O contract. The scripts in each `core/<tool>-hooks/` directory follow that tool's spec. Common enforcement logic (CHANGELOG/TIME_LOG check, ai-memory auto-pull, plan-gate reminder, stop-verify) is mirrored across tools but wrapped in tool-specific JSON I/O.
+Hook scripts are tool-specific because each tool has its own I/O contract. The scripts in each `core/<tool>-hooks/` directory follow that tool's spec. Common enforcement logic (description length via the shared `check-skill-descriptions.py`, ai-memory auto-pull, plan-gate reminder, stop-verify) is mirrored across tools but wrapped in tool-specific JSON I/O. The pre-v1.68.0 CHANGELOG/TIME_LOG commit gate was removed: it never ran in a main checkout, and turning it on would refuse the first commit of every task.
+
+Verify the commit hook before finishing: `bash [SKELETON_PATH]/core/claude-hooks/pre-commit-check.test.sh` (runs all four variants; expect `0 failed`).
 
 ---
 

@@ -1,7 +1,20 @@
 #!/usr/bin/env bash
 # agentskel pre-commit enforcement hook
-# Blocks git commit if task-completion artifacts are missing.
-# Installed to .claude/hooks/ by setup-skeleton.
+# Installed to .claude/hooks/ by setup-skeleton, next to
+# check-skill-descriptions.py (Codex reuses this script from .codex/hooks/).
+#
+# Checks, in order:
+#   1. Skill/workflow descriptions <= 1024 chars, in what the commit records
+#      (check-skill-descriptions.py). Runs in every checkout.
+#   2. Skeleton repo only: VERSION matches README and MASTER_PLAN.
+#
+# Block = exit 2 + reason on stderr. Anything else lets the commit through,
+# including python being missing (fail-open).
+#
+# v1.68.0: the CHANGELOG/TIME_LOG gate was removed. It sat behind a skip that
+# fired in every main checkout (.memory is always on ai-memory there), so it
+# never ran; switching it on would have refused the first commit of every task,
+# because task-completion writes the logs after the code commit.
 set -euo pipefail
 
 # Read the tool input from stdin (Claude Code passes JSON with tool details)
@@ -10,63 +23,49 @@ INPUT=$(cat)
 # Extract the command being run
 COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))" 2>/dev/null || echo "")
 
+# 1. Description length. Runs before every early exit below: the checker parses
+# the command itself (`cd X && git commit`, `git -C X commit`, `-a`,
+# `-- <paths>`), reads what the commit will record, and skips commits whose
+# target checkout is on ai-memory. Keep `||` outside the $(...): a pipeline +
+# heredoc + redirect + `||` inside command substitution is a runtime syntax
+# error in bash 5.2 that `bash -n` does not catch (pre-v1.68.0 bug).
+case "$COMMAND" in
+    *git*commit*)
+        # Block only on the checker's own verdict: python3 also exits 2 when it
+        # can't open the script, which must fail open, not block every commit.
+        rc=0
+        MSG=$(HOOK_INPUT="$INPUT" python3 "$(dirname "$0")/check-skill-descriptions.py" 2>&1 >/dev/null) || rc=$?
+        if [ "$rc" -eq 2 ] && [ "${MSG#Description exceeds}" != "$MSG" ]; then
+            echo "$MSG" >&2
+            exit 2
+        fi
+        ;;
+esac
+
 # EXIT EARLY if this is NOT a git commit command.
-# The settings.json "if" pattern is unreliable — verify explicitly here.
 # Match: `git commit`, `git commit -m ...`, `cd X && git commit ...`
-# Don't match: `git log`, `git status`, `git diff`, etc.
+# Don't match: `git log`, `git status`, `git commit-tree`, etc.
 if ! echo "$COMMAND" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+commit([[:space:]]|$)'; then
     exit 0
 fi
 
-# Only check commits on the project branch, not ai-memory.
-BRANCH=$(git branch --show-current 2>/dev/null || echo "")
-MEMORY_BRANCH=$(git -C .memory branch --show-current 2>/dev/null || echo "")
-
 # Strip -m "..." / -m '...' / --message variants so structural checks below
 # don't accidentally match text inside the commit message (e.g. a message like
-# "fix .memory mount" or "implement merge logic" must not bypass enforcement).
+# "fix .memory mount" must not skip the checks).
 CMD_STRUCT=$(echo "$COMMAND" | sed -E 's/-m[[:space:]]+"[^"]*"//g; s/-m[[:space:]]+'\''[^'\'']*'\''//g; s/--message[[:space:]]+"[^"]*"//g; s/--message[[:space:]]+'\''[^'\'']*'\''//g')
 
-# Skip when committing inside `.memory/` (the ai-memory worktree branch).
-# Match command structure (e.g. `cd .memory && git commit`, `git -C .memory commit`),
-# NOT the literal string `.memory` appearing in a commit message.
-if [ "$BRANCH" = "ai-memory" ] || [ "$MEMORY_BRANCH" = "ai-memory" ] || \
+# Skip commits into the ai-memory checkout itself. This is about the commit's
+# target, not about `.memory/` existing: pre-v1.68.0 also skipped whenever
+# `git -C .memory branch` said ai-memory, which is true in every main checkout.
+BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+if [ "$BRANCH" = "ai-memory" ] || \
    echo "$CMD_STRUCT" | grep -qE '(^|[[:space:];&|])cd[[:space:]]+\.memory(/|[[:space:]]|$)|git[[:space:]]+-C[[:space:]]+\.memory(/|[[:space:]]|$)'; then
-    exit 0
-fi
-
-# Skip merge commits or amends. `--amend` only counts as a flag (preceded by
-# whitespace, followed by space/end). `merge` only counts as the `git merge`
-# command — not the word "merge" inside a commit message.
-if echo "$CMD_STRUCT" | grep -qE '(^|[[:space:]])--amend([[:space:]]|$)|(^|[;&|[:space:]])git[[:space:]]+merge([[:space:]]|$)'; then
     exit 0
 fi
 
 ERRORS=""
 
-# Check if CHANGELOG.md and TIME_LOG.md have recent changes in .memory/
-# Strategy: look at the LAST commit on ai-memory. If CHANGELOG/TIME_LOG weren't
-# modified in the last commit OR aren't staged/modified right now, flag it.
-# This avoids wall-clock time dependency.
-if [ -d ".memory" ]; then
-    # Check if files are modified (staged or unstaged) in .memory/
-    DIRTY=$(git -C .memory status --porcelain 2>/dev/null || echo "")
-
-    # Check if CHANGELOG.md was modified in the last commit OR is currently dirty
-    CHANGELOG_RECENT=$(git -C .memory log -1 --name-only --format="" 2>/dev/null | grep "^CHANGELOG.md$" || true)
-    CHANGELOG_DIRTY=$(echo "$DIRTY" | grep " CHANGELOG.md$" || true)
-    if [ -z "$CHANGELOG_RECENT" ] && [ -z "$CHANGELOG_DIRTY" ]; then
-        ERRORS="${ERRORS}.memory/CHANGELOG.md not updated for this task. "
-    fi
-
-    TIMELOG_RECENT=$(git -C .memory log -1 --name-only --format="" 2>/dev/null | grep "^TIME_LOG.md$" || true)
-    TIMELOG_DIRTY=$(echo "$DIRTY" | grep " TIME_LOG.md$" || true)
-    if [ -z "$TIMELOG_RECENT" ] && [ -z "$TIMELOG_DIRTY" ]; then
-        ERRORS="${ERRORS}.memory/TIME_LOG.md not updated for this task. "
-    fi
-fi
-
-# Skeleton-only checks: VERSION must match README and MASTER_PLAN.
+# 2. Skeleton-only checks: VERSION must match README and MASTER_PLAN.
 # Strict match for the markdown table row `| Skeleton Path | . |` — value
 # column must be literally `.`. Pre-v1.63.2 used `'Skeleton Path.*\.'`
 # which matched any dot anywhere on the line, so downstream projects with
@@ -74,7 +73,7 @@ fi
 # `./agentskel` all triggered these checks incorrectly.
 if [ -f ".memory/CONFIG.md" ] && grep -qE '^\|[[:space:]]+Skeleton Path[[:space:]]+\|[[:space:]]+\.[[:space:]]+\|' .memory/CONFIG.md 2>/dev/null; then
     if [ -f "VERSION" ]; then
-        SKEL_VERSION=$(cat VERSION | tr -d '[:space:]')
+        SKEL_VERSION=$(tr -d '[:space:]' < VERSION)
 
         # Match X.Y.Z or X.Y format
         if [ -f "README.md" ]; then
@@ -90,60 +89,6 @@ if [ -f ".memory/CONFIG.md" ] && grep -qE '^\|[[:space:]]+Skeleton Path[[:space:
                 ERRORS="${ERRORS}MASTER_PLAN.md version (v${MP_VERSION}) != VERSION (${SKEL_VERSION}). "
             fi
         fi
-    fi
-fi
-
-# Lint: staged skill/workflow descriptions must not exceed 1024 chars
-# (agentskills.io spec limit). Multi-line YAML folded scalars (>) are allowed;
-# they are normalized to a single string for length measurement.
-STAGED=$(git diff --cached --name-only 2>/dev/null || true)
-if [ -n "$STAGED" ]; then
-    BAD=$(echo "$STAGED" | python3 - <<'PY' 2>/dev/null || true
-import sys, re, os
-
-FM_RE = re.compile(r'^---\s*\n(.*?)\n---\s*\n', re.DOTALL)
-
-def extract_desc(fm_block):
-    m = re.search(r'^description:[ \t]*(.*)', fm_block, re.MULTILINE)
-    if not m:
-        return None
-    first = m.group(1).rstrip()
-    if first in ('>', '|', '>-', '|-', '>+', '|+', ''):
-        rest = fm_block[m.end():]
-        content = []
-        for line in rest.split('\n'):
-            if line and line[:1] in (' ', '\t'):
-                content.append(line.strip())
-            else:
-                break
-        joined = ' '.join(content).strip()
-        return joined if joined else None
-    stripped = first.strip()
-    return stripped if stripped else None
-
-bad = []
-for line in sys.stdin.read().splitlines():
-    line = line.strip()
-    if not line.endswith('.md'):
-        continue
-    if not (line.endswith('/SKILL.md') or '/workflows/' in line):
-        continue
-    if not os.path.isfile(line):
-        continue
-    with open(line) as f:
-        text = f.read()
-    fm = FM_RE.match(text)
-    if not fm:
-        continue
-    desc = extract_desc(fm.group(1))
-    if desc and len(desc) > 1024:
-        bad.append(f"{line} ({len(desc)} chars)")
-if bad:
-    print("; ".join(bad))
-PY
-)
-    if [ -n "$BAD" ]; then
-        ERRORS="${ERRORS}Description exceeds 1024-char limit in: ${BAD}. Shorten or split the skill scope. "
     fi
 fi
 

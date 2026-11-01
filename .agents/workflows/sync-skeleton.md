@@ -220,12 +220,14 @@ Copilot's prompt files at `.github/prompts/*.prompt.md`.
 
 | Tool | Hook scripts | Settings/config |
 |---|---|---|
-| `claude` | `.claude/hooks/` — `pre-commit-check.sh`, `pre-memory-push.sh`, `pre-edit-check.sh`, `stop-verify.sh` | `.claude/settings.json` |
+| `claude` | `.claude/hooks/` — `pre-bash-safety.sh`, `pre-commit-check.sh`, `pre-memory-push.sh`, `pre-edit-check.sh`, `stop-verify.sh` | `.claude/settings.json` |
 | `antigravity` | `.gemini/hooks/` — same 4 (Gemini-format: JSON stdin/stdout, `BeforeTool`/`AfterAgent` events) | `.gemini/settings.json` |
 | `cursor` | `.cursor/hooks/` — same 4 (Cursor-format: `command` at stdin root, JSON `{permission,user_message,agent_message}` on stdout) | **`.cursor/hooks.json`** at workspace root (NOT `.cursor/hooks/`) |
 | `windsurf` | `.windsurf/hooks/` — 4 scripts from `core/windsurf-hooks/` (Windsurf-format: reads `tool_info.command_line` / `tool_info.file_path` from stdin; exit-code based) | `.windsurf/hooks.json` at workspace root; uses `pre_run_command` / `pre_write_code` / `post_cascade_response` |
 | `copilot` | none — Copilot has no hooks concept | none |
 | `codex` | `.codex/hooks/` — same 3 | `.codex/hooks.json` |
+
+Every tool's hook directory except Copilot's also gets `check-skill-descriptions.py`, copied from `core/claude-hooks/` (one source for all tools, since v1.68.0).
 
 **Pre-v1.62.0 migrations (apply once during sync):**
 

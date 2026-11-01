@@ -11,6 +11,17 @@
 # Note: Windsurf nests under `tool_info.command_line` (NOT `tool_input.command`
 # like Claude/Codex). Pre-v1.62.2 used Claude scripts here and never saw the
 # command — silently allowing everything.
+#
+# Checks, in order:
+#   1. Skill/workflow descriptions <= 1024 chars, in what the commit records
+#      (check-skill-descriptions.py, installed next to this script). Runs in
+#      every checkout.
+#   2. Skeleton repo only: VERSION matches README and MASTER_PLAN.
+# python missing or the checker crashing lets the commit through (fail-open).
+#
+# v1.68.0: CHANGELOG/TIME_LOG gate removed (never ran in a main checkout;
+# switching it on would refuse the first commit of every task). See the
+# claude-hooks variant for the full notes.
 set -euo pipefail
 
 INPUT=$(cat)
@@ -24,57 +35,66 @@ except Exception:
     print('')
 " 2>/dev/null || echo "")
 
-# Not a git commit — allow
+# 1. Description length. Runs before every early exit below: the checker parses
+# the command itself (`cd X && git commit`, `git -C X commit`, `-a`,
+# `-- <paths>`), reads what the commit will record, and skips commits whose
+# target checkout is on ai-memory. Keep `||` outside the $(...): a pipeline +
+# heredoc + redirect + `||` inside command substitution is a runtime syntax
+# error in bash 5.2 that `bash -n` does not catch (pre-v1.68.0 bug).
+case "$COMMAND" in
+    *git*commit*)
+        # Block only on the checker's own verdict: python3 also exits 2 when it
+        # can't open the script, which must fail open, not block every commit.
+        rc=0
+        MSG=$(HOOK_INPUT="$INPUT" python3 "$(dirname "$0")/check-skill-descriptions.py" 2>&1 >/dev/null) || rc=$?
+        if [ "$rc" -eq 2 ] && [ "${MSG#Description exceeds}" != "$MSG" ]; then
+            echo "$MSG" >&2
+            exit 2
+        fi
+        ;;
+esac
+
+# EXIT EARLY if this is NOT a git commit command.
+# Match: `git commit`, `git commit -m ...`, `cd X && git commit ...`
+# Don't match: `git log`, `git status`, `git commit-tree`, etc.
 if ! echo "$COMMAND" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+commit([[:space:]]|$)'; then
     exit 0
 fi
 
-# Only check commits on project branch, not ai-memory
-BRANCH=$(git branch --show-current 2>/dev/null || echo "")
-MEMORY_BRANCH=$(git -C .memory branch --show-current 2>/dev/null || echo "")
-
 # Strip -m "..." / -m '...' / --message variants so structural checks below
-# don't accidentally match commit message text (see claude-hooks notes).
+# don't accidentally match text inside the commit message (e.g. a message like
+# "fix .memory mount" must not skip the checks).
 CMD_STRUCT=$(echo "$COMMAND" | sed -E 's/-m[[:space:]]+"[^"]*"//g; s/-m[[:space:]]+'\''[^'\'']*'\''//g; s/--message[[:space:]]+"[^"]*"//g; s/--message[[:space:]]+'\''[^'\'']*'\''//g')
 
-if [ "$BRANCH" = "ai-memory" ] || [ "$MEMORY_BRANCH" = "ai-memory" ] || \
+# Skip commits into the ai-memory checkout itself. This is about the commit's
+# target, not about `.memory/` existing: pre-v1.68.0 also skipped whenever
+# `git -C .memory branch` said ai-memory, which is true in every main checkout.
+BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+if [ "$BRANCH" = "ai-memory" ] || \
    echo "$CMD_STRUCT" | grep -qE '(^|[[:space:];&|])cd[[:space:]]+\.memory(/|[[:space:]]|$)|git[[:space:]]+-C[[:space:]]+\.memory(/|[[:space:]]|$)'; then
-    exit 0
-fi
-
-# Skip merge commits or amends (flag/command match only — not message text)
-if echo "$CMD_STRUCT" | grep -qE '(^|[[:space:]])--amend([[:space:]]|$)|(^|[;&|[:space:]])git[[:space:]]+merge([[:space:]]|$)'; then
     exit 0
 fi
 
 ERRORS=""
 
-if [ -d ".memory" ]; then
-    DIRTY=$(git -C .memory status --porcelain 2>/dev/null || echo "")
-    CHANGELOG_RECENT=$(git -C .memory log -1 --name-only --format="" 2>/dev/null | grep "^CHANGELOG.md$" || true)
-    CHANGELOG_DIRTY=$(echo "$DIRTY" | grep " CHANGELOG.md$" || true)
-    if [ -z "$CHANGELOG_RECENT" ] && [ -z "$CHANGELOG_DIRTY" ]; then
-        ERRORS="${ERRORS}.memory/CHANGELOG.md not updated for this task. "
-    fi
-
-    TIMELOG_RECENT=$(git -C .memory log -1 --name-only --format="" 2>/dev/null | grep "^TIME_LOG.md$" || true)
-    TIMELOG_DIRTY=$(echo "$DIRTY" | grep " TIME_LOG.md$" || true)
-    if [ -z "$TIMELOG_RECENT" ] && [ -z "$TIMELOG_DIRTY" ]; then
-        ERRORS="${ERRORS}.memory/TIME_LOG.md not updated for this task. "
-    fi
-fi
-
-# Skeleton-only checks. Strict match for `| Skeleton Path | . |` —
-# pre-v1.63.2 used a loose regex that false-positived on any path with a dot.
+# 2. Skeleton-only checks: VERSION must match README and MASTER_PLAN.
+# Strict match for the markdown table row `| Skeleton Path | . |` — value
+# column must be literally `.`. Pre-v1.63.2 used `'Skeleton Path.*\.'`
+# which matched any dot anywhere on the line, so downstream projects with
+# Skeleton Path values like `../agentskel`, `~/.agentskel/skeleton`, or
+# `./agentskel` all triggered these checks incorrectly.
 if [ -f ".memory/CONFIG.md" ] && grep -qE '^\|[[:space:]]+Skeleton Path[[:space:]]+\|[[:space:]]+\.[[:space:]]+\|' .memory/CONFIG.md 2>/dev/null; then
     if [ -f "VERSION" ]; then
-        SKEL_VERSION=$(cat VERSION | tr -d '[:space:]')
+        SKEL_VERSION=$(tr -d '[:space:]' < VERSION)
+
+        # Match X.Y.Z or X.Y format
         if [ -f "README.md" ]; then
             README_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+(\.[0-9]+)?' README.md | head -1 | sed 's/^v//' || echo "")
             if [ -n "$README_VERSION" ] && [ "$README_VERSION" != "$SKEL_VERSION" ]; then
                 ERRORS="${ERRORS}README.md version (v${README_VERSION}) != VERSION (${SKEL_VERSION}). "
             fi
         fi
+
         if [ -f "MASTER_PLAN.md" ]; then
             MP_VERSION=$(grep -oE 'Corresponds to: agentskel v[0-9]+\.[0-9]+(\.[0-9]+)?' MASTER_PLAN.md | sed 's/^Corresponds to: agentskel v//' || echo "")
             if [ -n "$MP_VERSION" ] && [ "$MP_VERSION" != "$SKEL_VERSION" ]; then
