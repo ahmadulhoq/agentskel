@@ -4,6 +4,36 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-11-01 — v1.68.0: Commit hook repairs + merged remote branch deletes ask instead of block
+
+Two user requests in one release, 5 logical commits (test-first).
+
+1. **Pre-commit 1024-char description check never worked** (brief from a
+   downstream session; reference fix MCU-Watchlist PR #159 / TD-011). Seven
+   faults: bash 5.2 runtime crash (pipeline + heredoc + redirect + `||`
+   inside `$(...)`), blind stdin, folded `>` unmeasured, on-disk instead of
+   staged content, wrong checkout, narrow `Bash(git commit*)` trigger, and a
+   skip that fired in every main checkout. Shared
+   `core/claude-hooks/check-skill-descriptions.py` now serves all four tool
+   variants; triggers widened; new 4-variant suite (old hooks: 80/136 fail;
+   new: 137/137 on bash 5.2 in docker and macOS bash 3.2; MCU-Watchlist's
+   25-case suite unmodified: 25/25). **Maintainer decisions:** remove the
+   CHANGELOG/TIME_LOG commit gate (never ran; enabled it would refuse the
+   first commit of every task); add the check to Cursor + Windsurf too.
+   Beyond #159: python3 exits 2 when it can't open the script, which the
+   hook read as "block" — fail-open now requires the checker's own verdict.
+   This fix affects MCU-Watchlist too (its hook has the same bug).
+
+2. **pre-bash-safety: merged remote branch deletes → "ask"** (Claude Code's
+   own approval prompt, which an agent cannot answer) when every tip, per
+   `git ls-remote`, is in the remote default branch. Everything else stays
+   blocked; verdict runs after all block rules. Found: `-d` short form was
+   ALLOWED with no prompt; setup-skeleton never installed pre-bash-safety.sh
+   (fresh installs since v1.66.1 had a dangling hook). 57/57.
+
+sync-skeleton Step 5m delivers both downstream, including to projects that
+carry the MCU-Watchlist local fix. 499 ok / 0 fail.
+
 ## 2026-09-22 — v1.67.1: Retroactive release for PR #56 + downstream delivery + validator gate
 
 PR #56 closed real destructive-command gaps in pre-bash-safety.sh

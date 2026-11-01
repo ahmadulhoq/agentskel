@@ -115,6 +115,22 @@
 | .claudeignore | config | .claudeignore |
 | LICENSE | license | LICENSE |
 
+## core/claude-hooks (python + test suites)
+| Symbol | Type | File |
+|--------|------|------|
+| check-skill-descriptions.py | script (shared by all 4 tools' pre-commit hooks) | core/claude-hooks/check-skill-descriptions.py |
+| extract_desc | function | core/claude-hooks/check-skill-descriptions.py |
+| is_skill_file | function | core/claude-hooks/check-skill-descriptions.py |
+| strip_heredoc_bodies | function | core/claude-hooks/check-skill-descriptions.py |
+| simple_commands | function | core/claude-hooks/check-skill-descriptions.py |
+| find_commits | function | core/claude-hooks/check-skill-descriptions.py |
+| parse_commit_args | function | core/claude-hooks/check-skill-descriptions.py |
+| check_commit | function | core/claude-hooks/check-skill-descriptions.py |
+| hook_fields | function | core/claude-hooks/check-skill-descriptions.py |
+| pre-commit-check.test.sh | test suite (4 variants + trigger check) | core/claude-hooks/pre-commit-check.test.sh |
+| pre-bash-safety.test.sh | test suite (incl. throwaway-remote branch-delete cases) | core/claude-hooks/pre-bash-safety.test.sh |
+| DELETE_CHECK_PY | inline python (remote-delete ask/block verdict) | core/claude-hooks/pre-bash-safety.sh |
+
 ## scripts
 | Symbol | Type | File |
 |--------|------|------|

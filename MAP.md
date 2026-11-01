@@ -27,7 +27,7 @@
 | `core/rules/` | 2 always-on agent behavior rules | core-behavior.md, security-non-negotiables.md |
 | `core/skills/` | 9 procedural skills — mandatory lifecycle and meta-capabilities | session-start, task-completion, git-flow, codebase-navigator, skill-authoring, subagent-dispatch, atlassian-integration, knowledge-routing, discussion-continuity |
 | `core/claude-rules/` | 3 Claude-specific rule files (auto-loaded by Claude Code) | core-behavior.md, security.md, bootstrap.md |
-| `core/claude-hooks/` | 5 enforcement scripts + Claude settings template | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, settings.json |
+| `core/claude-hooks/` | Enforcement scripts + Claude settings template + test suites. `check-skill-descriptions.py` is the shared commit checker installed next to EVERY tool's pre-commit-check.sh (v1.68.0) | pre-bash-safety.sh (+ .test.sh), pre-commit-check.sh (+ .test.sh, runs all 4 tool variants), check-skill-descriptions.py, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, settings.json |
 | `core/cursor-hooks/` | 4 Cursor-format hook scripts + hooks.json | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, hooks.json. Cursor's I/O contract is `command` at top of stdin JSON + `{permission,user_message,agent_message}` JSON on stdout (v1.62.0). |
 | `core/gemini-hooks/` | 4 Gemini-format hook scripts + settings.json | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, settings.json. Gemini's I/O contract is `tool_input.command` stdin + JSON-only stdout (v1.61.0). |
 | `core/windsurf-hooks/` | 4 Windsurf-format hook scripts + hooks.json | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh, hooks.json. Windsurf's I/O contract is `tool_info.command_line` stdin + stderr-based blocking (v1.62.2). |
@@ -43,7 +43,7 @@
 | `.agents/` | Installed copy of rules, workflows, skills, standards (self-install for dogfooding) | Mirrors core/ and roles/dev/ — kept in sync via sync-skeleton. 17 skills, 33 workflows, 3 rules, 7 standards |
 | `.claude/skills/` | 50 auto-generated Claude Code skill stubs in **directory layout** (`<name>/SKILL.md`) | One stub per `.agents/` skill (17) and workflow (33). Pre-v1.60.0 used flat `<name>.md` which Claude silently ignored. |
 | `.claude/rules/` | Claude Code native-loaded rules (copies of core/claude-rules) | core-behavior.md, security.md, bootstrap.md |
-| `.claude/hooks/` | Installed Claude hook scripts (copies of core/claude-hooks) | pre-commit-check.sh, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh |
+| `.claude/hooks/` | Installed Claude hook scripts (copies of core/claude-hooks) | pre-bash-safety.sh, pre-commit-check.sh, check-skill-descriptions.py, pre-memory-push.sh, pre-edit-check.sh, stop-verify.sh |
 | `.claude-plugin/` | Plugin manifest for Claude Code `/plugin install` | plugin.json (tracks agentskel version) |
 | `.gemini/skills/` | 50 auto-generated Gemini stubs in directory layout | One stub per `.agents/` skill + workflow. Workflows aren't on Gemini's auto-discovery path otherwise (v1.61.0). |
 | `.cursor/rules/` | 51 Cursor rules: 1 always-on core (`agentskel.mdc`) + 50 per-skill/workflow stubs with `alwaysApply: false` (agent-requested discovery) | agentskel.mdc + 50 `<name>.mdc` files (v1.62.0) |
