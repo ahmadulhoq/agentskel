@@ -86,23 +86,43 @@ The template ships pre-approvals for read-only ops (already in v1.66.0) plus saf
 - Reads: `ls`, `cat`, `grep`, `find`, `git log`, `git status`, `git diff`, etc.
 - Writes: `Edit(**)`, `Write(**)` — file edits within the project
 - Git: `git add`, `git commit`, `git push`, `git pull`, `git fetch`, `git checkout`, `git merge`, `git stash`, `git worktree`
-- GitHub CLI: `gh pr *`, `gh issue *`, `gh api *`
+- GitHub CLI: `gh pr *`, `gh issue *`, and read-only `gh api` (`--method GET` / `-X GET`). `gh api *` wholesale was narrowed in v1.67.1: it can delete the repository.
 
 **Layer 2 — `pre-bash-safety.sh` hook (installed to `.claude/hooks/`):**
 
 Blocks destructive patterns with exit code 2 + a stderr message, **regardless of what the allowlist accepts**. The allowlist uses glob matchers (`Bash(git push *)` would match `git push --force`), so the safety hook enforces the block explicitly.
 
-Blocked patterns:
+Blocked patterns (also when prefixed with `git -C <path>`):
 - `git push --force` / `-f` / `--force-with-lease`
 - `git reset --hard`
 - `git branch -D` (force-delete)
-- `git checkout -- <file>` (discards uncommitted changes)
-- `git checkout .` (discards all uncommitted)
+- `git checkout -- <file>`, `git checkout .`, `git checkout -f` (discard uncommitted changes)
 - `git clean -f` (force-remove untracked)
-- `rm -rf` / `-fr` / `-Rf` (recursive force delete)
+- `git stash drop` / `git stash clear`
+- `rm -rf` / `-fr` / `-Rf`, and `rm -r -f` / `rm --recursive --force`
+- `find … -delete` / `-exec rm`
 - `git worktree remove --force`
+- `gh api` with a writing method (`POST`/`PUT`/`PATCH`/`DELETE`)
+- Remote branch deletes, **except** the case below
 
-Verified with 14 automated test cases (see PR #54 for the test matrix). Correctly allows `git branch -d` (safe delete), `git checkout main` (branch switch), `git status`, `git commit -m "reset --hard state"` (string in message, not a command).
+**Asks instead of blocking (v1.68.0) — remote branch deletes that lose nothing.**
+`git push <remote> --delete <branch>…` (or `-d`) returns Claude Code's own
+approval prompt (`permissionDecision: "ask"`) instead of a block when every
+named branch's tip, as the remote has it now (`git ls-remote`), is already in
+the remote's default branch. You click approve; an agent cannot answer that
+prompt, so the guard holds and the `!` workaround is no longer needed for
+routine cleanup. Still **blocked**: unmerged or squash-merged branches, the
+default branch / `main` / `master` / `ai-memory`, the `:branch` refspec form,
+`git -C` / `cd` in the same command, extra push flags, and any failure to
+reach the remote. The ask is decided only after every block rule has run, so
+a delete chained with a blocked command is still blocked. Claude Code only;
+the other tools have no equivalent of "ask".
+
+Verified by `core/claude-hooks/pre-bash-safety.test.sh` (57 cases, including a
+throwaway remote with merged, unmerged and squash-merged branches). It also
+asserts that everyday commands still run: `git branch -d` (safe delete),
+`git checkout main`, `git status`, `git commit -m "reset --hard state"`
+(string in message, not a command).
 
 ### What still pauses
 

@@ -396,9 +396,10 @@ mkdir -p .claude/hooks
 2. Copy `[SKELETON_PATH]/core/claude-hooks/pre-memory-push.sh` → `.claude/hooks/pre-memory-push.sh`
 3. Copy `[SKELETON_PATH]/core/claude-hooks/pre-edit-check.sh` → `.claude/hooks/pre-edit-check.sh`
 4. Copy `[SKELETON_PATH]/core/claude-hooks/stop-verify.sh` → `.claude/hooks/stop-verify.sh`
-5. `chmod +x .claude/hooks/*.sh`
-6. If `.claude/settings.json` does not exist, copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
-7. If `.claude/settings.json` already exists, merge the `hooks` section from the template.
+5. Copy `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` → `.claude/hooks/pre-bash-safety.sh` (the settings template wires it as the first Bash hook; pre-v1.68.0 setup never copied it, so fresh installs pointed at a missing script)
+6. `chmod +x .claude/hooks/*.sh`
+7. If `.claude/settings.json` does not exist, copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
+8. If `.claude/settings.json` already exists, merge the `hooks` section from the template.
 
 **Gemini CLI / Antigravity** (if `antigravity` in Supported Tools):
 ```bash

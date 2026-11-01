@@ -73,5 +73,60 @@ check ALLOWED 'git log --oneline -5'
 check ALLOWED 'git commit -m "mention reset --hard and rm -rf in the message"'
 check ALLOWED 'git commit -m "force push was avoided"'
 
+# --- remote branch delete: ASK only for fully merged branches (v1.68.0) ---
+# "ask" hands the decision to Claude Code's own approval prompt, which only the
+# user can answer. Everything that could lose commits stays BLOCKED.
+check_in() { # check_in <BLOCKED|ALLOWED|ASKED> <session cwd> <command>
+  local want="$1" cwd="$2" cmd="$3" got out code
+  out=$(cd "$cwd" && python3 -c \
+    'import json,sys; print(json.dumps({"cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' \
+    "$cwd" "$cmd" | "$HOOK" 2>/dev/null)
+  code=$?
+  if [ "$code" = 2 ]; then got=BLOCKED
+  elif printf '%s' "$out" | grep -q '"permissionDecision": "ask"'; then got=ASKED
+  else got=ALLOWED; fi
+  if [ "$got" = "$want" ]; then pass=$((pass+1));
+  else fail=$((fail+1)); printf 'FAIL  expected %-7s got %-7s : %s\n' "$want" "$got" "$cmd"; fi
+}
+
+TMP=$(mktemp -d); trap 'rm -r "$TMP"' EXIT
+gq() { git -C "$1" "${@:2}" >/dev/null 2>&1; }
+git init -q --bare -b main "$TMP/origin.git"
+git clone -q "$TMP/origin.git" "$TMP/repo" 2>/dev/null
+R="$TMP/repo"
+gq "$R" config user.email t@example.com; gq "$R" config user.name t
+echo a > "$R/a"; gq "$R" add a; gq "$R" commit -m init; gq "$R" push origin main
+for b in merged-a merged-b; do                       # merged via a real merge
+  gq "$R" checkout -b "$b" main; echo "$b" > "$R/$b"; gq "$R" add -A; gq "$R" commit -m "$b"
+  gq "$R" push origin "$b"; gq "$R" checkout main; gq "$R" merge --no-ff "$b" -m "merge $b"
+done
+gq "$R" checkout -b unmerged main; echo u > "$R/u"; gq "$R" add -A; gq "$R" commit -m u
+gq "$R" push origin unmerged; gq "$R" checkout main
+gq "$R" checkout -b squashed main; echo s > "$R/s"; gq "$R" add -A; gq "$R" commit -m s
+gq "$R" push origin squashed; gq "$R" checkout main
+gq "$R" merge --squash squashed; gq "$R" commit -m "squash squashed"
+gq "$R" push origin main; gq "$R" push origin main:ai-memory
+
+check_in ASKED   "$R" 'git push origin --delete merged-a'
+check_in ASKED   "$R" 'git push --delete origin merged-a merged-b'
+check_in ASKED   "$R" 'git push origin -d merged-b'
+check_in ASKED   "$R" 'git push origin --delete merged-a && git remote prune origin'
+check_in BLOCKED "$R" 'git push origin --delete unmerged'
+check_in BLOCKED "$R" 'git push origin --delete merged-a unmerged'
+check_in BLOCKED "$R" 'git push origin --delete squashed'
+check_in BLOCKED "$R" 'git push origin --delete main'
+check_in BLOCKED "$R" 'git push origin --delete ai-memory'
+check_in BLOCKED "$R" 'git push origin --delete no-such-branch'
+check_in BLOCKED "$R" 'git push origin :merged-a'
+check_in BLOCKED "$R" "git -C $R push origin --delete merged-a"
+check_in BLOCKED "$R" "cd $R && git push origin --delete merged-a"
+check_in BLOCKED "$R" 'git push --force origin --delete merged-a'
+check_in BLOCKED "$R" 'git push nowhere --delete merged-a'
+# a block rule elsewhere in the command still wins over the ask
+check_in BLOCKED "$R" 'git push origin --delete merged-a && rm -rf /tmp/x'
+check_in BLOCKED "$R" 'git push origin --delete merged-a; git reset --hard'
+# message text mentioning --delete is not a delete
+check_in ALLOWED "$R" 'git commit -m "push --delete was considered"'
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
