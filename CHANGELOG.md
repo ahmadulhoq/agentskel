@@ -34,6 +34,9 @@ Two user requests in one release, 5 logical commits (test-first).
    pushes chained with `date -d` were blocked — plus quoted-flag bypass,
    pinned test counts in Step 5l, and an unanchored README version regex
    in the newly-live skeleton VERSION check.
+   CI then failed check 12 on the review commit (any skeleton change after
+   the bump commit counted as unreleased); check 12 now passes branches that
+   carry their own bump and diffs the working tree (closes a local false pass).
 
 sync-skeleton Step 5m delivers both downstream, including to projects that
 carry the MCU-Watchlist local fix. 499 ok / 0 fail.
