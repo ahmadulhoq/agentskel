@@ -4,7 +4,7 @@
     "pre_run_command": [
       {
         "command": ".windsurf/hooks/pre-commit-check.sh",
-        "matcher": "git[[:space:]]+commit"
+        "matcher": "git.*commit"
       },
       {
         "command": ".windsurf/hooks/pre-memory-push.sh",

@@ -188,6 +188,33 @@ expect ALLOW "checker missing lets the commit through" "$MAIN" 'git commit -m "p
 for v in "${VARIANTS[@]}"; do mv "$TMP/hooks-$v/.x" "$TMP/hooks-$v/check-skill-descriptions.py" 2>/dev/null || true; done
 clean "$MAIN"
 
+echo "== triggers: each tool's config must route these commands to the hook"
+# A hook that is never called fails silently: pre-v1.68.0 `Bash(git commit*)`
+# never matched `git -C <dir> commit`. Claude's `if` is a glob over the Bash
+# command (approximated with fnmatch); Cursor's and Windsurf's are regexes.
+TRIG_OUT=$(python3 - "$CORE" <<'PY'
+import fnmatch, json, re, sys
+core = sys.argv[1]
+cmds = ['git commit -m "x"', 'git -C /some/dir commit -m "x"', 'git -c user.name=a commit -am "x"']
+regex_only = ['cd /some/dir && git commit -m "x"']
+bad = []
+claude = json.load(open(f"{core}/claude-hooks/settings.json"))
+pats = [h["if"][5:-1] for e in claude["hooks"]["PreToolUse"] for h in e["hooks"]
+        if h["command"].endswith("pre-commit-check.sh") and "if" in h]
+for c in cmds:
+    if pats and not any(fnmatch.fnmatchcase(c, p) for p in pats):
+        bad.append(f"claude if={pats} misses: {c}")
+for tool, event in (("cursor", "beforeShellExecution"), ("windsurf", "pre_run_command")):
+    cfg = json.load(open(f"{core}/{tool}-hooks/hooks.json"))
+    m = [h.get("matcher") for h in cfg["hooks"][event] if h["command"].endswith("pre-commit-check.sh")][0]
+    for c in cmds + regex_only:
+        if not re.search(m.replace("[[:space:]]", r"\s").replace("[:space:]", r"\s"), c):
+            bad.append(f"{tool} matcher {m!r} misses: {c}")
+print("\n".join(bad))
+PY
+)
+if [ -z "$TRIG_OUT" ]; then PASS=$((PASS + 1)); else FAIL=$((FAIL + 1)); echo "FAIL triggers:"; echo "$TRIG_OUT"; fi
+
 echo
 echo "${VARIANTS[*]}: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

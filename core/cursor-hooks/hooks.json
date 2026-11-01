@@ -4,7 +4,7 @@
     "beforeShellExecution": [
       {
         "command": ".cursor/hooks/pre-commit-check.sh",
-        "matcher": "^(.*[;&|[:space:]])?git[[:space:]]+commit([[:space:]]|$)"
+        "matcher": "git.*commit"
       },
       {
         "command": ".cursor/hooks/pre-memory-push.sh",
