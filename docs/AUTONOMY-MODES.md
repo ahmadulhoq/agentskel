@@ -118,7 +118,7 @@ reach the remote. The ask is decided only after every block rule has run, so
 a delete chained with a blocked command is still blocked. Claude Code only;
 the other tools have no equivalent of "ask".
 
-Verified by `core/claude-hooks/pre-bash-safety.test.sh` (57 cases, including a
+Verified by `core/claude-hooks/pre-bash-safety.test.sh` (63 cases, including a
 throwaway remote with merged, unmerged and squash-merged branches). It also
 asserts that everyday commands still run: `git branch -d` (safe delete),
 `git checkout main`, `git status`, `git commit -m "reset --hard state"`

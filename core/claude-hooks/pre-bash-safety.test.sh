@@ -127,6 +127,15 @@ check_in BLOCKED "$R" 'git push origin --delete merged-a && rm -rf /tmp/x'
 check_in BLOCKED "$R" 'git push origin --delete merged-a; git reset --hard'
 # message text mentioning --delete is not a delete
 check_in ALLOWED "$R" 'git commit -m "push --delete was considered"'
+# a plain push chained with an unrelated -d / --delete flag is not a delete
+check_in ALLOWED "$R" 'git push origin main && date -d tomorrow'
+check_in ALLOWED "$R" 'git push origin main && ls -d */'
+check_in ALLOWED "$R" 'git push -u origin main 2>&1 | grep -d skip x'
+# quoting the flag does not hide the delete (pre-v1.68.0 regex missed this)
+check_in ASKED   "$R" 'git push origin "--delete" merged-a'
+check_in BLOCKED "$R" "git push origin '-d' unmerged"
+# a delete inside a nested command string cannot be inspected: blocked
+check_in BLOCKED "$R" 'echo x && git push origin main; sh -c "git push origin --delete merged-a"'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

@@ -98,7 +98,10 @@ fi
 # The verdict is made at the end of the script ("Remote branch deletion
 # verdict").
 REMOTE_DELETE=0
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*push[[:space:]]+.*(--delete([[:space:]]|=|$)|[[:space:]]-d([[:space:]]|$)|[[:space:]]:[^[:space:]]+)'; then
+# Coarse prefilter only (quoted flags like "--delete" included): the python
+# verdict below parses the command and decides. A match that turns out not to
+# be a delete (`git push origin main && date -d tomorrow`) is allowed there.
+if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*push[[:space:]]+.*((--delete|[[:space:]"'\'']-d)(["'\''[:space:]=]|$)|[[:space:]]:[^[:space:]]+)'; then
     REMOTE_DELETE=1
 fi
 
@@ -209,7 +212,14 @@ for words in segments:
     deletes.append((positional[0], names))
 
 if not deletes:
-    verdict("BLOCK could not identify the branches being deleted")
+    # The prefilter matched, but no segment is a `git push` delete: e.g. a
+    # plain push chained with `date -d …`. Allow it — unless a single word
+    # carries a whole push-delete (a nested `bash -c "git push --delete …"`),
+    # which this parser cannot see into.
+    nested = [t for t in tokens if "push" in t and ("--delete" in t or " -d" in t or " :" in t)]
+    if nested:
+        verdict("BLOCK branch delete inside a nested command string; run it directly")
+    verdict("ALLOW")
 
 for _, names in deletes:
     hit = PROTECTED & set(names)
@@ -259,6 +269,8 @@ PY
         "{"*)
             printf '%s\n' "$VERDICT"
             exit 0
+            ;;
+        ALLOW)
             ;;
         *)
             block "remote branch delete (git push --delete / push origin :branch): ${VERDICT#BLOCK }"

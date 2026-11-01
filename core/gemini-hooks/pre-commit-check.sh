@@ -93,7 +93,7 @@ if [ -f ".memory/CONFIG.md" ] && grep -qE '^\|[[:space:]]+Skeleton Path[[:space:
 
         # Match X.Y.Z or X.Y format
         if [ -f "README.md" ]; then
-            README_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+(\.[0-9]+)?' README.md | head -1 | sed 's/^v//' || echo "")
+            README_VERSION=$(grep -oE '\*\*v[0-9]+\.[0-9]+(\.[0-9]+)?\*\* — see' README.md | head -1 | sed -E 's/^\*\*v//; s/\*\* — see$//' || echo "")
             if [ -n "$README_VERSION" ] && [ "$README_VERSION" != "$SKEL_VERSION" ]; then
                 ERRORS="${ERRORS}README.md version (v${README_VERSION}) != VERSION (${SKEL_VERSION}). "
             fi

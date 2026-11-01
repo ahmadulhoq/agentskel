@@ -37,9 +37,12 @@ Fixes:
   logs after the code commit. An end-of-task check is tracked in BACKLOG.
 - The skeleton-only VERSION/README/MASTER_PLAN check, previously dead behind
   the same skip, now runs in the skeleton's own main checkout.
-- `core/claude-hooks/pre-commit-check.test.sh` (new): 37 cases × 4 tools +
-  a trigger check that reads each tool's config. Old hooks: 80 of 136 fail,
-  including the bash 5.2 crash. New: 137/137 on bash 5.2 and macOS bash 3.2.
+- `core/claude-hooks/pre-commit-check.test.sh` (new): 36 cases × 4 tools +
+  a trigger check that reads each tool's config. Old hooks: 80 of 136 fail on
+  the first 34 cases, including the bash 5.2 crash. New: 145/145 on bash 5.2
+  and macOS bash 3.2 (the 2 later cases cover the skeleton-only VERSION check,
+  now anchored to README's `**vX.Y.Z** — see` marker so an older version
+  mentioned higher up can't block every commit).
   MCU-Watchlist's own 25-case suite, unmodified: 25/25 against the new hook.
 
 **2. `pre-bash-safety.sh`: merged remote branch deletes ask instead of
@@ -60,8 +63,9 @@ Found along the way:
   pointed at a missing script. Fixed in Step 5b3; sync Step 5m installs it.
 - `docs/AUTONOMY-MODES.md` safety-hook section predated v1.67.1 (still listed
   `gh api *` as allowed). Updated.
-- `pre-bash-safety.test.sh`: 57 cases (18 new, against a throwaway bare
-  remote with merged / unmerged / squash-merged branches).
+- `pre-bash-safety.test.sh`: 63 cases (24 new, against a throwaway bare
+  remote with merged / unmerged / squash-merged branches, plus chained
+  pushes with unrelated `-d` flags that must stay allowed).
 
 Downstream: `sync-skeleton` Step 5m (new). Projects carrying the MCU-Watchlist
 local fix get a superset: same checker behaviour, same 25 cases passing.

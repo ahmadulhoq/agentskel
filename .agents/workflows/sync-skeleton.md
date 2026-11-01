@@ -638,7 +638,7 @@ Two rule bypasses were also fixed: `git -C <path> <cmd>` evaded every git rule (
    ```bash
    bash core/claude-hooks/pre-bash-safety.test.sh
    ```
-   Expect `39 passed, 0 failed`. These rules **fail open** — a broken regex does not error, it silently stops blocking, and that stays invisible until the day it matters. Do not mark this step done on a visual diff alone.
+   Expect `0 failed` (39 cases at v1.67.1; later releases add more, so don't pin the count). These rules **fail open** — a broken regex does not error, it silently stops blocking, and that stays invisible until the day it matters. Do not mark this step done on a visual diff alone.
 
 4. **Cross-tool coverage** (if the project has other AI tool configs installed): the Gemini, Cursor, Windsurf, and Codex copies of the safety hook need the same replacement. Copilot has no hooks — behavioral rule only.
 
@@ -683,7 +683,7 @@ The 1024-char skill-description check in every tool's `pre-commit-check.sh` neve
 4. **Run both suites from the skeleton against the installed hooks** — do not mark this done on a visual diff (these hooks fail open, so a broken one is silent):
    ```bash
    bash [SKELETON_PATH]/core/claude-hooks/pre-commit-check.test.sh   # expect 0 failed
-   bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety.test.sh    # expect 57 passed, 0 failed
+   bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety.test.sh    # expect 0 failed
    ```
    Then `diff` each installed `pre-commit-check.sh` / `check-skill-descriptions.py` / `pre-bash-safety.sh` against its skeleton source to confirm the suites tested what is installed.
 

@@ -181,6 +181,20 @@ expect ALLOW "git status is not a commit" "$MAIN" 'git status'
 expect ALLOW "git commit-tree is not git commit" "$MAIN" 'git commit-tree HEAD^{tree} -m x'
 clean "$MAIN"
 
+echo "== skeleton-only VERSION check (dormant before v1.68.0, live now)"
+printf '| Field | Value |\n|---|---|\n| Skeleton Path | . |\n' > "$MEM/CONFIG.md"
+echo 1.0.0 > "$MAIN/VERSION"
+printf '# x\nSince v0.9.0 this does things.\n\n**v1.0.0** — see CHANGELOG\n' > "$MAIN/README.md"
+printf '> Corresponds to: agentskel v1.0.0\n' > "$MAIN/MASTER_PLAN.md"
+g "$MAIN" add VERSION README.md MASTER_PLAN.md; g "$MAIN" commit -m "skeleton markers"
+echo x >> "$MAIN/notes.txt"; g "$MAIN" add notes.txt
+expect ALLOW "an older vX.Y mentioned above the release marker is ignored" "$MAIN" 'git commit -m "probe"'
+printf '# x\n**v0.9.0** — see CHANGELOG\n' > "$MAIN/README.md"; g "$MAIN" add README.md
+expect BLOCK "README release marker != VERSION" "$MAIN" 'git commit -m "probe"'
+clean "$MAIN"
+g "$MAIN" rm -q VERSION README.md MASTER_PLAN.md; g "$MAIN" commit -m "drop markers"
+rm "$MEM/CONFIG.md"
+
 echo "== fail-open"
 skill "$MAIN" $S "$LONG"; g "$MAIN" add $S
 for v in "${VARIANTS[@]}"; do mv "$TMP/hooks-$v/check-skill-descriptions.py" "$TMP/hooks-$v/.x" 2>/dev/null || true; done
