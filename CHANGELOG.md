@@ -16,7 +16,7 @@ Two user requests in one release, 5 logical commits (test-first).
    skip that fired in every main checkout. Shared
    `core/claude-hooks/check-skill-descriptions.py` now serves all four tool
    variants; triggers widened; new 4-variant suite (old hooks: 80/136 fail;
-   new: 137/137 on bash 5.2 in docker and macOS bash 3.2; MCU-Watchlist's
+   new: 145/145 on bash 5.2 in docker and macOS bash 3.2; MCU-Watchlist's
    25-case suite unmodified: 25/25). **Maintainer decisions:** remove the
    CHANGELOG/TIME_LOG commit gate (never ran; enabled it would refuse the
    first commit of every task); add the check to Cursor + Windsurf too.
@@ -29,7 +29,11 @@ Two user requests in one release, 5 logical commits (test-first).
    `git ls-remote`, is in the remote default branch. Everything else stays
    blocked; verdict runs after all block rules. Found: `-d` short form was
    ALLOWED with no prompt; setup-skeleton never installed pre-bash-safety.sh
-   (fresh installs since v1.66.1 had a dangling hook). 57/57.
+   (fresh installs since v1.66.1 had a dangling hook). 63/63.
+   Self-review (commit 6) caught a regression in my own `-d` rule — plain
+   pushes chained with `date -d` were blocked — plus quoted-flag bypass,
+   pinned test counts in Step 5l, and an unanchored README version regex
+   in the newly-live skeleton VERSION check.
 
 sync-skeleton Step 5m delivers both downstream, including to projects that
 carry the MCU-Watchlist local fix. 499 ok / 0 fail.
