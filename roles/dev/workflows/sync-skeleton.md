@@ -650,6 +650,52 @@ Include all of the above in the Step 5 memory commit.
 
 ---
 
+## Step 5m — Migration: → v1.68.0 (commit hook repairs + merged-branch delete asks)
+
+Skip this step only if the project is already on skeleton v1.68.0+.
+
+The 1024-char skill-description check in every tool's `pre-commit-check.sh` never worked (bash 5.2 crash, blind stdin, wrong content, wrong checkout, narrow trigger, skipped in every main checkout). v1.68.0 replaces it with a shared checker and removes the CHANGELOG/TIME_LOG commit gate, which never ran in a main checkout. See the v1.68.0 CHANGELOG entry for the fault table.
+
+1. **Replace the commit hooks and install the checker** — for each tool in Supported Tools (overwrite, don't merge):
+
+   | Tool | Copy | Into |
+   |---|---|---|
+   | `claude` | `core/claude-hooks/pre-commit-check.sh`, `core/claude-hooks/check-skill-descriptions.py` | `.claude/hooks/` |
+   | `codex` | `core/claude-hooks/pre-commit-check.sh`, `core/claude-hooks/check-skill-descriptions.py` | `.codex/hooks/` |
+   | `antigravity` | `core/gemini-hooks/pre-commit-check.sh`, `core/claude-hooks/check-skill-descriptions.py` | `.gemini/hooks/` |
+   | `cursor` | `core/cursor-hooks/pre-commit-check.sh`, `core/claude-hooks/check-skill-descriptions.py` | `.cursor/hooks/` |
+   | `windsurf` | `core/windsurf-hooks/pre-commit-check.sh`, `core/claude-hooks/check-skill-descriptions.py` | `.windsurf/hooks/` |
+
+   `chmod +x` the `.sh` files.
+
+   **Projects carrying MCU-Watchlist's local fix (PR #159 / TD-011)** — `.claude/hooks/check-skill-descriptions.py` and `.claude/hooks/tests/pre-commit-check.test.sh` already exist. Overwrite the checker with the skeleton's (a superset: same behaviour plus multi-tool input parsing and a fail-open fix). Keep the local test file or delete it — the skeleton's suite covers all 25 of its cases. Run the local one once after the overwrite as a regression check; expect `25 passed, 0 failed`.
+
+2. **Widen the commit triggers** (these files are not overwritten by sync, so edit the one entry):
+   - `.claude/settings.json`: in the `pre-commit-check.sh` hook entry, replace `"if": "Bash(git commit*)"` with `"if": "Bash(git*commit*)"`.
+   - `.cursor/hooks.json`: set the `pre-commit-check.sh` entry's `matcher` to `git.*commit`.
+   - `.windsurf/hooks.json`: set the `pre-commit-check.sh` entry's `matcher` to `git.*commit`.
+   - Gemini / Codex: no change (they run the hook on every shell command).
+
+   If the existing value is not the old default (the project customised it), do not overwrite it — tell the user what the skeleton default is now and why (`git -C <dir> commit` must reach the hook).
+
+3. **Replace `pre-bash-safety.sh`** (Claude Code only). Copy `core/claude-hooks/pre-bash-safety.sh` → `.claude/hooks/pre-bash-safety.sh`, `chmod +x`. If the file did not exist yet, this is the pre-v1.68.0 setup-skeleton gap (the settings template wired a script setup never copied) — installing it now is the fix. Confirm `.claude/settings.json` lists it as the first `PreToolUse` Bash hook (Step 5k item 3).
+
+4. **Run both suites from the skeleton against the installed hooks** — do not mark this done on a visual diff (these hooks fail open, so a broken one is silent):
+   ```bash
+   bash [SKELETON_PATH]/core/claude-hooks/pre-commit-check.test.sh   # expect 0 failed
+   bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety.test.sh    # expect 57 passed, 0 failed
+   ```
+   Then `diff` each installed `pre-commit-check.sh` / `check-skill-descriptions.py` / `pre-bash-safety.sh` against its skeleton source to confirm the suites tested what is installed.
+
+5. **Tell the user** what changed in behaviour:
+   - Commits whose staged skill/workflow descriptions exceed 1024 chars are now blocked in every checkout (previously never). Nothing else is newly blocked: the CHANGELOG/TIME_LOG gate is gone.
+   - Deleting an already-merged remote branch now brings up the tool's approval prompt instead of a hard block.
+   - Restart the AI tool so the changed hook config (`settings.json` / `hooks.json`) is reloaded.
+
+Include all of the above in the Step 6 project-files commit; the Skeleton Version bump goes in the Step 5 memory commit.
+
+---
+
 ## Step 5x — Adding New Migration Steps
 
 When a breaking skeleton version requires project-level migration, add a new
