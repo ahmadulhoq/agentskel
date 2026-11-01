@@ -63,6 +63,11 @@ Found along the way:
   pointed at a missing script. Fixed in Step 5b3; sync Step 5m installs it.
 - `docs/AUTONOMY-MODES.md` safety-hook section predated v1.67.1 (still listed
   `gh api *` as allowed). Updated.
+- Validator check 12 (`no unreleased skeleton changes`): a branch that already
+  carries its own `VERSION` bump now passes, so review fixes committed after
+  the bump commit don't force a fake second bump (this PR hit that in CI).
+  The diff is also against the working tree, so uncommitted `core/` edits
+  fail locally too; before, the local run passed and CI failed.
 - `pre-bash-safety.test.sh`: 63 cases (24 new, against a throwaway bare
   remote with merged / unmerged / squash-merged branches, plus chained
   pushes with unrelated `-d` flags that must stay allowed).
