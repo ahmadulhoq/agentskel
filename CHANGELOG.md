@@ -13,6 +13,11 @@ failed. Fix: `git log --first-parent -m -- VERSION` (the merge commit), plus
 an uncommitted VERSION bump counts as a pending release. Verified in five
 states incl. a throwaway clone simulating the open branch. No downstream
 migration (validate.py is skeleton-only).
+PR review then found my first draft missed a branch that merged main after
+an unbumped core edit (merge looked like a bump on first-parent). Fixed by
+judging branches from their merge-base. New scripts/validate.test.sh (13
+repo states; v1.68.0 fails 4, first draft fails 1). CI now runs all three
+behavioural suites on bash 5.2, not only the static validator.
 
 ## 2026-11-01 — v1.68.0: Commit hook repairs + merged remote branch deletes ask instead of block
 
