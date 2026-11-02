@@ -4,6 +4,16 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-11-02 — v1.68.1: validator check 12 red on main right after merging v1.68.0
+
+My v1.68.0 check-12 change was tested on the open branch only. Post-merge,
+`git log -1 -- VERSION` (full history) found the bump commit inside the
+merged branch, so that PR's review commits looked unreleased and main's CI
+failed. Fix: `git log --first-parent -m -- VERSION` (the merge commit), plus
+an uncommitted VERSION bump counts as a pending release. Verified in five
+states incl. a throwaway clone simulating the open branch. No downstream
+migration (validate.py is skeleton-only).
+
 ## 2026-11-01 — v1.68.0: Commit hook repairs + merged remote branch deletes ask instead of block
 
 Two user requests in one release, 5 logical commits (test-first).
