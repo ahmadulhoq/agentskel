@@ -1,5 +1,82 @@
 # agentskel Changelog
 
+## v1.68.0 — 2026-11-01
+
+### Commit hook repairs + merged remote branch deletes ask instead of block
+
+**1. The 1024-char skill-description check in `pre-commit-check.sh` never
+worked.** First fixed downstream in MCU-Watchlist PR #159 (TD-011); this
+release carries a superset to every tool. Faults, reproduced on bash 5.2.21 /
+git 2.43:
+
+| # | Fault | Effect |
+|---|---|---|
+| 1 | `BAD=$(echo … \| python3 - <<'PY' 2>/dev/null \|\| true` is a runtime syntax error in bash 5.2 (`bash -n` passes) | every commit with staged files blocked in checkouts without `.memory` (agent worktrees) |
+| 2 | the heredoc *is* python's stdin, so the piped file list never arrived | check could never fire |
+| 3 | folded `description: >` read as empty | never measured |
+| 4 | read the file on disk, not the staged blob | wrong content checked; `-a` / path commits not covered |
+| 5 | ran in the session folder | `cd X && git commit` / `git -C X commit` checked the wrong repo |
+| 6 | trigger `Bash(git commit*)` | `git -C X commit` never reached the hook |
+| 7 | skipped whenever `.memory` was on `ai-memory` | skipped in every main checkout |
+
+Fixes:
+- New shared `core/claude-hooks/check-skill-descriptions.py` (#159's checker +
+  input parsing for Cursor's and Windsurf's hook JSON), installed next to every
+  tool's `pre-commit-check.sh`.
+- All four `pre-commit-check.sh` variants (Claude/Codex, Gemini, Cursor,
+  Windsurf) call it first. Cursor and Windsurf never had the check; Gemini's
+  version wrongly rejected any multi-line description (valid since v1.54.0).
+- Fail-open hardened beyond #159: `python3` exits 2 when it cannot open the
+  script, which the hook read as "block". Now blocks only on the checker's
+  own verdict.
+- Triggers widened: Claude `Bash(git*commit*)`; Cursor/Windsurf matcher
+  `git.*commit`. Gemini/Codex already run on every shell command.
+- **CHANGELOG/TIME_LOG commit gate removed** (maintainer decision). It sat
+  behind fault 7's skip, so it never ran in a main checkout; enabled, it would
+  refuse the first commit of every task, because task-completion writes the
+  logs after the code commit. An end-of-task check is tracked in BACKLOG.
+- The skeleton-only VERSION/README/MASTER_PLAN check, previously dead behind
+  the same skip, now runs in the skeleton's own main checkout.
+- `core/claude-hooks/pre-commit-check.test.sh` (new): 36 cases × 4 tools +
+  a trigger check that reads each tool's config. Old hooks: 80 of 136 fail on
+  the first 34 cases, including the bash 5.2 crash. New: 145/145 on bash 5.2
+  and macOS bash 3.2 (the 2 later cases cover the skeleton-only VERSION check,
+  now anchored to README's `**vX.Y.Z** — see` marker so an older version
+  mentioned higher up can't block every commit).
+  MCU-Watchlist's own 25-case suite, unmodified: 25/25 against the new hook.
+
+**2. `pre-bash-safety.sh`: merged remote branch deletes ask instead of
+block.** `git push <remote> --delete <branch>…` (or `-d`) now returns Claude
+Code's own approval prompt (`permissionDecision: "ask"`) when every branch's
+tip, as the remote has it now (`git ls-remote`), is already in the remote's
+default branch. An agent cannot answer that prompt; the user clicks approve.
+Still blocked: unmerged and squash-merged branches, default/main/master/
+ai-memory, the `:branch` refspec, `git -C` / `cd` in the same command, extra
+push flags, and remote lookups that fail. Decided after every block rule, so
+a delete chained with a blocked command stays blocked. Claude Code only.
+
+Found along the way:
+- `git push origin -d <branch>` was **allowed** with no prompt: the rule only
+  matched `--delete`, and `Bash(git push *)` auto-approves. Covered now.
+- `setup-skeleton` never installed `pre-bash-safety.sh`, though the settings
+  template wires it as the first Bash hook (since v1.66.1). Fresh installs
+  pointed at a missing script. Fixed in Step 5b3; sync Step 5m installs it.
+- `docs/AUTONOMY-MODES.md` safety-hook section predated v1.67.1 (still listed
+  `gh api *` as allowed). Updated.
+- Validator check 12 (`no unreleased skeleton changes`): a branch that already
+  carries its own `VERSION` bump now passes, so review fixes committed after
+  the bump commit don't force a fake second bump (this PR hit that in CI).
+  The diff is also against the working tree, so uncommitted `core/` edits
+  fail locally too; before, the local run passed and CI failed.
+- `pre-bash-safety.test.sh`: 63 cases (24 new, against a throwaway bare
+  remote with merged / unmerged / squash-merged branches, plus chained
+  pushes with unrelated `-d` flags that must stay allowed).
+
+Downstream: `sync-skeleton` Step 5m (new). Projects carrying the MCU-Watchlist
+local fix get a superset: same checker behaviour, same 25 cases passing.
+
+affected: setup-skeleton, sync-skeleton
+
 ## v1.67.1 — 2026-09-22
 
 ### Retroactive release for PR #56 (destructive-command gaps) + downstream delivery + a validator gate

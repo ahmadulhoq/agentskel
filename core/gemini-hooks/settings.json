@@ -8,7 +8,7 @@
             "type": "command",
             "command": ".gemini/hooks/pre-commit-check.sh",
             "name": "agentskel-pre-commit",
-            "description": "Block git commit if CHANGELOG/TIME_LOG not updated; lint multi-line YAML descriptions in staged skill/workflow files."
+            "description": "Block git commit if a skill/workflow description in the commit exceeds 1024 chars; skeleton repo: VERSION consistency."
           },
           {
             "type": "command",

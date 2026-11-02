@@ -20,7 +20,7 @@ Checks:
   10. inline rules propag. — v1.64.0 git-discipline rule fingerprints appear
                              in all 5 inline-rule templates + installed copies
   11. changelog presence   — CHANGELOG.md has a section for the current VERSION
-  12. unreleased changes   — no skeleton file changed since VERSION last moved
+  12. unreleased changes   — no skeleton file changed since VERSION last moved (incl. uncommitted; a branch carrying its own bump passes)
 
 Usage:
   scripts/validate.py            # run all checks; exit 1 on any failure
@@ -659,12 +659,31 @@ def check_no_unreleased_skeleton_changes() -> Result:
         r.bad("shallow clone: cannot verify. CI needs actions/checkout fetch-depth: 0")
         return r
 
+    # A release branch carries its own pending bump: VERSION differs from where
+    # the branch left the default branch. Every skeleton change on the branch
+    # belongs to that release (the CHANGELOG-entry check still applies), so
+    # review fixes committed after the bump commit don't need a fake second
+    # bump (v1.68.0, PR #59). On main, or a branch with no bump, fall through.
+    for ref in ("origin/main", "origin/HEAD", "main"):
+        base = _git("merge-base", "HEAD", ref)
+        if base:
+            base_version = _git("show", f"{base}:VERSION")
+            current = _read(REPO / "VERSION").strip() if (REPO / "VERSION").exists() else ""
+            if base_version is not None and base != _git("rev-parse", "HEAD") \
+                    and base_version.strip() != current:
+                r.ok()
+                return r
+            break
+
     last_bump = _git("log", "-1", "--format=%H", "--", "VERSION")
     if not last_bump:
         r.ok()  # no VERSION history (fresh repo) — nothing to compare against
         return r
 
-    changed = _git("diff", "--name-only", f"{last_bump}..HEAD", "--", *RELEASE_TRACKED_PATHS)
+    # Diff against the working tree, not HEAD: uncommitted skeleton edits are
+    # unreleased too (pre-v1.68.0 compared commits only and passed locally on
+    # a dirty tree that CI then failed).
+    changed = _git("diff", "--name-only", last_bump, "--", *RELEASE_TRACKED_PATHS)
     if changed is None:
         r.bad(f"could not diff {last_bump[:8]}..HEAD")
         return r
