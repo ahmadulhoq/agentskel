@@ -659,23 +659,52 @@ def check_no_unreleased_skeleton_changes() -> Result:
         r.bad("shallow clone: cannot verify. CI needs actions/checkout fetch-depth: 0")
         return r
 
-    # A release branch carries its own pending bump: VERSION differs from where
-    # the branch left the default branch. Every skeleton change on the branch
-    # belongs to that release (the CHANGELOG-entry check still applies), so
-    # review fixes committed after the bump commit don't need a fake second
-    # bump (v1.68.0, PR #59). On main, or a branch with no bump, fall through.
+    current = _read(REPO / "VERSION").strip() if (REPO / "VERSION").exists() else ""
+
+    # On a branch ahead of the default branch (a feature/release branch, a PR's
+    # CI merge commit, unpushed direct commits): judge only the branch's own
+    # changes, against where it left the default branch.
+    #   - Branch carries its own VERSION bump -> every skeleton change on it
+    #     belongs to that release (check 11 still requires the CHANGELOG
+    #     entry), so review fixes after the bump commit need no second bump.
+    #   - No bump -> any skeleton change since the merge-base is unreleased.
+    # Comparing against the merge-base, not the branch's own history, matters:
+    # merging main into the branch would otherwise look like a bump on the
+    # branch's first-parent line and hide earlier unbumped edits (PR #60 review).
+    head = _git("rev-parse", "HEAD")
     for ref in ("origin/main", "origin/HEAD", "main"):
         base = _git("merge-base", "HEAD", ref)
-        if base:
-            base_version = _git("show", f"{base}:VERSION")
-            current = _read(REPO / "VERSION").strip() if (REPO / "VERSION").exists() else ""
-            if base_version is not None and base != _git("rev-parse", "HEAD") \
-                    and base_version.strip() != current:
-                r.ok()
-                return r
-            break
+        if not base:
+            continue
+        if base == head:
+            break  # on the default branch itself: handled below
+        base_version = _git("show", f"{base}:VERSION")
+        if base_version is not None and base_version.strip() != current:
+            r.ok()
+            return r
+        changed = _git("diff", "--name-only", base, "--", *RELEASE_TRACKED_PATHS)
+        if changed is None:
+            r.bad(f"could not diff {base[:8]} against the working tree")
+            return r
+        files = [f for f in changed.split("\n") if f]
+        if not files:
+            r.ok()
+            return r
+        shown = ", ".join(files[:5]) + (f" (+{len(files) - 5} more)" if len(files) > 5 else "")
+        r.bad(
+            f"{len(files)} skeleton file(s) changed on this branch since it left {ref} "
+            f"({base[:8]}) with VERSION still {current}: {shown}. "
+            "Bump VERSION and add a CHANGELOG entry."
+        )
+        return r
 
-    last_bump = _git("log", "-1", "--format=%H", "--", "VERSION")
+    # On the default branch: the last bump along its own line (first parent). For a merged
+    # release PR that is the merge commit, which brings every commit of the PR
+    # in at once. Full history would find the bump commit inside the merged
+    # branch and flag that PR's later review commits as unreleased (v1.68.1:
+    # main went red right after merging v1.68.0). `-m` makes git diff a merge
+    # against its first parent so it is not simplified away.
+    last_bump = _git("log", "--first-parent", "-m", "-1", "--format=%H", "--", "VERSION")
     if not last_bump:
         r.ok()  # no VERSION history (fresh repo) — nothing to compare against
         return r
@@ -693,7 +722,13 @@ def check_no_unreleased_skeleton_changes() -> Result:
         r.ok()
         return r
 
-    version = _read(REPO / "VERSION").strip() if (REPO / "VERSION").exists() else "?"
+    version = current or "?"
+    # A bump already made in the working tree (not yet committed) covers the
+    # changes alongside it; check 11 still requires its CHANGELOG entry.
+    bumped_from = _git("show", f"{last_bump}:VERSION")
+    if bumped_from is not None and bumped_from.strip() != version:
+        r.ok()
+        return r
     shown = ", ".join(files[:5]) + (f" (+{len(files) - 5} more)" if len(files) > 5 else "")
     r.bad(
         f"{len(files)} skeleton file(s) changed since VERSION last moved to {version} "

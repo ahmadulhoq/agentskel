@@ -19,3 +19,12 @@ jobs:
           python-version: "3.11"
       - name: Run static validator
         run: python3 scripts/validate.py
+      # Behavioural suites. These run the hooks and the history-reading
+      # validator check in throwaway repos, on the runner's bash (5.2 on
+      # ubuntu-latest — the version that exposed the v1.68.0 hook crash).
+      - name: Validator check 12 across repo states
+        run: bash scripts/validate.test.sh
+      - name: Commit hook suite (all four tools)
+        run: bash core/claude-hooks/pre-commit-check.test.sh
+      - name: Safety hook suite
+        run: bash core/claude-hooks/pre-bash-safety.test.sh

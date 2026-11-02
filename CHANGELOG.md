@@ -1,5 +1,40 @@
 # agentskel Changelog
 
+## v1.68.1 — 2026-11-02
+
+### Fix: validator check 12 failed on main right after merging v1.68.0
+
+v1.68.0 taught `no unreleased skeleton changes` to pass a branch that carries
+its own VERSION bump, so review fixes committed after the bump commit don't
+need a second bump. It was tested on the open branch, not after merging. On
+`main` post-merge, the check took the last VERSION-touching commit from full
+history: `1f13da2`, the bump commit *inside* the merged branch. The PR's later
+review commits then looked unreleased, and CI on `main` failed.
+
+- `scripts/validate.py` check 12 now splits by where you are:
+  - **On a branch ahead of `main`** (feature/release branch, a PR's CI merge
+    commit, unpushed direct commits): only the branch's own changes count,
+    measured from its merge-base with `origin/main`. A branch that bumps
+    VERSION passes (review fixes after the bump commit included). Without a
+    bump, any `core/`/`roles/`/`scripts/`/`.agents/` change fails.
+  - **On `main` itself**: the last bump along first-parent history
+    (`git log --first-parent -m -- VERSION`), which for a merged release PR
+    is the merge commit. An uncommitted VERSION bump counts as a pending
+    release, so the local run agrees with CI before the release commit.
+- PR review caught a gap in the first draft, which used first-parent
+  history on branches too: a branch that merged `main` after an unbumped
+  `core/` edit passed locally, because the merge looked like a bump on the
+  branch's own line. The merge-base split closes it.
+- **New `scripts/validate.test.sh`**: builds throwaway repos for 13 states
+  (post-merge main, dirty trees, docs-only, direct commits, release
+  branches, branch that merged main, PR CI merge commits with and without a
+  bump). v1.68.0's validator fails 4 of them; the first v1.68.1 draft fails 1.
+- **CI now runs the behavioural suites**, not just the static validator:
+  `validate.test.sh`, `pre-commit-check.test.sh` (all four tools) and
+  `pre-bash-safety.test.sh`, on ubuntu-latest's bash 5.2.
+
+No downstream migration: `scripts/validate.py` runs only in the skeleton repo.
+
 ## v1.68.0 — 2026-11-01
 
 ### Commit hook repairs + merged remote branch deletes ask instead of block
