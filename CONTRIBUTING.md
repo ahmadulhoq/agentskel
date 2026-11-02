@@ -184,9 +184,12 @@ Run `python3 scripts/validate.py` before opening a PR. It runs twelve determinis
 
 The check walks back to the commit that last touched `VERSION`, so it needs real history: a shallow clone **fails** with an explanatory message rather than passing on an empty diff. CI sets `fetch-depth: 0` for this reason. If you work in a shallow clone, run `git fetch --unshallow` first.
 
-Two refinements (v1.68.0):
-- **Release branches.** If your branch already carries a `VERSION` bump (VERSION differs from where the branch left `origin/main`), every skeleton change on the branch counts as part of that release. Review fixes committed after the bump commit pass without a second bump. Check 11 still requires the CHANGELOG entry, so describe the fixes there.
-- **Uncommitted edits count.** The diff is against your working tree, so a dirty `core/` file fails locally exactly as it would once committed and pushed.
+How it decides (v1.68.0, corrected in v1.68.1):
+- **On a branch ahead of `main`** (including a PR's CI merge commit): only the branch's own changes count, from its merge-base with `origin/main`. If the branch bumps `VERSION`, every skeleton change on it belongs to that release, including review fixes committed after the bump commit. Check 11 still requires the CHANGELOG entry, so describe the fixes there. Without a bump, any skeleton change on the branch fails, and that includes edits made before you merged `main` into the branch.
+- **On `main` itself**: changes are measured from the last bump along `main`'s first-parent history, which for a merged release PR is the merge commit.
+- **Uncommitted edits count.** The diff is against your working tree, so a dirty `core/` file fails locally exactly as it would once committed. An uncommitted `VERSION` bump counts as a pending release.
+
+Changing this check? Run `bash scripts/validate.test.sh`. It builds throwaway repos for every state above, and CI runs it too.
 
 CI runs the same validator on every push and PR. A green local run should mean a green CI run.
 

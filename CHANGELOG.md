@@ -11,20 +11,27 @@ need a second bump. It was tested on the open branch, not after merging. On
 history: `1f13da2`, the bump commit *inside* the merged branch. The PR's later
 review commits then looked unreleased, and CI on `main` failed.
 
-- `scripts/validate.py`: find the last bump along the branch's first-parent
-  line (`git log --first-parent -m -- VERSION`). For a merged release PR that
-  is the merge commit, which brings in every commit of the PR at once.
-  `-m` diffs a merge against its first parent so it is not simplified away.
-- A VERSION bump already made in the working tree (not yet committed) now
-  counts as a pending release, so the local run agrees with CI before the
-  release commit too. Check 11 still requires the CHANGELOG entry.
-
-Verified in five states: post-merge `main` passes; post-merge `main` with an
-uncommitted `core/` edit fails; a PR's CI merge commit passes; an open release
-branch with review commits after its bump passes (throwaway clone with
-`origin/main` at the pre-merge tip); an uncommitted `core/` edit alongside an
-uncommitted bump passes. Squash merges and Direct-Commit Mode put
-the bump on the first-parent line directly, so they are covered too.
+- `scripts/validate.py` check 12 now splits by where you are:
+  - **On a branch ahead of `main`** (feature/release branch, a PR's CI merge
+    commit, unpushed direct commits): only the branch's own changes count,
+    measured from its merge-base with `origin/main`. A branch that bumps
+    VERSION passes (review fixes after the bump commit included). Without a
+    bump, any `core/`/`roles/`/`scripts/`/`.agents/` change fails.
+  - **On `main` itself**: the last bump along first-parent history
+    (`git log --first-parent -m -- VERSION`), which for a merged release PR
+    is the merge commit. An uncommitted VERSION bump counts as a pending
+    release, so the local run agrees with CI before the release commit.
+- PR review caught a gap in the first draft, which used first-parent
+  history on branches too: a branch that merged `main` after an unbumped
+  `core/` edit passed locally, because the merge looked like a bump on the
+  branch's own line. The merge-base split closes it.
+- **New `scripts/validate.test.sh`**: builds throwaway repos for 13 states
+  (post-merge main, dirty trees, docs-only, direct commits, release
+  branches, branch that merged main, PR CI merge commits with and without a
+  bump). v1.68.0's validator fails 4 of them; the first v1.68.1 draft fails 1.
+- **CI now runs the behavioural suites**, not just the static validator:
+  `validate.test.sh`, `pre-commit-check.test.sh` (all four tools) and
+  `pre-bash-safety.test.sh`, on ubuntu-latest's bash 5.2.
 
 No downstream migration: `scripts/validate.py` runs only in the skeleton repo.
 
