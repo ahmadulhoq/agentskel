@@ -1,5 +1,33 @@
 # agentskel Changelog
 
+## v1.68.1 — 2026-11-02
+
+### Fix: validator check 12 failed on main right after merging v1.68.0
+
+v1.68.0 taught `no unreleased skeleton changes` to pass a branch that carries
+its own VERSION bump, so review fixes committed after the bump commit don't
+need a second bump. It was tested on the open branch, not after merging. On
+`main` post-merge, the check took the last VERSION-touching commit from full
+history: `1f13da2`, the bump commit *inside* the merged branch. The PR's later
+review commits then looked unreleased, and CI on `main` failed.
+
+- `scripts/validate.py`: find the last bump along the branch's first-parent
+  line (`git log --first-parent -m -- VERSION`). For a merged release PR that
+  is the merge commit, which brings in every commit of the PR at once.
+  `-m` diffs a merge against its first parent so it is not simplified away.
+- A VERSION bump already made in the working tree (not yet committed) now
+  counts as a pending release, so the local run agrees with CI before the
+  release commit too. Check 11 still requires the CHANGELOG entry.
+
+Verified in five states: post-merge `main` passes; post-merge `main` with an
+uncommitted `core/` edit fails; a PR's CI merge commit passes; an open release
+branch with review commits after its bump passes (throwaway clone with
+`origin/main` at the pre-merge tip); an uncommitted `core/` edit alongside an
+uncommitted bump passes. Squash merges and Direct-Commit Mode put
+the bump on the first-parent line directly, so they are covered too.
+
+No downstream migration: `scripts/validate.py` runs only in the skeleton repo.
+
 ## v1.68.0 — 2026-11-01
 
 ### Commit hook repairs + merged remote branch deletes ask instead of block

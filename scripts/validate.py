@@ -675,7 +675,13 @@ def check_no_unreleased_skeleton_changes() -> Result:
                 return r
             break
 
-    last_bump = _git("log", "-1", "--format=%H", "--", "VERSION")
+    # The last bump along THIS branch's own line (first parent). For a merged
+    # release PR that is the merge commit, which brings every commit of the PR
+    # in at once. Full history would find the bump commit inside the merged
+    # branch and flag that PR's later review commits as unreleased (v1.68.1:
+    # main went red right after merging v1.68.0). `-m` makes git diff a merge
+    # against its first parent so it is not simplified away.
+    last_bump = _git("log", "--first-parent", "-m", "-1", "--format=%H", "--", "VERSION")
     if not last_bump:
         r.ok()  # no VERSION history (fresh repo) — nothing to compare against
         return r
@@ -694,6 +700,12 @@ def check_no_unreleased_skeleton_changes() -> Result:
         return r
 
     version = _read(REPO / "VERSION").strip() if (REPO / "VERSION").exists() else "?"
+    # A bump already made in the working tree (not yet committed) covers the
+    # changes alongside it; check 11 still requires its CHANGELOG entry.
+    bumped_from = _git("show", f"{last_bump}:VERSION")
+    if bumped_from is not None and bumped_from.strip() != version:
+        r.ok()
+        return r
     shown = ", ".join(files[:5]) + (f" (+{len(files) - 5} more)" if len(files) > 5 else "")
     r.bad(
         f"{len(files)} skeleton file(s) changed since VERSION last moved to {version} "
