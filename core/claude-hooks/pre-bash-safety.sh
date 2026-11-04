@@ -119,40 +119,54 @@ EOF
     exit 2
 }
 
+# Every git rule below starts with GIT_CMD: `git` (or a path ending in /git:
+# /usr/bin/git, ./git) and then ANY global options before the subcommand.
+# Until v1.69.0 only `-C <path>` / `-c <k=v>` were allowed there, so
+# `git --no-pager reset --hard`, `git -P checkout -f` and `/usr/bin/git push
+# --force` matched no rule at all. Only git's value-taking global options
+# (-C, -c, --git-dir, ...) consume the next word: letting any option do so
+# read `git --no-pager log --grep restore` as a `restore` (PR review).
+GIT_CMD='(^|[;&|[:space:]])([^[:space:];&|]*/)?git([[:space:]]+((-[Cc]|--(git-dir|work-tree|namespace|exec-path|config-env|super-prefix|attr-source|list-cmds))[[:space:]]+[^[:space:]]+|-[^[:space:]]+))*[[:space:]]+'
+
 # --- Force pushes ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*push[[:space:]]+.*(--force([[:space:]]|=|$)|--force-with-lease|-f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
-    block "force push (git push --force / -f / --force-with-lease)"
+if grep -qE "$GIT_CMD"'push[[:space:]]+.*(--force([[:space:]]|=|$)|--force-with-lease|-f([[:space:]]|$))' <<<"$CMD_STRUCT" \
+   || grep -qE "$GIT_CMD"'push[[:space:]]+([^;&|]*[[:space:]])?["'\'']?\+[^:[:space:]"'\'']' <<<"$CMD_STRUCT"; then
+    # The second pattern (v1.69.0): a `+` refspec (`+main`, `+HEAD:main`)
+    # force-pushes that ref with no --force flag at all. `+:x` is a delete,
+    # decided by the remote-delete verdict below. Bounded to one command, so
+    # `git push origin main && echo +5` is not a force push.
+    block "force push (git push --force / -f / --force-with-lease / +refspec)"
 fi
 
 # --- Hard reset ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*reset[[:space:]]+.*--hard' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'reset[[:space:]]+.*--hard' <<<"$CMD_STRUCT"; then
     block "hard reset (git reset --hard) — discards uncommitted work"
 fi
 
 # --- Force delete branch ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*branch[[:space:]]+.*(-D([[:space:]]|$)|--delete[[:space:]]+.*(--force|-f)([[:space:]]|$)|(--force|-f)[[:space:]]+.*--delete([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'branch[[:space:]]+.*(-D([[:space:]]|$)|--delete[[:space:]]+.*(--force|-f)([[:space:]]|$)|(--force|-f)[[:space:]]+.*--delete([[:space:]]|$))' <<<"$CMD_STRUCT"; then
     block "force branch delete (short or long form) — discards unmerged work"
 fi
 
 # --- Checkout file discard: git checkout -- <path> ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+--([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'checkout[[:space:]]+--([[:space:]]|$)' <<<"$CMD_STRUCT"; then
     block "checkout -- <file> — discards uncommitted changes"
 fi
 
 # --- Checkout bulk file discard: git checkout . ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+\.([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'checkout[[:space:]]+\.([[:space:]]|$)' <<<"$CMD_STRUCT"; then
     block "git checkout . — discards ALL uncommitted changes"
 fi
 
 # --- git restore: the modern spelling of "checkout -- <file>" ---
 # Added 2026-08-16 (MCU-Watchlist). The old spelling was blocked and this one,
 # which discards exactly the same work, was not covered at all.
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*restore([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'restore([[:space:]]|$)' <<<"$CMD_STRUCT"; then
     block "git restore — discards uncommitted changes (modern 'checkout -- <file>')"
 fi
 
 # --- git clean with -f (force) ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*clean[[:space:]]+.*(-[a-zA-Z]*f|--force)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'clean[[:space:]]+.*(-[a-zA-Z]*f|--force)' <<<"$CMD_STRUCT"; then
     block "git clean force (-f / --force) — removes untracked files, cannot be undone"
 fi
 
@@ -258,7 +272,7 @@ if grep -oE '(^|[;&|[:space:]])rm[[:space:]][^;&|]*' <<<"$CMD_STRUCT" | LC_ALL=C
 fi
 
 # --- Worktree force remove ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*worktree[[:space:]]+remove[[:space:]]+.*(--force|-f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'worktree[[:space:]]+remove[[:space:]]+.*(--force|-f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
     block "git worktree remove force (--force / -f) — discards uncommitted worktree changes"
 fi
 
@@ -271,17 +285,17 @@ REMOTE_DELETE=0
 # Coarse prefilter only (quoted flags like "--delete" included): the python
 # verdict below parses the command and decides. A match that turns out not to
 # be a delete (`git push origin main && date -d tomorrow`) is allowed there.
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*push[[:space:]]+.*((--delete|[[:space:]"'\'']-d)(["'\''[:space:]=]|$)|[[:space:]]\+?:[^[:space:]]+)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'push[[:space:]]+.*((--delete|[[:space:]"'\'']-d)(["'\''[:space:]=]|$)|[[:space:]]\+?:[^[:space:]]+)' <<<"$CMD_STRUCT"; then
     REMOTE_DELETE=1
 fi
 
 # --- Forced checkout: discards every uncommitted change without naming a path ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+.*(--force([[:space:]]|$)|-[a-zA-Z]*f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'checkout[[:space:]]+.*(--force([[:space:]]|$)|-[a-zA-Z]*f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
     block "git checkout --force / -f — discards uncommitted changes"
 fi
 
 # --- Stash destruction: drop/clear cannot be recovered through the reflog UI ---
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*stash[[:space:]]+(drop|clear)([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'stash[[:space:]]+(drop|clear)([[:space:]]|$)' <<<"$CMD_STRUCT"; then
     block "git stash drop/clear — discards stashed work"
 fi
 
@@ -368,6 +382,12 @@ for words in segments:
     # them so the push is still seen (MCU-Watchlist 2026-11-02).
     while words and "=" in words[0] and words[0].split("=", 1)[0].rstrip("+").isidentifier():
         words = words[1:]
+    # A path-qualified git (/usr/bin/git) is git too (v1.69.0): it used to be
+    # skipped here, so its deletes were allowed. Ask only for the plain form.
+    if words and words[0] != "git" and os.path.basename(words[0]) == "git":
+        rest = words[1:]
+        if "push" in rest and ({"--delete", "-d"} & set(rest) or any(re.match(r"^\+?:", w) for w in rest[rest.index("push") + 1:])):
+            verdict("BLOCK path-qualified git before the push; run the delete as a plain `git push` command")
     if words and words[0] in WRAPPERS and "git" in words:
         rest = words[words.index("git"):]
         if "push" in rest and ({"--delete", "-d"} & set(rest) or any(re.match(r"^\+?:", w) for w in rest[rest.index("push") + 1:])):

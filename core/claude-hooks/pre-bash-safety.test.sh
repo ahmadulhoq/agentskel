@@ -73,6 +73,42 @@ check BLOCKED 'rm --recursive --force /tmp/x'
 # compound commands must not hide the payload
 check BLOCKED 'echo hi && rm -rf /tmp/x'
 check BLOCKED 'cd /tmp; git reset --hard'
+# --- v1.69.0: gaps the MCU-Watchlist reviews noted, fixed at regex level ---
+# a path-qualified git binary is still git
+check BLOCKED '/usr/bin/git push --force origin main'
+check BLOCKED '/usr/local/bin/git reset --hard HEAD'
+check BLOCKED './git checkout -- src/x'
+check BLOCKED '/usr/bin/git branch -D x'
+# any global option before the subcommand, not just -C / -c
+check BLOCKED 'git --no-pager push --force origin main'
+check BLOCKED 'git --no-pager -C /other/repo reset --hard'
+check BLOCKED 'git -c core.pager=cat --no-pager checkout -- src/x'
+check BLOCKED 'git --no-pager restore src/x'
+check BLOCKED 'git --no-pager clean -fd'
+check BLOCKED 'git --git-dir=.git --work-tree=. stash drop'
+check BLOCKED 'git --no-pager worktree remove --force wt'
+check BLOCKED 'git -P checkout -f'
+# a +refspec is a force push of that ref
+check BLOCKED 'git push origin +main'
+check BLOCKED 'git push origin +HEAD:main'
+check BLOCKED 'git push origin "+feature"'
+check BLOCKED 'git push --no-verify origin +refs/heads/x:refs/heads/x'
+check BLOCKED 'git --no-pager push origin +main'
+# ... and ordinary work still runs
+check ALLOWED '/usr/bin/git status'
+check ALLOWED 'git --no-pager log --oneline -5'
+check ALLOWED 'git --no-pager diff'
+check ALLOWED 'git --no-pager show HEAD'
+check ALLOWED 'git -c color.ui=never push origin main'
+check ALLOWED 'git push origin feat+x'
+check ALLOWED 'git push origin main && echo +5'
+check ALLOWED 'git --no-pager branch -d merged-x'
+# only real value-taking global options consume the next word
+check ALLOWED 'git --no-pager log --grep restore'
+check ALLOWED 'git -P log --oneline --grep stash drop'
+check ALLOWED 'git --no-pager log -S clean -- x'
+check BLOCKED 'git --git-dir .git --no-pager reset --hard'
+check BLOCKED 'git --work-tree /w -C /r clean -f'
 
 # --- rules first added in MCU-Watchlist (2026-08-16; upstream since v1.69.0) ---
 # Each was a real gap: the operation was blocked under one spelling and walked
@@ -603,6 +639,11 @@ check_in ASKED   "$R" 'git push origin "--delete" merged-a'
 check_in BLOCKED "$R" "git push origin '-d' unmerged"
 # a delete inside a nested command string cannot be inspected: blocked
 check_in BLOCKED "$R" 'echo x && git push origin main; sh -c "git push origin --delete merged-a"'
+# v1.69.0: path-qualified git and global options reach the remote-delete check
+check_in BLOCKED "$R" '/usr/bin/git push origin --delete unmerged'
+check_in BLOCKED "$R" '/usr/bin/git push origin --delete merged-a'
+check_in BLOCKED "$R" 'git --no-pager push origin --delete merged-a'
+check_in ALLOWED "$R" 'git --no-pager push origin main'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
