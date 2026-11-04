@@ -105,7 +105,9 @@ Command: $COMMAND
 This is a destructive operation. agentskel refuses to auto-approve it,
 regardless of Autopilot Mode.
 
-If you genuinely intend it, run it as a single command with this first word
+Agent: do NOT add the override below on your own. Stop and ask the user.
+Use it only after they have approved this exact command in the current
+conversation. If they have, run it as a single command with this first word
 (not available for remote branch deletes):
 
     AGENTSKEL_UNSAFE=i-understand <your command>

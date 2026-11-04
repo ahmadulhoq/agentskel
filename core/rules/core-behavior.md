@@ -85,6 +85,7 @@ Workflows that produce external side effects with no local file changes (e.g. `p
 - **Present each PR URL on its own line.** When a turn opens multiple PRs (rare but happens), list each as `PR #N: <url>` on its own line in the end-of-turn summary — not comma-separated inline — so the user can click each one independently.
 - **Post-merge cleanup is mandatory after the user confirms a merge.** When the user says "merged" (or equivalent), run the `git-flow` Post-Merge Cleanup procedure **before any other work**: switch to default branch, pull, delete the local feature branch, prune stale remote refs, update RESUME. Only then proceed to the next task.
 - **Honor user-specified commit granularity** for the duration of the workflow. If the user says "smaller commits", "atomic commits", "commit per file", "commit per logical unit", or equivalent, apply that granularity to every commit until the workflow ends — it is **not** a one-shot instruction. Surface the chosen granularity in the workflow plan so it stays visible across steps. Default when no instruction given: one commit per logical change.
+- **Never self-approve a safety-hook override.** `AGENTSKEL_UNSAFE=i-understand` (the pre-bash-safety escape hatch) may be used only after the user has approved that exact command in the current exchange. When the hook blocks a command, stop and ask; never reword a command to get past it — a variant that slips through is a bug to report.
 
 ## How You Communicate
 - Treat the user as the product owner. They make decisions, you execute.

@@ -575,6 +575,7 @@ def check_inline_rules_propagation() -> Result:
         "PR URL on its own line",
         "Post-merge cleanup is mandatory",
         "Honor user-specified commit granularity",
+        "Never self-approve a safety-hook override",
     )
     targets = [
         "core/AGENTS.md.template",
