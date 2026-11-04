@@ -21,7 +21,11 @@
 # were developed over five rounds of independent adversarial review. Every
 # case below closed a real bug; do not delete one to make a change pass.
 set -uo pipefail
-HOOK="${1:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/pre-bash-safety.sh}"
+HOOK="${1:-$(dirname "${BASH_SOURCE[0]}")/pre-bash-safety.sh}"
+# Absolute, so the remote-delete cases (which cd into a temp repo) still find
+# it when a relative path is passed.
+HOOK="$(cd "$(dirname "$HOOK")" && pwd)/$(basename "$HOOK")"
+[ -x "$HOOK" ] || { echo "not an executable hook: $HOOK" >&2; exit 2; }
 pass=0; fail=0
 
 check() { # check <BLOCKED|ALLOWED> <command>

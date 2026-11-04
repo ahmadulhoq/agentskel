@@ -12,32 +12,107 @@
 #         case: deleting remote branches that are fully merged (v1.68.0).
 # Allows: exit 0 (falls through to next hook or tool execution).
 #
-# Installed to .claude/hooks/ by setup-skeleton. Runs before Bash calls.
+# Installed to .claude/hooks/ by setup-skeleton, next to its two helpers
+# (pre-bash-heredocs.py, pre-bash-commands.py). Runs before Bash calls.
+# The other tools run this same script through a thin wrapper of their own
+# (core/<tool>-hooks/pre-bash-safety.sh) that converts their hook JSON.
+#
+# v1.69.0: upstreamed from MCU-Watchlist (PRs #164, #165): heredoc stripping
+# for a few exact text-writing shapes, the AGENTSKEL_UNSAFE override (first
+# word of a single command only, never for remote deletes), git restore,
+# every spelling of force branch delete, git clean --force, worktree remove
+# -f, and per-command checks for rm and git branch (pre-bash-commands.py)
+# with the old regexes kept as a floor. Developed over five rounds of
+# independent adversarial review there. Tests: pre-bash-safety.test.sh.
 set -euo pipefail
 
 # Read the tool input from stdin (Claude Code passes JSON with tool details)
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))" 2>/dev/null || echo "")
-SESSION_CWD=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('cwd',''))" 2>/dev/null || echo "")
+# python3 -I: a json.py or shlex.py in the session folder must not replace the
+# real module. errors="replace": a command python cannot print as-is (a lone
+# surrogate, non-ASCII under an ASCII locale) used to come out EMPTY, and an
+# empty command is allowed (MCU-Watchlist 2026-11-02).
+COMMAND=$(printf '%s' "$INPUT" | python3 -I -c "import sys,json; sys.stdout.reconfigure(errors='replace'); d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))" 2>/dev/null || echo "")
+SESSION_CWD=$(printf '%s' "$INPUT" | python3 -I -c "import sys,json; sys.stdout.reconfigure(errors='replace'); d=json.load(sys.stdin); print(d.get('cwd',''))" 2>/dev/null || echo "")
 
 # Empty command = nothing to check
 [ -z "$COMMAND" ] && exit 0
 
+# Strip heredoc BODIES: they are content, not commands. Found 2026-08-16
+# (MCU-Watchlist) when an edit to THIS FILE was blocked because the patch text
+# quoted a force-delete command inside a comment. Writing documentation about a
+# dangerous command is not running it, and a hook that cannot be safely edited
+# is a hook nobody will fix.
+#
+# pre-bash-heredocs.py decides what a heredoc is (2026-11-02: the awk version
+# read `<<<`, `$((1<<x))` and a quoted "<<EOF" as heredocs and hid every line
+# after them). A heredoc fed to a shell (`bash <<EOF`, `cat <<EOF | sh`) keeps
+# its body: that is commands. If the helper fails, nothing is stripped (fail
+# closed: more is checked, not less).
+CMD_HD=$(printf '%s' "$COMMAND" | python3 -I "$(dirname "$0")/pre-bash-heredocs.py" 2>/dev/null) || CMD_HD="$COMMAND"
+
 # Strip -m "..." / -m '...' / --message variants so patterns don't match text
 # inside commit messages (a commit message like "reset the hard state" must not
 # trigger the reset --hard block).
-CMD_STRUCT=$(echo "$COMMAND" | sed -E 's/-m[[:space:]]+"[^"]*"//g; s/-m[[:space:]]+'\''[^'\'']*'\''//g; s/--message[[:space:]]+"[^"]*"//g; s/--message[[:space:]]+'\''[^'\'']*'\''//g')
+CMD_STRUCT=$(echo "$CMD_HD" | sed -E 's/-m[[:space:]]+"[^"]*"//g; s/-m[[:space:]]+'\''[^'\'']*'\''//g; s/--message[[:space:]]+"[^"]*"//g; s/--message[[:space:]]+'\''[^'\'']*'\''//g')
 
-block() {
-    local reason="$1"
+# Deliberate, auditable escape hatch. Added 2026-08-16 (MCU-Watchlist).
+#
+# The message below used to say "do it manually or explicitly override" while no
+# override existed. So the only ways past were the human running the command, or
+# the agent rephrasing a flag to dodge the regex. The second happened: the short
+# force-delete flag was blocked and the long spelling of the same operation went
+# straight through, because the rules matched SPELLINGS rather than OPERATIONS.
+#
+# A control that a rephrase defeats is not a control, and an agent routing around
+# one learns that safety is negotiable. So the rules below match operations, and
+# intent gets a front door that shows up in the transcript.
+#
+#     AGENTSKEL_UNSAFE=i-understand <one command>
+#
+# It must be the FIRST word, and the command must be a single command (no ; & |
+# or line break once commit messages and heredoc bodies are set aside). Until
+# 2026-11-02 it matched the phrase anywhere — a commit message, a heredoc, an
+# echo — and then switched off every rule in the whole compound command.
+# It never applies to remote branch deletes (see the verdict at the end).
+override_requested() {
+    # Read with commit messages KEPT (CMD_HD): the message stripping is not
+    # quote-aware, so `'-m "'; <second command>; echo '"'` would hide a command.
+    grep -qE '^[[:space:]]*AGENTSKEL_UNSAFE=i-understand[[:space:]]' <<<"$CMD_HD" || return 1
+    # Redirections belong to the one command (2>&1, >&2, &>/dev/null); set them
+    # aside, then refuse anything that is, or hides, a second command:
+    # ; & | newline, $( ), backticks, <( ), >( ) (second review, 2026-11-02).
+    local one
+    one=$(sed -E 's/[0-9]*>&[0-9-]+//g; s/&>>?//g' <<<"$CMD_HD")
+    case "$one" in
+        *[';&|`']* | *'$('* | *'<('* | *'>('* | *$'\n'*) return 1 ;;
+    esac
+    return 0
+}
+
+block() { # block <reason> [no-override]
+    local reason="$1" overridable=yes
+    [ "${2:-}" = no-override ] && overridable=no
+    if [ "$overridable" = yes ] && override_requested; then
+        echo "pre-bash-safety.sh: OVERRIDDEN ($reason) — AGENTSKEL_UNSAFE set explicitly." >&2
+        return 0
+    fi
     cat >&2 <<EOF
 BLOCKED by pre-bash-safety.sh: $reason
 
 Command: $COMMAND
 
 This is a destructive operation. agentskel refuses to auto-approve it,
-regardless of Autopilot Mode. If you genuinely intend to run this, do it
-manually or explicitly override.
+regardless of Autopilot Mode.
+
+If you genuinely intend it, run it as a single command with this first word
+(not available for remote branch deletes):
+
+    AGENTSKEL_UNSAFE=i-understand <your command>
+
+That is deliberate and reviewable. Rewording a flag to slip past this check is
+neither — if you find a variant that gets through, that is a bug in this hook,
+not a way around it.
 
 See docs/AUTONOMY-MODES.md → "Always pause" for the full list.
 EOF
@@ -45,51 +120,146 @@ EOF
 }
 
 # --- Force pushes ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*push[[:space:]]+.*(--force([[:space:]]|=|$)|--force-with-lease|-f([[:space:]]|$))'; then
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*push[[:space:]]+.*(--force([[:space:]]|=|$)|--force-with-lease|-f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
     block "force push (git push --force / -f / --force-with-lease)"
 fi
 
 # --- Hard reset ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*reset[[:space:]]+.*--hard'; then
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*reset[[:space:]]+.*--hard' <<<"$CMD_STRUCT"; then
     block "hard reset (git reset --hard) — discards uncommitted work"
 fi
 
 # --- Force delete branch ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*branch[[:space:]]+.*-D([[:space:]]|$)'; then
-    block "force branch delete (git branch -D) — discards unmerged work"
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*branch[[:space:]]+.*(-D([[:space:]]|$)|--delete[[:space:]]+.*(--force|-f)([[:space:]]|$)|(--force|-f)[[:space:]]+.*--delete([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+    block "force branch delete (short or long form) — discards unmerged work"
 fi
 
 # --- Checkout file discard: git checkout -- <path> ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+--([[:space:]]|$)'; then
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+--([[:space:]]|$)' <<<"$CMD_STRUCT"; then
     block "checkout -- <file> — discards uncommitted changes"
 fi
 
 # --- Checkout bulk file discard: git checkout . ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+\.([[:space:]]|$)'; then
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+\.([[:space:]]|$)' <<<"$CMD_STRUCT"; then
     block "git checkout . — discards ALL uncommitted changes"
 fi
 
+# --- git restore: the modern spelling of "checkout -- <file>" ---
+# Added 2026-08-16 (MCU-Watchlist). The old spelling was blocked and this one,
+# which discards exactly the same work, was not covered at all.
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*restore([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+    block "git restore — discards uncommitted changes (modern 'checkout -- <file>')"
+fi
+
 # --- git clean with -f (force) ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*clean[[:space:]]+.*-[a-zA-Z]*f'; then
-    block "git clean -f — removes untracked files, cannot be undone"
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*clean[[:space:]]+.*(-[a-zA-Z]*f|--force)' <<<"$CMD_STRUCT"; then
+    block "git clean force (-f / --force) — removes untracked files, cannot be undone"
 fi
 
-# --- Recursive force rm ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])rm[[:space:]]+(-[a-zA-Z]*[rR][a-zA-Z]*[fF]|-[a-zA-Z]*[fF][a-zA-Z]*[rR])'; then
-    block "rm -rf (or -fr / -Rf) — recursive force delete"
-fi
+# --- Recursive force rm, force branch delete: decided per command ---
+# pre-bash-commands.py reads the command the way bash splits it (quotes, $'',
+# braces, $( ), backticks, <( ), redirections, comments) and blocks only when
+# ONE rm carries recursive + force, or ONE git branch carries delete + force,
+# in any spelling. Its header has the rules and the history: the regexes this
+# replaces read past the end of a command (any hyphenated file name with an r
+# and an f — "-confirmed", "-four" — tripped them) or stopped too early
+# (`rm -r $(cat list) -f`).
+#
+# It reads CMD_HD: heredoc bodies removed, commit messages KEPT, because a
+# `$( )` in a message runs (`git commit -m "$(rm -rf y)"`), and plain message
+# text is a single word the reader does not treat as a command.
+#
+# If it cannot run or answers anything else, every rm and every git branch
+# delete is blocked until a person runs it. Fail closed.
+CMD_VERDICT=$(printf '%s' "$CMD_HD" | python3 -I "$(dirname "$0")/pre-bash-commands.py" 2>/dev/null) || CMD_VERDICT=""
+case "$CMD_VERDICT" in
+    "BLOCK "*)
+        block "${CMD_VERDICT#BLOCK }"
+        ;;
+    ALLOW)
+        ;;
+    *)
+        # Only reached when the reader itself is broken, so be blunt: any rm,
+        # and any git branch delete, waits for a person. Reads CMD_HD so a
+        # $( ) inside a commit message is not hidden.
+        # Quotes, backslashes, $ and braces removed first, so r\m, r$'m',
+        # {r,}m and {rm,-rf,y} all read as rm; and "rm" anywhere counts
+        # (-O'rm ...', rm${IFS}-rf, \nrm): this path is rare, so blunt is fine.
+        CMD_PLAIN=$(tr -d '\\"'"'"'${},' <<<"$CMD_HD")
+        if grep -q 'rm' <<<"$CMD_PLAIN"; then
+            block "rm while the per-command check could not run (strict fallback)"
+        fi
+        if grep -qE 'git.*branch' <<<"$CMD_PLAIN"; then
+            block "git branch while the per-command check could not run (strict fallback)"
+        fi
+        ;;
+esac
 
-# --- rm with recursive AND force given SEPARATELY (rm -r -f, rm --recursive
-#     --force). The bundled-flag pattern above misses these entirely. ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])rm[[:space:]]' \
-   && echo "$CMD_STRUCT" | grep -qE '(^|[[:space:]])(-[a-zA-Z]*[rR]|--recursive)([[:space:]]|$)' \
-   && echo "$CMD_STRUCT" | grep -qE '(^|[[:space:]])(-[a-zA-Z]*[fF]|--force)([[:space:]]|$)'; then
-    block "rm with recursive + force (split or long flags) — cannot be undone"
+# --- Floor: the pre-v1.69.0 rm rules, which apply whatever the reader says ---
+# The reader may only ADD blocks (third and fourth reviews, 2026-11-02: every
+# round found a place where it misread bash). The floor is the old rule,
+# unchanged, run on a copy of the command in which some hyphens are
+# neutralised: those that cannot start a working rm option. A hyphen that has
+# a literal character before it in the same word (other than a $NAME variable
+# name, and other than more hyphens) is either inside a word that does not
+# start with "-" or in the middle of an option cluster, where rm rejects the
+# option and deletes nothing. That is the "-confirmed" / "-four" / "-verify"
+# case, and `$DIR/run-after.txt`. Everything else is matched exactly as the old rule
+# matches it: `$x-rf` (x empty), `$(:)-rf`, `` `:`-rf ``, `*-rf`, `$x--force`.
+# A word that starts with "--" and is all plain characters is a long option:
+# its hyphens are neutralised for the bundled-flag rule (`rm --force x` is not
+# -f...r), and the long-form rule below reads the original.
+# LC_ALL=C (v1.69.0): macOS awk in a UTF-8 locale splits a non-breaking space
+# in half while splitting fields and dies ("towc: multibyte conversion
+# failure"). Under `set -e` that exited the hook with status 2 (blocked by
+# accident); in the split-flag `if` below it made the rule fail OPEN. Byte
+# semantics change nothing else: every class here is ASCII.
+CMD_FLOOR=$(LC_ALL=C awk '
+function neutral(f,    out, n, k, c, j, run, b, lit) {
+    if (f ~ /^--[A-Za-z0-9._\/+:,%=~^-]*$/) { gsub(/-/, "_", f); return f }
+    out = ""; n = length(f)
+    for (k = 1; k <= n; k++) {
+        c = substr(f, k, 1)
+        if (c == "-") {
+            j = k
+            while (j > 1 && substr(f, j - 1, 1) ~ /[A-Za-z0-9._\/+:%=~^-]/) j--
+            run = substr(f, j, k - j)
+            b = (j > 1) ? substr(f, j - 1, 1) : ""
+            lit = run
+            if (b == "$") {
+                if (match(lit, /^[A-Za-z_][A-Za-z0-9_]*/)) lit = substr(lit, RLENGTH + 1)
+                else if (match(lit, /^[0-9]/)) lit = substr(lit, 2)
+            } else if (b == "{") {
+                lit = ""        # inside ${ } or { , }: an expansion, not literal text
+            }
+            if (lit ~ /[^-]/) c = "_"
+        }
+        out = out c
+    }
+    return out
+}
+{
+    gsub(/[;&|<>]/, " & ")      # a separator or redirection ends a word
+    line = ""
+    for (i = 1; i <= NF; i++) line = line (i > 1 ? " " : "") neutral($i)
+    print line
+}' <<<"$CMD_STRUCT")
+if grep -qE '(^|[;&|[:space:]])rm[[:space:]]+.*(-[a-zA-Z]*[rR][a-zA-Z]*[fF]|-[a-zA-Z]*[fF][a-zA-Z]*[rR])' <<<"$CMD_FLOOR" \
+   || grep -qE '(^|[;&|[:space:]])rm[[:space:]]+.*(--recursive[[:space:]]+.*--force|--force[[:space:]]+.*--recursive)' <<<"$CMD_STRUCT"; then
+    block "recursive force delete (rm -rf / -fr / --recursive --force) — cannot be undone"
+fi
+# Split flags (rm -r x -f) within one command, up to the next ; & | or line
+# break, in a single pass (one grep per segment took 110 s on 30,000 segments).
+if grep -oE '(^|[;&|[:space:]])rm[[:space:]][^;&|]*' <<<"$CMD_STRUCT" | LC_ALL=C awk '
+    /(^|[[:space:]])(-[a-zA-Z]*[rR][a-zA-Z]*|--recursive)([[:space:]]|$)/ &&
+    /(^|[[:space:]])(-[a-zA-Z]*[fF][a-zA-Z]*|--force)([[:space:]]|$)/ { found = 1 }
+    END { exit !found }'; then
+    block "recursive force delete (rm with -r and -f) — cannot be undone"
 fi
 
 # --- Worktree force remove ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*worktree[[:space:]]+remove[[:space:]]+.*--force'; then
-    block "git worktree remove --force — discards uncommitted worktree changes"
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*worktree[[:space:]]+remove[[:space:]]+.*(--force|-f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+    block "git worktree remove force (--force / -f) — discards uncommitted worktree changes"
 fi
 
 # --- Remote branch deletion: git push --delete / git push origin :branch ---
@@ -101,32 +271,32 @@ REMOTE_DELETE=0
 # Coarse prefilter only (quoted flags like "--delete" included): the python
 # verdict below parses the command and decides. A match that turns out not to
 # be a delete (`git push origin main && date -d tomorrow`) is allowed there.
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*push[[:space:]]+.*((--delete|[[:space:]"'\'']-d)(["'\''[:space:]=]|$)|[[:space:]]:[^[:space:]]+)'; then
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*push[[:space:]]+.*((--delete|[[:space:]"'\'']-d)(["'\''[:space:]=]|$)|[[:space:]]\+?:[^[:space:]]+)' <<<"$CMD_STRUCT"; then
     REMOTE_DELETE=1
 fi
 
 # --- Forced checkout: discards every uncommitted change without naming a path ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+.*(--force([[:space:]]|$)|-[a-zA-Z]*f([[:space:]]|$))'; then
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*checkout[[:space:]]+.*(--force([[:space:]]|$)|-[a-zA-Z]*f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
     block "git checkout --force / -f — discards uncommitted changes"
 fi
 
 # --- Stash destruction: drop/clear cannot be recovered through the reflog UI ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*stash[[:space:]]+(drop|clear)([[:space:]]|$)'; then
+if grep -qE '(^|[;&|[:space:]])git[[:space:]]+(-[Cc][[:space:]]+[^[:space:]]+[[:space:]]+)*stash[[:space:]]+(drop|clear)([[:space:]]|$)' <<<"$CMD_STRUCT"; then
     block "git stash drop/clear — discards stashed work"
 fi
 
 # --- find with a destructive action. `Bash(find *)` is allowlisted as a search
 #     tool, but -delete and -exec rm turn it into a bulk remover. ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])find[[:space:]]' \
-   && echo "$CMD_STRUCT" | grep -qE '(-delete([[:space:]]|$)|-exec[[:space:]]+rm([[:space:]]|$)|-execdir[[:space:]]+rm([[:space:]]|$))'; then
+if grep -qE '(^|[;&|[:space:]])find[[:space:]]' <<<"$CMD_STRUCT" \
+   && grep -qE '(-delete([[:space:]]|$)|-exec[[:space:]]+rm([[:space:]]|$)|-execdir[[:space:]]+rm([[:space:]]|$))' <<<"$CMD_STRUCT"; then
     block "find with -delete / -exec rm — bulk delete"
 fi
 
 # --- gh api with a writing method. `gh api` is a general-purpose authenticated
 #     GitHub client: `gh api -X DELETE /repos/:owner/:repo` deletes the repo,
 #     and other endpoints can strip branch protection. Read-only is fine. ---
-if echo "$CMD_STRUCT" | grep -qE '(^|[;&|[:space:]])gh[[:space:]]+api([[:space:]]|$)' \
-   && echo "$CMD_STRUCT" | grep -qiE '(-X|--method)[[:space:]]*=?[[:space:]]*(POST|PUT|PATCH|DELETE)'; then
+if grep -qE '(^|[;&|[:space:]])gh[[:space:]]+api([[:space:]]|$)' <<<"$CMD_STRUCT" \
+   && grep -qiE '(-X|--method)[[:space:]]*=?[[:space:]]*["'\'']?(POST|PUT|PATCH|DELETE)' <<<"$CMD_STRUCT"; then
     block "gh api with a writing method (POST/PUT/PATCH/DELETE) — can delete repos or remove branch protection"
 fi
 
@@ -148,12 +318,14 @@ fi
 # wired into other tools.
 if [ "$REMOTE_DELETE" = 1 ]; then
     read -r -d '' DELETE_CHECK_PY <<'PY' || true
-import json, os, shlex, subprocess
+import json, os, re, shlex, subprocess
 
 cmd = os.environ.get("SAFETY_CMD", "")
 cwd = os.environ.get("SAFETY_CWD") or os.getcwd()
 PROTECTED = {"main", "master", "ai-memory"}
 SEPARATORS = {"&&", "||", ";", "|", "&", "(", ")", ";;", "|&"}
+WRAPPERS = {"env", "command", "builtin", "exec", "sudo", "doas", "nohup", "nice",
+            "time", "timeout", "xargs", "stdbuf", "chronic", "unbuffer"}
 
 
 def verdict(text):
@@ -164,6 +336,10 @@ def verdict(text):
 def git(*args):
     return subprocess.run(["git", "-C", cwd, *args], capture_output=True, text=True, timeout=20)
 
+
+# A newline ends a command, as ; does (MCU-Watchlist 2026-11-02: a delete on
+# the second line was not seen).
+cmd = cmd.replace("\\\n", " ").replace("\n", " ; ")
 
 try:
     lex = shlex.shlex(cmd, posix=True, punctuation_chars=True)
@@ -187,6 +363,15 @@ if any(seg[:1] == ["cd"] for seg in segments):
 
 deletes = []
 for words in segments:
+    # Leading NAME=value words only set the environment for this one command
+    # (`FOO=1 git push …`, `X+=1 git push …`, `AGENTSKEL_UNSAFE=… git push …`); skip
+    # them so the push is still seen (MCU-Watchlist 2026-11-02).
+    while words and "=" in words[0] and words[0].split("=", 1)[0].rstrip("+").isidentifier():
+        words = words[1:]
+    if words and words[0] in WRAPPERS and "git" in words:
+        rest = words[words.index("git"):]
+        if "push" in rest and ({"--delete", "-d"} & set(rest) or any(re.match(r"^\+?:", w) for w in rest[rest.index("push") + 1:])):
+            verdict(f"BLOCK `{words[0]}` before the push; run the delete as a plain `git push` command")
     if not words or words[0] != "git":
         continue
     i, global_opts = 1, []
@@ -198,11 +383,11 @@ for words in segments:
     args = words[i + 1:]
     positional = [a for a in args if not a.startswith("-")]
     flags = [a for a in args if a.startswith("-")]
-    if not ({"--delete", "-d"} & set(flags) or any(":" in a for a in positional)):
+    if not ({"--delete", "-d"} & set(flags) or any(re.match(r"^\+?:", a) for a in positional)):
         continue
     if global_opts:
         verdict("BLOCK git options before `push` (-C/-c); run it from the repo itself")
-    if any(":" in a for a in positional):
+    if any(re.match(r"^\+?:", a) for a in positional):
         verdict("BLOCK refspec form (`:branch`); use `git push <remote> --delete <branch>`")
     if set(flags) - {"--delete", "-d"}:
         verdict("BLOCK extra push options alongside --delete")
@@ -264,7 +449,7 @@ print(json.dumps({"hookSpecificOutput": {
     ),
 }}))
 PY
-    VERDICT=$(SAFETY_CMD="$COMMAND" SAFETY_CWD="$SESSION_CWD" python3 -c "$DELETE_CHECK_PY" 2>/dev/null) || VERDICT="BLOCK the merge check crashed"
+    VERDICT=$(SAFETY_CMD="$COMMAND" SAFETY_CWD="$SESSION_CWD" python3 -I -c "$DELETE_CHECK_PY" 2>/dev/null) || VERDICT="BLOCK the merge check crashed"
     case "$VERDICT" in
         "{"*)
             printf '%s\n' "$VERDICT"
@@ -273,7 +458,7 @@ PY
         ALLOW)
             ;;
         *)
-            block "remote branch delete (git push --delete / push origin :branch): ${VERDICT#BLOCK }"
+            block "remote branch delete (git push --delete / push origin :branch): ${VERDICT#BLOCK }" no-override
             ;;
     esac
 fi
