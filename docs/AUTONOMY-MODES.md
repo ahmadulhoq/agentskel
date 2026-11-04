@@ -88,22 +88,32 @@ The template ships pre-approvals for read-only ops (already in v1.66.0) plus saf
 - Git: `git add`, `git commit`, `git push`, `git pull`, `git fetch`, `git checkout`, `git merge`, `git stash`, `git worktree`
 - GitHub CLI: `gh pr *`, `gh issue *`, and read-only `gh api` (`--method GET` / `-X GET`). `gh api *` wholesale was narrowed in v1.67.1: it can delete the repository.
 
-**Layer 2 — `pre-bash-safety.sh` hook (installed to `.claude/hooks/`):**
+**Layer 2 — `pre-bash-safety.sh` hook (every tool with hooks, since v1.69.0):**
 
 Blocks destructive patterns with exit code 2 + a stderr message, **regardless of what the allowlist accepts**. The allowlist uses glob matchers (`Bash(git push *)` would match `git push --force`), so the safety hook enforces the block explicitly.
 
-Blocked patterns (also when prefixed with `git -C <path>`):
-- `git push --force` / `-f` / `--force-with-lease`
+One rule engine serves every tool: `core/claude-hooks/pre-bash-safety.sh` with its helpers `pre-bash-heredocs.py` and `pre-bash-commands.py`. Claude Code runs it directly. Gemini CLI, Cursor, Windsurf and Codex run it through a thin wrapper of their own (`core/<tool>-hooks/pre-bash-safety.sh`) that converts their hook JSON. Copilot has no hooks. The v1.69.0 engine was developed in MCU-Watchlist over five rounds of independent adversarial review and upstreamed with its 387-case suite.
+
+Blocked operations. Every git rule also applies to a path-qualified git (`/usr/bin/git`) and to any global options before the subcommand (`git --no-pager …`, `git -C <path> …`):
+- `git push --force` / `-f` / `--force-with-lease`, and a `+refspec` push (`git push origin +main`)
 - `git reset --hard`
-- `git branch -D` (force-delete)
-- `git checkout -- <file>`, `git checkout .`, `git checkout -f` (discard uncommitted changes)
-- `git clean -f` (force-remove untracked)
+- force branch delete in every spelling (`-D`, `-d -f`, `--delete --force`, …)
+- `git checkout -- <file>`, `git checkout .`, `git checkout -f`, `git restore` (discard uncommitted changes)
+- `git clean -f` / `--force` (force-remove untracked)
 - `git stash drop` / `git stash clear`
-- `rm -rf` / `-fr` / `-Rf`, and `rm -r -f` / `rm --recursive --force`
+- recursive force `rm` in every spelling and position: `-rf`, `-r -f`, `--recursive --force`, `rm x -rf`, inside `bash -c`, `$( )`, backticks, `eval`, brace expansion
 - `find … -delete` / `-exec rm`
-- `git worktree remove --force`
-- `gh api` with a writing method (`POST`/`PUT`/`PATCH`/`DELETE`)
+- `git worktree remove --force` / `-f`
+- `gh api` with a writing method (`POST`/`PUT`/`PATCH`/`DELETE`, quoted or not)
 - Remote branch deletes, **except** the case below
+
+**How `rm` and `git branch` are decided.** `pre-bash-commands.py` reads the command the way bash splits it: quotes, `$''`, braces, `${ }`, `$( )`, backticks, `<( )`, arithmetic, `case`, redirections and comments. It blocks when one `rm` carries recursive + force, or one `git branch` carries delete + force. The old regexes still run as a floor, so the reader can only *add* blocks. That is why real hyphenated file names (`the-fantastic-four-first-steps.json`) are now allowed while every spelling of `-rf` is still caught.
+
+**Text that mentions a dangerous command.** Quoted text is read as commands unless it is a search pattern (`grep`, `rg`, `git log -S`) or a message value (`-m`, gh `--title`/`--body`). So `echo "rm -rf is dangerous"` is blocked: that is the deliberate fail-safe cost. To write a commit message or PR body that mentions a blocked command, use `git commit -F - <<'EOF'` or `gh … --body-file - <<'EOF'`. Heredoc bodies are skipped only for those shapes and for `cat > FILE` / `tee FILE > /dev/null`, each with a quoted end marker and nothing after it. `-m "$(cat <<'EOF' …)"` is checked in full.
+
+**Override.** `AGENTSKEL_UNSAFE=i-understand <one command>`, as the first word of a single command, runs it past the block rules (never past remote branch deletes). It shows up in the transcript. **An agent may use it only after the user has approved that exact command in the current exchange** (core-behavior rule "Never self-approve a safety-hook override"; the block message says so too). Rewording a command to slip past the hook is never acceptable: a variant that gets through is a bug to report.
+
+**Accepted limit.** A flag assembled at run time, from a substitution's output or from word splitting (`rm $(echo x-rf | cut -c2-) y`, `IFS=a; rm $(echo a-rf) y`), does not exist in the command text until bash runs it, so no static check can see it. Allowing real hyphenated file names necessarily allows these. The old coarse rule blocked them only as a side effect of its false positives. Documented in `pre-bash-commands.py`.
 
 **Asks instead of blocking (v1.68.0) — remote branch deletes that lose nothing.**
 `git push <remote> --delete <branch>…` (or `-d`) returns Claude Code's own
@@ -113,16 +123,19 @@ the remote's default branch. You click approve; an agent cannot answer that
 prompt, so the guard holds and the `!` workaround is no longer needed for
 routine cleanup. Still **blocked**: unmerged or squash-merged branches, the
 default branch / `main` / `master` / `ai-memory`, the `:branch` refspec form,
-`git -C` / `cd` in the same command, extra push flags, and any failure to
-reach the remote. The ask is decided only after every block rule has run, so
-a delete chained with a blocked command is still blocked. Claude Code only;
-the other tools have no equivalent of "ask".
+`git -C` / `cd` / a path-qualified git in the same command, extra push flags,
+and any failure to reach the remote. The ask is decided only after every block
+rule has run, so a delete chained with a blocked command is still blocked.
+**Claude Code only:** in the other tools a merged delete is blocked, because
+none has a verified approval prompt and an output they don't understand could
+be read as "allow".
 
-Verified by `core/claude-hooks/pre-bash-safety.test.sh` (63 cases, including a
-throwaway remote with merged, unmerged and squash-merged branches). It also
-asserts that everyday commands still run: `git branch -d` (safe delete),
-`git checkout main`, `git status`, `git commit -m "reset --hard state"`
-(string in message, not a command).
+Verified by `core/claude-hooks/pre-bash-safety.test.sh` (rules; run it against
+an installed copy with `bash pre-bash-safety.test.sh <path>`) and
+`pre-bash-safety-tools.test.sh` (each tool's wrapper and output contract), on
+bash 5.2 and macOS bash 3.2, in CI. The suites assert both halves: destructive
+commands are blocked, and everyday commands (`git branch -d`, `git checkout
+main`, `git status`, `rm` of a hyphenated file) still run.
 
 ### What still pauses
 
