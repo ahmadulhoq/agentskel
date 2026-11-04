@@ -27,7 +27,7 @@ Update to `active` once the cartographer workflow finishes.
 | Field | Value |
 |-------|-------|
 | Default Branch | main |
-| Skeleton Version | 1.68.1 |
+| Skeleton Version | 1.69.0 |
 | Skeleton Path | . |
 | Blueprint Path | |
 | Last Blueprint Sync | |

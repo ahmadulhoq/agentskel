@@ -4,6 +4,28 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-11-05 — v1.69.0: pre-bash-safety upstreamed from MCU-Watchlist, every tool, gaps closed
+
+Brief from a downstream session. Ported MCU-Watchlist's hook + two helpers
+verbatim (PRs #164/#165; 387-case suite from five adversarial reviews), with
+three maintainer decisions: port to ALL tools (one engine + thin wrappers;
+merged-delete ask becomes block outside Claude via AGENTSKEL_NO_ASK), add an
+override guard (core-behavior rule in 14 files + validator fingerprint +
+block message), and fix the regex-level gaps now (path-qualified git, any
+global git option, +refspec force push; 19 fail-open cases).
+
+Found while porting: macOS awk crashes on a non-breaking space in a UTF-8
+locale (MCU's own hook: 386/387 on macOS) — floor blocked by accident,
+split-flag rule failed OPEN. Fixed with LC_ALL=C. Also: my first GIT_CMD
+let any option swallow the subcommand as its value (`git --no-pager log
+--grep restore` blocked) — restricted to git's value-taking globals before
+commit. Test harness: relative hook path broke the cd-ing cases (31 false
+failures) — resolved to absolute.
+
+Install/sync: setup 5b3, sync table, new Step 5n (suites against INSTALLED
+hooks), BL-006 fixed in 5k/5l. Rules 421/421, wrappers 81/81 on bash 5.2 +
+macOS 3.2; MCU's unmodified suite 387/387 against the skeleton hook.
+
 ## 2026-11-02 — v1.68.1: validator check 12 red on main right after merging v1.68.0
 
 My v1.68.0 check-12 change was tested on the open branch only. Post-merge,

@@ -130,6 +130,22 @@
 | pre-commit-check.test.sh | test suite (4 variants + trigger check) | core/claude-hooks/pre-commit-check.test.sh |
 | pre-bash-safety.test.sh | test suite (incl. throwaway-remote branch-delete cases) | core/claude-hooks/pre-bash-safety.test.sh |
 | DELETE_CHECK_PY | inline python (remote-delete ask/block verdict) | core/claude-hooks/pre-bash-safety.sh |
+| GIT_CMD | regex prefix shared by every git rule (path-qualified git + global options) | core/claude-hooks/pre-bash-safety.sh |
+| override_requested | function (AGENTSKEL_UNSAFE first-word check) | core/claude-hooks/pre-bash-safety.sh |
+| block | function (block message; no-override for remote deletes) | core/claude-hooks/pre-bash-safety.sh |
+| pre-bash-commands.py | script (per-command reader: rm / git branch) | core/claude-hooks/pre-bash-commands.py |
+| Reader | class (splits a command the way bash does) | core/claude-hooks/pre-bash-commands.py |
+| verdict | function (BLOCK/ALLOW, re-reads quoted text) | core/claude-hooks/pre-bash-commands.py |
+| check_command | function | core/claude-hooks/pre-bash-commands.py |
+| rm_forced_recursive | function | core/claude-hooks/pre-bash-commands.py |
+| git_branch_force_delete | function | core/claude-hooks/pre-bash-commands.py |
+| exempt_words | function (search patterns / message values) | core/claude-hooks/pre-bash-commands.py |
+| braces | function (brace expansion) | core/claude-hooks/pre-bash-commands.py |
+| pre-bash-heredocs.py | script (strips bodies of exact text-writing shapes) | core/claude-hooks/pre-bash-heredocs.py |
+| strip | function | core/claude-hooks/pre-bash-heredocs.py |
+| SHAPES | constant (the allowed whole-command shapes) | core/claude-hooks/pre-bash-heredocs.py |
+| pre-bash-safety-tools.test.sh | test suite (4 tool wrappers + config wiring) | core/claude-hooks/pre-bash-safety-tools.test.sh |
+| pre-bash-safety.sh (wrapper) | per-tool wrapper around the engine | core/{gemini,cursor,windsurf,codex}-hooks/pre-bash-safety.sh |
 
 ## scripts
 | Symbol | Type | File |
