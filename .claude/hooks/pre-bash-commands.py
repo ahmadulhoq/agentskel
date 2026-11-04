@@ -1,12 +1,38 @@
 #!/usr/bin/env python3
-"""Per-command checks for pre-bash-safety.sh: recursive force rm, force
-branch delete.
+"""Per-command checks for pre-bash-safety.sh.
+
+Decided here, per command: recursive force rm, force branch delete, and
+(v1.69.0, agentskel BL-007/BL-009/BL-010) every other destructive git form,
+find -delete / -exec rm, and gh api writes:
+
+    git push   --force / -f (any cluster, e.g. -uf) / --force-with-lease /
+               a +refspec / --mirror / --prune
+    git reset --hard
+    git checkout -f / -- <paths> / . / <tree-ish> <paths>
+    git switch -f / --discard-changes
+    git restore (any)
+    git clean -f / --force
+    git worktree remove -f / --force
+    git stash drop / clear
+    find -delete / -exec|-execdir|-ok|-okdir rm
+    gh api with a writing method, including the POST that -f/-F/--field/
+           --raw-field/--input imply without -X; graphql only for an inline
+           query that is not a mutation and that the shell cannot change
+
+A remote branch delete (git push --delete / -d / :branch) is NOT decided here
+when it is a plain top-level command: the hook's own verdict asks or blocks
+(merged-branch check). Anywhere else (inside $( ), backticks, a ( ) group,
+bash -c, eval, ...) it is blocked, because nothing can ask about a command it
+cannot see.
 
 The command arrives on stdin (heredoc bodies already removed, commit messages
 NOT removed: a `$( )` inside a message runs). Prints one line:
-    BLOCK <reason>    or    ALLOW
+    BLOCK <reason>    or    ALLOW    or    ALLOW DELETE
+("ALLOW DELETE": nothing to block here, but a top-level remote branch delete
+was seen; the hook must run its delete verdict even if its own prefilter
+missed the command, e.g. a backslash-escaped or quoted `git` word.)
 Anything else (CRASH, a timeout, missing python) makes the hook fall back to
-blocking every rm and every git branch delete: fail closed.
+blocking every rm and every destructive git / find / gh api word: fail closed.
 
 Why a reader and not a regex (MCU-Watchlist, 2026-11-02): a regex sees one
 string, so it either reads past the end of a command (`rm -r a; ls -f b`
@@ -82,6 +108,7 @@ class Reader:
         self.s = text
         self.i = 0
         self.commands = []      # every simple command found: a list of words
+        self.nesting = []       # per command: its $( ) / ( ) / backtick depth
         self.strings = []       # redirection targets, read again as commands
         self.unterminated = False
         self.depth = depth
@@ -329,6 +356,7 @@ class Reader:
             target = False
             if cmd:
                 self.commands.append(cmd)
+                self.nesting.append(self.depth)
             cmd = []
 
         def add(text):
@@ -431,10 +459,12 @@ class Reader:
 
 
 def read(text, depth=0):
-    """(commands, strings) of `text`."""
+    """(commands, strings, top) of `text`. top[k]: command k is a plain
+    top-level command of `text` (not inside $( ), backticks or ( ))."""
     r = Reader(text, depth)
     r.parse()
     commands, strings = r.commands, r.strings
+    top = [n == depth for n in r.nesting]
     if r.unterminated:
         # bash would refuse to run this; read it once more with the quotes
         # removed so flags inside the unclosed quote still count (fail safe).
@@ -442,7 +472,8 @@ def read(text, depth=0):
         q.parse()
         commands = commands + q.commands
         strings = strings + q.strings
-    return commands, strings
+        top = top + [False] * len(q.commands)
+    return commands, strings, top
 
 
 def braces(word):
@@ -619,7 +650,240 @@ def exempt_words(cmd, definitions):
 MAX_RM_WORDS = 64
 
 
-def check_command(cmd):
+# --- v1.69.0: every other destructive git form, find, gh api ------------------
+# Each takes the words after the subcommand. Long options may be abbreviated
+# (git accepts any unambiguous prefix), so prefixes count; a short option
+# cluster (-uf) counts letter by letter, up to a letter that takes a value.
+
+def opt_name(arg):
+    return arg[2:].split("=", 1)[0]
+
+
+def is_long(arg, full, minimum):
+    o = opt_name(arg)
+    return arg.startswith("--") and len(o) >= minimum and full.startswith(o)
+
+
+def split_args(args, long_values=(), short_values=""):
+    """(options, positionals, after_dashdash), skipping option values."""
+    opts, pos, i = [], [], 0
+    while i < len(args):
+        a = args[i]
+        if a == "--":
+            return opts, pos, args[i + 1:]
+        if a.startswith("--") and len(a) > 2:
+            opts.append(a)
+            if "=" not in a and opt_name(a) in long_values:
+                i += 1
+        elif a.startswith("-") and len(a) > 1:
+            opts.append(a)
+            for k, ch in enumerate(a[1:]):
+                if ch in short_values:
+                    if k == len(a) - 2:
+                        i += 1          # its value is the next word
+                    break
+        else:
+            pos.append(a)
+        i += 1
+    return opts, pos, []
+
+
+def letters(arg, short_values=""):
+    """Letters of a short option cluster, up to one that takes a value."""
+    out = []
+    if arg.startswith("-") and not arg.startswith("--"):
+        for ch in arg[1:]:
+            out.append(ch)
+            if ch in short_values:
+                break
+    return out
+
+
+PUSH_VALUES = {"push-option", "repo", "receive-pack", "exec"}
+
+
+def git_push(args):
+    """A reason to block, "DELETE" for a remote branch delete, or None."""
+    opts, pos, rest = split_args(args, PUSH_VALUES, "o")
+    refs = pos + rest
+    delete = False
+    for a in opts:
+        if (is_long(a, "force", 3) or is_long(a, "force-with-lease", 3)
+                or "f" in letters(a, "o")):
+            return "force push (--force / -f / --force-with-lease) — overwrites remote history"
+        if is_long(a, "mirror", 2):
+            return "git push --mirror — deletes remote branches that are not local"
+        if is_long(a, "prune", 3):
+            return "git push --prune — deletes remote branches that are not local"
+        if is_long(a, "delete", 2) or "d" in letters(a, "o"):
+            delete = True
+    for r in refs:
+        if r.startswith("+") and not r.startswith("+:"):
+            return "force push of a +refspec — overwrites remote history"
+        if r.startswith(":") or r.startswith("+:"):
+            delete = True
+    return "DELETE" if delete else None
+
+
+def git_reset(args):
+    if any(is_long(a, "hard", 2) for a in args):
+        return "hard reset (git reset --hard) — discards uncommitted work"
+    return None
+
+
+def git_checkout(args):
+    opts, pos, rest = split_args(args, {"orphan"}, "bB")
+    if any(is_long(a, "force", 3) or "f" in letters(a, "bB") for a in opts):
+        return "git checkout --force / -f — discards uncommitted changes"
+    if rest or "." in pos or len(pos) >= 2 or any(is_long(a, "pathspec-from-file", 5) for a in opts):
+        return "git checkout <paths> — overwrites uncommitted changes in those files"
+    return None
+
+
+def git_switch(args):
+    opts, _, _ = split_args(args, {"create", "force-create", "orphan"}, "cC")
+    for a in opts:
+        if is_long(a, "force", 3) and not is_long(a, "force-create", 7) or "f" in letters(a, "cC"):
+            return "git switch --force / -f — discards uncommitted changes"
+        if is_long(a, "discard-changes", 4):
+            return "git switch --discard-changes — discards uncommitted changes"
+    return None
+
+
+def git_clean(args):
+    opts, _, _ = split_args(args, {"exclude"}, "e")
+    if any(is_long(a, "force", 2) or "f" in letters(a, "e") for a in opts):
+        return "git clean force (-f / --force) — removes untracked files, cannot be undone"
+    return None
+
+
+def git_worktree(args):
+    if args[:1] == ["remove"] and any(is_long(a, "force", 2) or "f" in letters(a) for a in args[1:]):
+        return "git worktree remove force (--force / -f) — discards uncommitted worktree changes"
+    return None
+
+
+def git_stash(args):
+    if args[:1] in (["drop"], ["clear"]):
+        return "git stash drop/clear — discards stashed work"
+    return None
+
+
+GIT_RULES = {"push": git_push, "reset": git_reset, "checkout": git_checkout, "switch": git_switch,
+             "clean": git_clean, "worktree": git_worktree, "stash": git_stash}
+
+
+def git_destructive(cmd, i):
+    j = git_subcommand(cmd, i)
+    if j >= len(cmd):
+        return None
+    if cmd[j] == "restore":
+        return "git restore — discards uncommitted changes (modern 'checkout -- <file>')"
+    rule = GIT_RULES.get(cmd[j])
+    return rule(cmd[j + 1:]) if rule else None
+
+
+def find_destructive(args):
+    for k, a in enumerate(args):
+        if a == "-delete":
+            return True
+        if a in ("-exec", "-execdir", "-ok", "-okdir") and k + 1 < len(args) and name(args[k + 1]) == "rm":
+            return True
+    return False
+
+
+GH_API_VALUE_OPTS = {"-X", "--method", "-f", "--raw-field", "-F", "--field", "-H", "--header",
+                     "--input", "-q", "--jq", "-t", "--template", "--cache", "--hostname", "-p",
+                     "--preview"}
+WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+GRAPHQL_VAR_DECL = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)\s*:")
+GRAPHQL_VAR_USE = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)")
+
+
+def gh_api(cmd, i, expands):
+    """A reason to block a `gh api` call, or None. `expands`: the raw command
+    has a $ that bash expands (outside single quotes, not escaped)."""
+    if i + 1 >= len(cmd) or cmd[i + 1] != "api":
+        return None
+    method, fields, has_input, endpoint = None, [], False, None
+    k = i + 2
+    while k < len(cmd):
+        a = cmd[k]
+        if a in GH_API_VALUE_OPTS:
+            opt, val, k = a, (cmd[k + 1] if k + 1 < len(cmd) else ""), k + 2
+        elif a.startswith("--") and "=" in a:
+            (opt, val), k = a.split("=", 1), k + 1
+        elif re.match(r"^-[XfFHqtp].", a):
+            opt, val, k = a[:2], a[2:], k + 1
+        elif a.startswith("-") and len(a) > 1:
+            opt, val, k = a, None, k + 1
+        else:
+            if endpoint is None:
+                endpoint = a
+            k += 1
+            continue
+        if opt in ("-X", "--method"):
+            method = (val or "").strip().upper()
+        elif opt in ("-f", "--raw-field"):
+            fields.append(("raw", val or ""))
+        elif opt in ("-F", "--field"):
+            fields.append(("typed", val or ""))
+        elif opt == "--input":
+            has_input = True
+    if endpoint is not None and endpoint.lstrip("/") == "graphql":
+        if has_input:
+            return "gh api graphql --input — the hook cannot see the query (it may be a mutation)"
+        queries = [(kind, v.split("=", 1)[1]) for kind, v in fields if v.split("=", 1)[0] == "query" and "=" in v]
+        if not queries:
+            return "gh api graphql with no inline query — the hook cannot see what runs"
+        for kind, q in queries:
+            if kind == "typed" and q.startswith("@"):
+                return "gh api graphql -F query=@file — the hook cannot see the query (it may be a mutation)"
+            if PLACEHOLDER in q:
+                return "gh api graphql query built by a command substitution — the hook cannot see it"
+            if re.search(r"\bmutation\b", q):
+                return "gh api graphql mutation — writes to GitHub"
+            declared = set(GRAPHQL_VAR_DECL.findall(q))
+            used = set(GRAPHQL_VAR_USE.findall(q))
+            if used and (expands or used - declared):
+                # After quote removal, a GraphQL variable ($owner) and a shell
+                # expansion bash fills in ("$M") look the same. Allow $ only
+                # when no $ in the raw command is expanded by bash.
+                return "gh api graphql query with a $ the shell may expand — the hook cannot see the final query"
+        return None
+    effective = method or ("POST" if fields or has_input else "GET")
+    if effective in WRITE_METHODS:
+        return (f"gh api {effective} — can delete repos, remove branch protection or post content "
+                "(-f/-F/--field/--input imply POST without -X)")
+    return None
+
+
+def shell_expands(text):
+    """True if `text` has a $ that bash expands: outside single quotes and
+    not escaped by a backslash (inside double quotes or unquoted)."""
+    single = double = False
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if single:
+            if c == "'":
+                single = False
+        elif c == "\\":
+            i += 2
+            continue
+        elif c == "'" and not double:
+            single = True
+        elif c == '"':
+            double = not double
+        elif c == "$" and i + 1 < len(text) and (text[i + 1].isalnum() or text[i + 1] in "_{(@*#?!$-"):
+            return True
+        i += 1
+    return False
+
+
+def check_command(cmd, top=False, expands=True):
+    """A "BLOCK <reason>" for `cmd`, "DELETE" for a top-level remote branch
+    delete (the hook's own verdict decides it), or None."""
     words = expand(cmd)     # {rm,-rf,y} and {r,}m are commands too
     rms = [i for i, w in enumerate(words) if name(w) == "rm"]
     if len(rms) > MAX_RM_WORDS:
@@ -627,10 +891,27 @@ def check_command(cmd):
     for i in rms:           # every rm: `env -u rm -- rm -rf y` runs the second
         if rm_forced_recursive(words[i + 1:]):
             return "BLOCK recursive force delete (rm with recursive + force flags) — cannot be undone"
+    delete = False
     for i, w in enumerate(words):
-        if name(w) == "git" and git_branch_force_delete(words, i):
-            return "BLOCK force branch delete (git branch delete + force, any spelling) — discards unmerged work"
-    return None
+        n = name(w)
+        if n == "git":
+            if git_branch_force_delete(words, i):
+                return "BLOCK force branch delete (git branch delete + force, any spelling) — discards unmerged work"
+            found = git_destructive(words, i)
+            if found == "DELETE":
+                if not top:
+                    return ("BLOCK remote branch delete inside $( ), backticks, ( ), bash -c, eval or similar"
+                            " — nothing can ask about a command it cannot see; run it as a plain command")
+                delete = True
+            elif found:
+                return "BLOCK " + found
+        elif n == "find" and find_destructive(words[i + 1:]):
+            return "BLOCK find with -delete / -exec rm — bulk delete"
+        elif n == "gh":
+            found = gh_api(words, i, expands)
+            if found:
+                return "BLOCK " + found
+    return "DELETE" if delete else None
 
 
 def readings(w):
@@ -651,10 +932,14 @@ def readings(w):
 
 
 def verdict(text, depth=0):
-    commands, strings = read(text, depth)
-    for cmd in commands:
-        found = check_command(cmd)
-        if found:
+    commands, strings, top = read(text, depth)
+    expands = shell_expands(text)
+    delete = False
+    for cmd, is_top in zip(commands, top):
+        found = check_command(cmd, top=is_top and depth == 0, expands=expands)
+        if found == "DELETE":
+            delete = True
+        elif found:
             return found
     definitions = bool(DEFINITION.search(text))
     again = []
@@ -676,9 +961,9 @@ def verdict(text, depth=0):
         if text_again == text:
             continue        # reading it again would only repeat this level
         found = verdict(text_again, depth + 1)
-        if found != "ALLOW":
+        if not found.startswith("ALLOW"):
             return found
-    return "ALLOW"
+    return "ALLOW DELETE" if delete else "ALLOW"
 
 
 def on_timeout(signum, frame):

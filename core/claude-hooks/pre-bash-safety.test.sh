@@ -544,6 +544,87 @@ check ALLOWED "$(printf 'gh pr comment 165 --body-file - <<'"'"'EOF'"'"'\ngit re
 check ALLOWED "$(printf 'tee -a notes.md > /dev/null <<'"'"'EOF'"'"'\ngit reset --hard\nEOF')"
 check ALLOWED "$(printf 'cat >> notes.md << "EOF"\ngit reset --hard\nEOF\n')"
 
+# --- v1.69.0: every rule is decided per command (BL-007, BL-008, BL-009, BL-010) ---
+# The git, find and gh api rules used to be regexes over the whole line: blind
+# to text bash runs later (bash -c, eval, $( )), and firing across && on a
+# flag that belongs to the next command. They now go through the same
+# per-command reader as rm and git branch, with the regexes kept as a floor.
+#
+# BL-007: a destructive git / find / gh command inside a nested shell
+check BLOCKED 'bash -c "git reset --hard"'
+check BLOCKED "sh -c 'cd /tmp && git clean -fd'"
+check BLOCKED 'eval "git push --force origin main"'
+check BLOCKED "ssh host 'git checkout -- .'"
+check BLOCKED 'echo $(git reset --hard)'
+check BLOCKED 'echo `git stash drop`'
+check BLOCKED "xargs -I{} sh -c 'git worktree remove --force {}'"
+check BLOCKED 'trap "git reset --hard" EXIT'
+check BLOCKED 'bash -c "find . -name x -delete"'
+check BLOCKED "bash -c 'gh api -X DELETE /repos/o/r'"
+check BLOCKED "sudo bash -c 'git restore .'"
+check BLOCKED 'bash -c "git push origin +main"'
+SHG='git reset --hard'; for i in $(seq 7); do SHG="bash -c $(printf %q "$SHG")"; done
+check BLOCKED "$SHG"
+# BL-008: a flag that belongs to the NEXT command is not this command's flag
+check ALLOWED 'git push origin main && rm -f tmp.txt'
+check ALLOWED 'git push origin main; ls -f'
+check ALLOWED 'git checkout main && git update-ref refs/heads/x HEAD'
+check ALLOWED 'git checkout -b feat && npm ci -f'
+check ALLOWED 'git clean -n && ls -f'
+check ALLOWED 'git reset --soft HEAD~1 && grep -c -- --hard notes.txt'
+check ALLOWED 'git worktree remove wt && ls -f'
+check ALLOWED 'find . -name "*.log" && git branch --delete merged-x'
+check ALLOWED 'git stash list && git log -1 --format=%B | grep -c drop'
+# ... but a quoted separator is part of the word, not the end of the command
+check BLOCKED 'git push origin "a;b" -f'
+check BLOCKED "git push origin 'x&&y' --force"
+check BLOCKED 'git reset "a|b" --hard'
+check BLOCKED "git clean 'a;b' -fd"
+# BL-009: gh api fields and --input make a POST even without -X
+check BLOCKED 'gh api repos/o/r/issues -f title=x'
+check BLOCKED 'gh api -F x=1 /repos/o/r/labels'
+check BLOCKED 'gh api --field name=x repos/o/r/labels'
+check BLOCKED 'gh api --raw-field body=x repos/o/r/issues/1/comments'
+check BLOCKED 'gh api --input body.json repos/o/r/pulls'
+check BLOCKED 'gh api -XPOST repos/o/r/issues'
+check BLOCKED 'gh api --method=delete /repos/o/r'
+check BLOCKED 'gh api -X delete /repos/o/r'
+check ALLOWED 'gh api -X GET search/issues -f q=repo:o/r'
+check ALLOWED 'gh api --method GET repos/o/r/issues -F per_page=100'
+check ALLOWED 'gh api --paginate repos/o/r/issues'
+check ALLOWED 'gh api -H "Accept: application/vnd.github.raw" repos/o/r/contents/f'
+# GraphQL: an inline query is a read; a mutation, or a query the hook cannot see, is not
+check ALLOWED "gh api graphql -f query='query { viewer { login } }'"
+check ALLOWED "gh api graphql -f query='{ viewer { login } }'"
+check ALLOWED "gh api graphql -F owner=o -f query='query(\$owner: String!) { repositoryOwner(login: \$owner) { id } }'"
+check ALLOWED "gh api graphql --raw-field query='{ repository(owner: \"o\", name: \"r\") { id } }'"
+check ALLOWED "gh api graphql -X POST -f query='{ viewer { login } }'"
+check BLOCKED "gh api graphql -f query='mutation { addStar(input: {starrableId: \"x\"}) { clientMutationId } }'"
+check BLOCKED "gh api graphql -f query='mutation X { deleteRef(input: {refId: \"x\"}) { clientMutationId } }'"
+check BLOCKED "gh api graphql -f 'query=mutation{deleteRef(input:{refId:\"x\"}){clientMutationId}}'"
+check BLOCKED 'gh api graphql -F query=@q.graphql'
+check BLOCKED 'gh api graphql --input q.json'
+check BLOCKED 'gh api graphql -f owner=o'
+# BL-010: destructive forms no rule covered before
+check BLOCKED 'git push --mirror origin'
+check BLOCKED 'git push --prune origin'
+check BLOCKED 'git push -uf origin main'
+check BLOCKED 'git push origin main -fu'
+check BLOCKED 'git switch -f main'
+check BLOCKED 'git switch --force main'
+check BLOCKED 'git switch --discard-changes main'
+check BLOCKED 'git checkout -qf main'
+check ALLOWED 'git switch main'
+check ALLOWED 'git switch -c feat'
+check ALLOWED 'git switch -'
+check ALLOWED 'git push -u origin main'
+check ALLOWED 'git push --tags origin'
+check ALLOWED 'git reset --soft HEAD~1'
+check ALLOWED 'git reset HEAD src/file.ts'
+check ALLOWED 'git checkout -b feat origin/main'
+check ALLOWED 'git clean -n'
+check ALLOWED 'find . -name "*.ts" -newer x'
+
 # --- must allow: ordinary work. A hook nobody can work alongside gets removed. ---
 check ALLOWED 'git push origin main'
 check ALLOWED 'git checkout -b feature/new'
@@ -647,6 +728,13 @@ check_in BLOCKED "$R" '/usr/bin/git push origin --delete unmerged'
 check_in BLOCKED "$R" '/usr/bin/git push origin --delete merged-a'
 check_in BLOCKED "$R" 'git --no-pager push origin --delete merged-a'
 check_in ALLOWED "$R" 'git --no-pager push origin main'
+# BL-007: a push-delete inside a nested shell cannot be asked about: blocked
+check_in BLOCKED "$R" 'bash -c "git push origin --delete merged-a"'
+check_in BLOCKED "$R" "eval 'git push origin :merged-a'"
+check_in BLOCKED "$R" 'echo $(git push origin --delete merged-a)'
+# BL-010: --mirror / --prune delete remote branches without naming them
+check_in BLOCKED "$R" 'git push --mirror origin'
+check_in BLOCKED "$R" 'git push --prune origin refs/heads/*:refs/heads/*'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

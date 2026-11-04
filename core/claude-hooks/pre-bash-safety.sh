@@ -172,11 +172,13 @@ if grep -qE "$GIT_CMD"'clean[[:space:]]+.*(-[a-zA-Z]*f|--force)' <<<"$CMD_STRUCT
     block "git clean force (-f / --force) — removes untracked files, cannot be undone"
 fi
 
-# --- Recursive force rm, force branch delete: decided per command ---
+# --- Every destructive form: decided per command ---
 # pre-bash-commands.py reads the command the way bash splits it (quotes, $'',
 # braces, $( ), backticks, <( ), redirections, comments) and blocks only when
-# ONE rm carries recursive + force, or ONE git branch carries delete + force,
-# in any spelling. Its header has the rules and the history: the regexes this
+# ONE command carries the destructive form: rm recursive + force, git branch
+# delete + force, and since v1.69.0 every git rule below, find -delete and
+# gh api writes, also inside bash -c / eval / $( ). The regexes further down
+# stay as a floor: the reader may only ADD blocks. Its header has the rules and the history: the regexes this
 # replaces read past the end of a command (any hyphenated file name with an r
 # and an f — "-confirmed", "-four" — tripped them) or stopped too early
 # (`rm -r $(cat list) -f`).
@@ -188,11 +190,18 @@ fi
 # If it cannot run or answers anything else, every rm and every git branch
 # delete is blocked until a person runs it. Fail closed.
 CMD_VERDICT=$(printf '%s' "$CMD_HD" | python3 -I "$(dirname "$0")/pre-bash-commands.py" 2>/dev/null) || CMD_VERDICT=""
+READER_DELETE=0
 case "$CMD_VERDICT" in
     "BLOCK "*)
         block "${CMD_VERDICT#BLOCK }"
         ;;
     ALLOW)
+        ;;
+    "ALLOW DELETE")
+        # A plain top-level remote branch delete: the verdict at the end of
+        # this script decides it (ask / block), even when the regex
+        # prefilter misses the spelling (`\git`, `'git'`, `(git ...)`).
+        READER_DELETE=1
         ;;
     *)
         # Only reached when the reader itself is broken, so be blunt: any rm,
@@ -207,6 +216,12 @@ case "$CMD_VERDICT" in
         fi
         if grep -qE 'git.*branch' <<<"$CMD_PLAIN"; then
             block "git branch while the per-command check could not run (strict fallback)"
+        fi
+        if grep -qE 'git.*(push|reset|checkout|switch|restore|clean|worktree|stash)' <<<"$CMD_PLAIN"; then
+            block "git while the per-command check could not run (strict fallback)"
+        fi
+        if grep -qE 'find.*-(delete|exec|ok)|gh.*api' <<<"$CMD_PLAIN"; then
+            block "find / gh api while the per-command check could not run (strict fallback)"
         fi
         ;;
 esac
@@ -332,7 +347,7 @@ fi
 # Network down, parse failure, missing objects: blocked.
 # The "ask" decision is Claude Code's PreToolUse contract; this script is not
 # wired into other tools.
-if [ "$REMOTE_DELETE" = 1 ]; then
+if [ "$REMOTE_DELETE" = 1 ] || [ "$READER_DELETE" = 1 ]; then
     read -r -d '' DELETE_CHECK_PY <<'PY' || true
 import json, os, re, shlex, subprocess
 
@@ -418,6 +433,11 @@ for words in segments:
     names = [b[len("refs/heads/"):] if b.startswith("refs/heads/") else b for b in positional[1:]]
     deletes.append((positional[0], names))
 
+if not deletes and os.environ.get("SAFETY_READER_DELETE") == "1":
+    # The per-command reader saw a remote delete that this parser cannot
+    # place: disagree -> block.
+    verdict("BLOCK could not identify the branches being deleted; run it as a plain `git push <remote> --delete <branch>`")
+
 if not deletes:
     # The prefilter matched, but no segment is a `git push` delete: e.g. a
     # plain push chained with `date -d …`. Allow it — unless a single word
@@ -471,7 +491,7 @@ print(json.dumps({"hookSpecificOutput": {
     ),
 }}))
 PY
-    VERDICT=$(SAFETY_CMD="$COMMAND" SAFETY_CWD="$SESSION_CWD" python3 -I -c "$DELETE_CHECK_PY" 2>/dev/null) || VERDICT="BLOCK the merge check crashed"
+    VERDICT=$(SAFETY_CMD="$COMMAND" SAFETY_CWD="$SESSION_CWD" SAFETY_READER_DELETE="$READER_DELETE" python3 -I -c "$DELETE_CHECK_PY" 2>/dev/null) || VERDICT="BLOCK the merge check crashed"
     case "$VERDICT" in
         "{"*)
             # AGENTSKEL_NO_ASK=1 is set by the other tools' wrappers
