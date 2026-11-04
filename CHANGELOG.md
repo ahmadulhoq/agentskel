@@ -1,5 +1,107 @@
 # agentskel Changelog
 
+## v1.69.0 — 2026-11-05
+
+### pre-bash-safety: upstreamed from MCU-Watchlist, every tool, gaps closed
+
+MCU-Watchlist carried a much stronger safety hook as a project-local fix
+(PRs #164, #165, merge commits 1e853ef3 and 32a8c635), developed over five
+rounds of independent adversarial review. Until now, a sync would have
+overwritten it with the weaker skeleton hook. This release makes that hook
+the skeleton's, and extends it.
+
+**Ported verbatim (behaviour and tests preserved):**
+- `core/claude-hooks/pre-bash-commands.py` (new). Recursive force `rm` and
+  force `git branch` delete are decided by a reader that splits the command
+  the way bash does: quotes, `$''`, brace expansion including the command
+  word, `${ }`, `$( )`, backticks, `<( )`/`>( )`, `$(( ))`, `$[ ]`, extglob,
+  `case` patterns, redirections and comments. The old coarse regexes run as
+  a floor, so the reader can only ADD blocks. The floor neutralises a hyphen
+  only when a literal filename character precedes it, so real hyphenated
+  files (`the-fantastic-four-first-steps.json`) are no longer blocked.
+- `core/claude-hooks/pre-bash-heredocs.py` (new). Heredoc bodies are skipped
+  only for a few exact whole-command text-writing shapes: `git commit -F -`,
+  `gh … --body-file -`, `cat > FILE`, `tee FILE > /dev/null`. Each may sit
+  behind `cd`/`git add &&`, and needs a quoted end marker, an exact end line
+  and nothing after it. Three earlier "recognise heredocs anywhere" designs
+  were each defeated in review, and that approach is not coming back.
+- Hook: the `AGENTSKEL_UNSAFE=i-understand` override (first word of a
+  single command, never for remote deletes); `git restore`;
+  `git clean --force`; `git worktree remove -f`; force branch delete in
+  every spelling; quoted `gh api --method "DELETE"`; `NAME=value` /
+  `NAME+=value` before a remote delete; here-strings instead of
+  `echo | grep` (that failed open under pipefail on long commands);
+  `python3 -I` on every call.
+- **Accepted, documented limit** (kept in `pre-bash-commands.py`): a delete
+  flag assembled at run time, from a substitution's output or word
+  splitting, cannot be seen before bash runs. Allowing real hyphenated
+  filenames necessarily allows these.
+- Suite: MCU-Watchlist's 387 cases, now `pre-bash-safety.test.sh`. They are
+  a superset of our previous 63. It takes an optional hook path, so sync
+  can test the **installed** hook. Against the v1.68.1 hook: 134 failures.
+
+**Fixed beyond the port:**
+- **macOS:** `LC_ALL=C` on both awk calls. In a UTF-8 locale, macOS awk
+  splits a non-breaking space in half and dies. The floor then blocked by
+  accident, and the split-flag rule failed OPEN. MCU-Watchlist's own copy
+  scores 386/387 on macOS; the skeleton copy passes its suite 387/387.
+- **Regex-level gaps** (maintainer decision; 19 cases, all allowed before):
+  - a path-qualified git (`/usr/bin/git`, `./git`);
+  - any global option before the subcommand (`git --no-pager …`, `-P`,
+    `--git-dir=…`); only git's value-taking globals consume the next word,
+    so `git --no-pager log --grep restore` stays allowed;
+  - `git push origin +main` (a `+refspec` force push);
+  - the remote-delete check skipping a path-qualified git.
+
+  All git rules now share one `GIT_CMD` prefix. It matches everything the
+  old prefix did, so the change can only add blocks.
+
+**Every tool** (maintainer decision): Gemini CLI, Cursor, Windsurf and Codex
+get `core/<tool>-hooks/pre-bash-safety.sh`, a thin wrapper around the same
+engine (installed next to it as `pre-bash-safety-engine.sh`, with both
+helpers). The wrapper converts the tool's hook JSON in and the verdict out,
+and is wired first, with no matcher, on every shell command.
+- Outside Claude Code, a merged remote-branch delete is **blocked**, not
+  asked (`AGENTSKEL_NO_ASK=1`). None of the other tools has a verified
+  approval prompt.
+- A missing engine blocks loudly rather than leaving every command
+  unchecked.
+- New `pre-bash-safety-tools.test.sh`: 81 cases covering each tool's input
+  and output contract, plus a config-wiring check. The full rule suite also
+  passes through the Gemini and Codex wrappers.
+
+**Override guard** (maintainer decision): the agent can type the override
+itself, so there's a new core-behavior rule, "Never self-approve a
+safety-hook override". It allows the override only after the user has
+approved that exact command in the current exchange. The rule is in all 14
+rule files and is fingerprinted by the validator; the block message says the
+same. Hook behaviour is unchanged.
+
+**Install / sync:**
+- setup-skeleton Step 5b3 and the sync hook-refresh table name the new
+  files.
+- New sync **Step 5n** installs the engine, helpers and wrappers, wires each
+  wrapper, and runs the suites against the installed hooks.
+- **BL-006 fixed:** Steps 5k/5l said to copy the Claude-format script into
+  the other tools' folders, where it reads an empty command and allows
+  everything.
+- MCU-Watchlist can drop its "never overwrite the hook on sync" carve-out
+  after taking Step 5n.
+- CI runs the wrapper suite too.
+
+**Filed, not fixed** (BACKLOG):
+- the whole-line false-positive shape in the other git rules (BL-008);
+- `gh api -f/-F/--input`, which implies POST without `-X` (GraphQL queries
+  are POSTs too, so this needs a design);
+- nested shells for rules other than `rm`/`git branch` (BL-007);
+- generalising the per-command reader to every rule.
+
+Verified: rules 421/421 and wrappers 81/81 on bash 5.2 (docker) and macOS
+bash 3.2; MCU-Watchlist's unmodified 387-case suite passes 387/387 against
+the skeleton hook.
+
+affected: setup-skeleton, sync-skeleton
+
 ## v1.68.1 — 2026-11-02
 
 ### Fix: validator check 12 failed on main right after merging v1.68.0
