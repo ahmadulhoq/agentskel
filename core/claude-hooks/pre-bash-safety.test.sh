@@ -564,6 +564,9 @@ check ALLOWED 'git commit -m "force push was avoided"'
 # user can answer. Everything that could lose commits stays BLOCKED.
 check_in() { # check_in <BLOCKED|ALLOWED|ASKED> <session cwd> <command>
   local want="$1" cwd="$2" cmd="$3" got out code
+  # EXPECT_NO_ASK=1: testing another tool's wrapper, where a merged delete is
+  # blocked instead of asked (AGENTSKEL_NO_ASK, v1.69.0).
+  [ "$want" = ASKED ] && [ "${EXPECT_NO_ASK:-}" = 1 ] && want=BLOCKED
   out=$(cd "$cwd" && python3 -c \
     'import json,sys; print(json.dumps({"cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' \
     "$cwd" "$cmd" | "$HOOK" 2>/dev/null)

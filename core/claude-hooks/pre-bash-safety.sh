@@ -472,6 +472,14 @@ PY
     VERDICT=$(SAFETY_CMD="$COMMAND" SAFETY_CWD="$SESSION_CWD" python3 -I -c "$DELETE_CHECK_PY" 2>/dev/null) || VERDICT="BLOCK the merge check crashed"
     case "$VERDICT" in
         "{"*)
+            # AGENTSKEL_NO_ASK=1 is set by the other tools' wrappers
+            # (core/<tool>-hooks/pre-bash-safety.sh, v1.69.0): their hook
+            # contracts have no verified approval prompt, and an output a tool
+            # does not understand may be read as "allow". There a merged
+            # delete is blocked, for the user to run.
+            if [ "${AGENTSKEL_NO_ASK:-}" = 1 ]; then
+                block "remote branch delete: the branches are merged, but this tool has no approval prompt only you can answer; run it yourself" no-override
+            fi
             printf '%s\n' "$VERDICT"
             exit 0
             ;;
