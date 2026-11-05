@@ -128,11 +128,108 @@ EOF
 # --force` matched no rule at all. Only git's value-taking global options
 # (-C, -c, --git-dir, ...) consume the next word: letting any option do so
 # read `git --no-pager log --grep restore` as a `restore` (PR review).
-GIT_CMD='(^|[;&|[:space:]])([^[:space:];&|]*/)?git([[:space:]]+((-[Cc]|--(git-dir|work-tree|namespace|exec-path|config-env|super-prefix|attr-source|list-cmds))[[:space:]]+[^[:space:]]+|-[^[:space:]]+))*[[:space:]]+'
+# `[-_]`: the floor text below turns a hyphen inside a word into `_`.
+GIT_CMD='(^|[;&|[:space:]])([^[:space:];&|]*/)?git([[:space:]]+((-[Cc]|--(git[-_]dir|work[-_]tree|namespace|exec[-_]path|config[-_]env|super[-_]prefix|attr[-_]source|list[-_]cmds))[[:space:]]+[^[:space:]]+|-[^[:space:]]+))*[[:space:]]+'
+
+# --- Floor text for the git / find / gh api rules (v1.69.0, BL-008) ---
+# These rules are a FLOOR under pre-bash-commands.py, which decides each
+# command properly. Until v1.69.0 they matched `.*` across the whole line, so
+# a flag of the NEXT command counted (`git push origin main && rm -f tmp` was
+# a force push; `git checkout x && git update-ref ...` was `checkout -f`).
+# They now stop at the end of the command (`[^;&|]*`), on a copy where:
+#   - a ; & | < > inside quotes is part of the word ("a;b" does not end the
+#     command, so quoting cannot hide a flag from the floor);
+#   - & in a redirection (2>&1, &>file, <&3) is not a separator;
+#   - a hyphen with a literal character before it in the same word
+#     (update-ref, turn-it-off) is turned into `_`, as the rm floor does,
+#     so it cannot read as an option; `$x-f` still reads as `-f`.
+# A separator inside $( ) or backticks still ends the floor's command; the
+# reader reads those as commands of their own.
+# Python, not awk: an awk loop that appends one character at a time took
+# 535 s on a 200,000-character command under macOS awk. This is linear.
+# If python fails, the floor reads the plain command (separators inside
+# quotes then end a command early; the reader still reads those).
+read -r -d '' GITFLOOR_PY <<'PY' || true
+import sys
+
+SEP = set(";&|<>")
+LIT = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._/+:%=~^-")
+
+
+def neutral(w):
+    # A hyphen with a literal character before it in the same word cannot
+    # start an option: make it "_". Not after a $NAME (that may be empty) or
+    # inside ${ } / { , }. Same rule as the rm floor's awk `neutral`.
+    out = list(w)
+    run_start = 0
+    for k, c in enumerate(w):
+        if k == 0 or w[k - 1] not in LIT:
+            run_start = k
+        if c != "-":
+            continue
+        j = run_start
+        lit = w[j:k]
+        b = w[j - 1] if j > 0 else ""
+        if b == "$":
+            m = 0
+            if lit[:1].isdigit():
+                m = 1
+            elif lit[:1].isalpha() or lit[:1] == "_":
+                while m < len(lit) and (lit[m].isalnum() or lit[m] == "_") and lit[m].isascii():
+                    m += 1
+            lit = lit[m:]
+        elif b == "{":
+            lit = ""
+        if any(ch != "-" for ch in lit):
+            out[k] = "_"
+    return "".join(out)
+
+
+def floor_line(line):
+    buf, sq, dq, prev, i, n = [], False, False, "", 0, len(line)
+    while i < n:
+        c = line[i]
+        if sq:
+            if c == "'":
+                sq = False
+            elif c in SEP:
+                c = "_"
+        elif c == "\\":
+            buf.append(line[i:i + 2])
+            prev = line[i + 1:i + 2]
+            i += 2
+            continue
+        elif dq:
+            if c == '"':
+                dq = False
+            elif c in SEP:
+                c = "_"
+        elif c == "'":
+            sq = True
+        elif c == '"':
+            dq = True
+        elif c == "&" and (prev in ("<", ">") or line[i + 1:i + 2] == ">"):
+            c = "_"
+        elif c in SEP:
+            buf.append(" " + c + " ")
+            prev = c
+            i += 1
+            continue
+        prev = line[i]
+        buf.append(c)
+        i += 1
+    return " ".join(neutral(w) for w in "".join(buf).split(" ") if w)
+
+
+text = sys.stdin.buffer.read().decode("utf-8", "surrogateescape")
+lines = [floor_line(l.replace("\t", " ")) for l in text.split("\n")]
+sys.stdout.buffer.write("\n".join(lines).encode("utf-8", "surrogateescape"))
+PY
+CMD_GITFLOOR=$(printf '%s' "$CMD_STRUCT" | python3 -I -c "$GITFLOOR_PY" 2>/dev/null) || CMD_GITFLOOR="$CMD_STRUCT"
 
 # --- Force pushes ---
-if grep -qE "$GIT_CMD"'push[[:space:]]+.*(--force([[:space:]]|=|$)|--force-with-lease|-f([[:space:]]|$))' <<<"$CMD_STRUCT" \
-   || grep -qE "$GIT_CMD"'push[[:space:]]+([^;&|]*[[:space:]])?["'\'']?\+[^:[:space:]"'\'']' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'push[[:space:]]+[^;&|]*(--force([[:space:]]|=|$)|--force[-_]with[-_]lease|-f([[:space:]]|$))' <<<"$CMD_GITFLOOR" \
+   || grep -qE "$GIT_CMD"'push[[:space:]]+([^;&|]*[[:space:]])?["'\'']?\+[^:[:space:]"'\'']' <<<"$CMD_GITFLOOR"; then
     # The second pattern (v1.69.0): a `+` refspec (`+main`, `+HEAD:main`)
     # force-pushes that ref with no --force flag at all. `+:x` is a delete,
     # decided by the remote-delete verdict below. Bounded to one command, so
@@ -141,34 +238,34 @@ if grep -qE "$GIT_CMD"'push[[:space:]]+.*(--force([[:space:]]|=|$)|--force-with-
 fi
 
 # --- Hard reset ---
-if grep -qE "$GIT_CMD"'reset[[:space:]]+.*--hard' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'reset[[:space:]]+[^;&|]*--hard' <<<"$CMD_GITFLOOR"; then
     block "hard reset (git reset --hard) — discards uncommitted work"
 fi
 
 # --- Force delete branch ---
-if grep -qE "$GIT_CMD"'branch[[:space:]]+.*(-D([[:space:]]|$)|--delete[[:space:]]+.*(--force|-f)([[:space:]]|$)|(--force|-f)[[:space:]]+.*--delete([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'branch[[:space:]]+[^;&|]*(-D([[:space:]]|$)|--delete[[:space:]]+[^;&|]*(--force|-f)([[:space:]]|$)|(--force|-f)[[:space:]]+[^;&|]*--delete([[:space:]]|$))' <<<"$CMD_GITFLOOR"; then
     block "force branch delete (short or long form) — discards unmerged work"
 fi
 
 # --- Checkout file discard: git checkout -- <path> ---
-if grep -qE "$GIT_CMD"'checkout[[:space:]]+--([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'checkout[[:space:]]+--([[:space:]]|$)' <<<"$CMD_GITFLOOR"; then
     block "checkout -- <file> — discards uncommitted changes"
 fi
 
 # --- Checkout bulk file discard: git checkout . ---
-if grep -qE "$GIT_CMD"'checkout[[:space:]]+\.([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'checkout[[:space:]]+\.([[:space:]]|$)' <<<"$CMD_GITFLOOR"; then
     block "git checkout . — discards ALL uncommitted changes"
 fi
 
 # --- git restore: the modern spelling of "checkout -- <file>" ---
 # Added 2026-08-16 (MCU-Watchlist). The old spelling was blocked and this one,
 # which discards exactly the same work, was not covered at all.
-if grep -qE "$GIT_CMD"'restore([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'restore([[:space:]]|$)' <<<"$CMD_GITFLOOR"; then
     block "git restore — discards uncommitted changes (modern 'checkout -- <file>')"
 fi
 
 # --- git clean with -f (force) ---
-if grep -qE "$GIT_CMD"'clean[[:space:]]+.*(-[a-zA-Z]*f|--force)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'clean[[:space:]]+[^;&|]*(-[a-zA-Z]*f|--force)' <<<"$CMD_GITFLOOR"; then
     block "git clean force (-f / --force) — removes untracked files, cannot be undone"
 fi
 
@@ -289,7 +386,7 @@ if grep -oE '(^|[;&|[:space:]])rm[[:space:]][^;&|]*' <<<"$CMD_STRUCT" | LC_ALL=C
 fi
 
 # --- Worktree force remove ---
-if grep -qE "$GIT_CMD"'worktree[[:space:]]+remove[[:space:]]+.*(--force|-f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'worktree[[:space:]]+remove[[:space:]]+[^;&|]*(--force|-f([[:space:]]|$))' <<<"$CMD_GITFLOOR"; then
     block "git worktree remove force (--force / -f) — discards uncommitted worktree changes"
 fi
 
@@ -307,27 +404,33 @@ if grep -qE "$GIT_CMD"'push[[:space:]]+.*((--delete|[[:space:]"'\'']-d)(["'\''[:
 fi
 
 # --- Forced checkout: discards every uncommitted change without naming a path ---
-if grep -qE "$GIT_CMD"'checkout[[:space:]]+.*(--force([[:space:]]|$)|-[a-zA-Z]*f([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'checkout[[:space:]]+[^;&|]*(--force([[:space:]]|$)|-[a-zA-Z]*f([[:space:]]|$))' <<<"$CMD_GITFLOOR"; then
     block "git checkout --force / -f — discards uncommitted changes"
 fi
 
 # --- Stash destruction: drop/clear cannot be recovered through the reflog UI ---
-if grep -qE "$GIT_CMD"'stash[[:space:]]+(drop|clear)([[:space:]]|$)' <<<"$CMD_STRUCT"; then
+if grep -qE "$GIT_CMD"'stash[[:space:]]+(drop|clear)([[:space:]]|$)' <<<"$CMD_GITFLOOR"; then
     block "git stash drop/clear — discards stashed work"
 fi
 
 # --- find with a destructive action. `Bash(find *)` is allowlisted as a search
 #     tool, but -delete and -exec rm turn it into a bulk remover. ---
-if grep -qE '(^|[;&|[:space:]])find[[:space:]]' <<<"$CMD_STRUCT" \
-   && grep -qE '(-delete([[:space:]]|$)|-exec[[:space:]]+rm([[:space:]]|$)|-execdir[[:space:]]+rm([[:space:]]|$))' <<<"$CMD_STRUCT"; then
+if grep -qE '(^|[;&|[:space:]])([^[:space:];&|]*/)?find[[:space:]][^;&|]*(-delete([[:space:]]|$)|-exec[[:space:]]+rm([[:space:]]|$)|-execdir[[:space:]]+rm([[:space:]]|$))' <<<"$CMD_GITFLOOR"; then
     block "find with -delete / -exec rm — bulk delete"
 fi
 
 # --- gh api with a writing method. `gh api` is a general-purpose authenticated
 #     GitHub client: `gh api -X DELETE /repos/:owner/:repo` deletes the repo,
 #     and other endpoints can strip branch protection. Read-only is fine. ---
-if grep -qE '(^|[;&|[:space:]])gh[[:space:]]+api([[:space:]]|$)' <<<"$CMD_STRUCT" \
-   && grep -qiE '(-X|--method)[[:space:]]*=?[[:space:]]*["'\'']?(POST|PUT|PATCH|DELETE)' <<<"$CMD_STRUCT"; then
+# Per command (v1.69.0). A POST to graphql passes the floor: whether it is a
+# read (an inline query) or a write (a mutation) is the reader's call.
+if grep -oE '(^|[;&|[:space:]])([^[:space:];&|]*/)?gh[[:space:]]+api([[:space:]][^;&|]*)?' <<<"$CMD_GITFLOOR" | LC_ALL=C awk '
+    { line = toupper($0) }
+    line ~ /(-X|--METHOD)[[:space:]]*=?[[:space:]]*["\047]?(POST|PUT|PATCH|DELETE)/ {
+        graphql_post = (line ~ /(^|[[:space:]])\/?GRAPHQL([[:space:]]|$)/) && (line !~ /(-X|--METHOD)[[:space:]]*=?[[:space:]]*["\047]?(PUT|PATCH|DELETE)/)
+        if (!graphql_post) found = 1
+    }
+    END { exit !found }'; then
     block "gh api with a writing method (POST/PUT/PATCH/DELETE) — can delete repos or remove branch protection"
 fi
 
