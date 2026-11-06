@@ -4,6 +4,41 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-11-07 — v1.69.0 (same PR #61): every rule per command (BL-007..010), differential, adversarial review round
+
+User: "fix the filed ones now" — same PR/version, add the obvious new forms
+(push --mirror/--prune, switch -f/--discard-changes), GraphQL inline query
+OK / mutation, file, --input blocked. Reader now decides every git / find /
+gh rule; regexes stay as a floor bounded to one command (`[^;&|]*`) on a
+python-built copy (quote separators neutralised, redirection `&`, intra-word
+hyphens). Tests first throughout.
+
+Differential (old cf5b1c9 vs new, suite + generated variants): first run
+found one FP I introduced (GraphQL `$` check too broad: `-F o="$OWNER"`).
+Self-review found a real bypass (`gh api -iX DELETE`: pflag bundles) and a
+regression (`git push origin :` read as delete). Then two independent
+reviewer subagents: 155 new cases; the committed hook allowed 123 destructive
+commands, blocked 2 harmless, took 61 s on 80k hyphens (hook past timeout =
+fail open). Fixed: reader fidelity (braces seq, backticks, heredocs, \r,
+(( )), zsh), name matching (case — APFS — glob, =cmd, git-reset, empty
+expansions), git aliases + dangerous config + plumbing, checkout one-path,
+find/fd removers, gh delete subcommands + api bundles/method fail-closed,
+override refuses code-running commands, delete verdict repo-changing words +
+pushurl, linear floors (MCU's awk floor was quadratic too).
+
+Re-probe of every reviewer script on the fixed hook: one more gap —
+`gh label delete` I had classed as local-only (it strips the label from every
+issue); now blocked. Rest = accepted run-time class + hook self-protection +
+timeout fail-open → BL-011..013 (design decisions for the user).
+Deliberate relaxation vs MCU: `git restore --staged` alone is allowed (index
+only, same as `git reset <file>`); flagged in the PR for the user.
+
+Final: rules 668/668, wrappers 81/81 on bash 5.2 + macOS 3.2; MCU's
+unmodified suite 387/387 on both; differential 4,571 commands, 91
+old-block→new-allow all FPs, no timeouts; validate.py 499/0.
+
+affected: sync-skeleton
+
 ## 2026-11-05 — v1.69.0: pre-bash-safety upstreamed from MCU-Watchlist, every tool, gaps closed
 
 Brief from a downstream session. Ported MCU-Watchlist's hook + two helpers
