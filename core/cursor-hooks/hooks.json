@@ -3,6 +3,9 @@
   "hooks": {
     "beforeShellExecution": [
       {
+        "command": ".cursor/hooks/pre-bash-safety.sh"
+      },
+      {
         "command": ".cursor/hooks/pre-commit-check.sh",
         "matcher": "git.*commit"
       },

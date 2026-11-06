@@ -88,22 +88,54 @@ The template ships pre-approvals for read-only ops (already in v1.66.0) plus saf
 - Git: `git add`, `git commit`, `git push`, `git pull`, `git fetch`, `git checkout`, `git merge`, `git stash`, `git worktree`
 - GitHub CLI: `gh pr *`, `gh issue *`, and read-only `gh api` (`--method GET` / `-X GET`). `gh api *` wholesale was narrowed in v1.67.1: it can delete the repository.
 
-**Layer 2 — `pre-bash-safety.sh` hook (installed to `.claude/hooks/`):**
+**Layer 2 — `pre-bash-safety.sh` hook (every tool with hooks, since v1.69.0):**
 
 Blocks destructive patterns with exit code 2 + a stderr message, **regardless of what the allowlist accepts**. The allowlist uses glob matchers (`Bash(git push *)` would match `git push --force`), so the safety hook enforces the block explicitly.
 
-Blocked patterns (also when prefixed with `git -C <path>`):
-- `git push --force` / `-f` / `--force-with-lease`
+One rule engine serves every tool: `core/claude-hooks/pre-bash-safety.sh` with its helpers `pre-bash-heredocs.py` and `pre-bash-commands.py`. Claude Code runs it directly. Gemini CLI, Cursor, Windsurf and Codex run it through a thin wrapper of their own (`core/<tool>-hooks/pre-bash-safety.sh`) that converts their hook JSON. Copilot has no hooks. The v1.69.0 engine was developed in MCU-Watchlist over five rounds of independent adversarial review and upstreamed with its 387-case suite.
+
+Blocked operations. Each applies in every position: after `&&` or `;`, inside `bash -c`, `eval`, `ssh`, `$( )` or backticks, behind a path-qualified binary (`/usr/bin/git`), and behind any global options before the subcommand (`git --no-pager …`, `git -C <path> …`). Long options count by any unambiguous prefix, as git accepts them (`git reset --h`). The command name is matched the way the shell and file system will find it: any case (`GIT`, because macOS file systems are case-insensitive), as a glob (`/usr/bin/gi?`), as zsh `=git`, as git's dashed builtin (`git-reset`), and with an always-empty expansion glued on (`${x}git`, `--ha$()rd`).
+- `git push --force` / `-f` (in any cluster, e.g. `-uf`) / `--force-with-lease`; a `+refspec` push (`git push origin +main`); `--mirror` and `--prune`, which delete remote branches
 - `git reset --hard`
-- `git branch -D` (force-delete)
-- `git checkout -- <file>`, `git checkout .`, `git checkout -f` (discard uncommitted changes)
-- `git clean -f` (force-remove untracked)
+- force branch delete in every spelling (`-D`, `-d -f`, `--delete --force`, …); a force move or copy over an existing branch (`-M`, `-C`)
+- `git checkout -f`, `git checkout -- <file>`, `git checkout .`, `git checkout <tree-ish> <paths>`, `--ours` / `--theirs` / `--conflict` / `-p`, and a lone argument that is a path (`./`, `..`, `:/`, a glob, or a file that exists in the session folder); `git switch -f` / `--discard-changes`; `git restore` (all discard uncommitted changes). `git restore --staged` alone only unstages and is allowed.
+- `git clean -f` / `--force` (force-remove untracked)
 - `git stash drop` / `git stash clear`
-- `rm -rf` / `-fr` / `-Rf`, and `rm -r -f` / `rm --recursive --force`
-- `find … -delete` / `-exec rm`
-- `git worktree remove --force`
-- `gh api` with a writing method (`POST`/`PUT`/`PATCH`/`DELETE`)
-- Remote branch deletes, **except** the case below
+- plumbing that discards work: `update-ref -d`, `read-tree --reset -u`, `checkout-index -f`, `send-pack --force`, `reflog delete` / `expire`, `submodule update -f` / `deinit -f`
+- git aliases that run any of the above. Aliases are resolved from `-c alias.*`, `--config-env`, `GIT_CONFIG_COUNT`/`KEY`/`VALUE`, `GIT_CONFIG_PARAMETERS`, a `git config alias.*` earlier in the same command, and aliases already stored in the repo's config. A shell alias (`!…`) defined and run in one command is blocked. So is `git config` storing a destructive or shell alias.
+- config that makes a plain command destructive: `remote.*.mirror`, `remote.*.push=+…`, `clean.requireForce=false` (through `-c` or `git config`)
+- recursive force `rm` in every spelling and position: `-rf`, `-r -f`, `--recursive --force`, `rm x -rf`, brace expansion
+- `find … -delete`, or `-exec` / `-execdir` / `-ok` running a remover (`rm`, `unlink`, `shred`, or a shell script that runs one), through wrappers; the same for `fd -x` / `-X`
+- `git worktree remove --force` / `-f`
+- `gh` subcommands that delete on GitHub (`gh repo delete`, `gh issue delete`, `gh release delete-asset`, `gh label delete`, `… remove`). `gh alias delete` and `gh extension remove` touch only local gh config and are allowed.
+- `gh api` writes:
+  - a writing method (`POST`/`PUT`/`PATCH`/`DELETE`, quoted or not);
+  - **and the POST that `-f`, `-F`, `--field`, `--raw-field` or `--input` imply without `-X`**.
+
+  `gh api graphql` is allowed only for an inline query that is not a `mutation`, does not come from a file, `--input` or `$( )`, and contains no `$` that bash would expand. A GraphQL variable inside single quotes (`'query($owner: String!) …'`) is fine.
+- Remote branch deletes, **except** the case below. A delete nested anywhere (inside `bash -c`, `$( )` and so on) is always blocked, because nothing can ask about a command it cannot see.
+
+**How commands are decided.** `pre-bash-commands.py` reads the command the way bash splits it: quotes, `$''`, braces, `${ }`, `$( )`, backticks, `<( )`, arithmetic, `case`, redirections and comments. It decides every rule above, one command at a time, and reads nested shells as commands. MCU-Watchlist built it for `rm` and `git branch`; v1.69.0 extended it to the rest. The old regexes still run as a floor, so the reader can only *add* blocks. Each floor rule stops at the end of its own command and ignores hyphens inside words. That is why:
+- real hyphenated file names (`the-fantastic-four-first-steps.json`) are allowed;
+- `git push origin main && rm -f tmp` is not a force push;
+- `git checkout x && git update-ref …` is not a forced checkout;
+
+while every spelling of the destructive forms is still caught. If the reader cannot run, the hook blocks every `rm` and every destructive git, find or gh api word until a person runs the command.
+
+**Text that mentions a dangerous command.** Quoted text is read as commands unless it is a search pattern (`grep`, `rg`, `git log -S`) or a message value (`-m`, gh `--title`/`--body`). So `echo "rm -rf is dangerous"` is blocked: that is the deliberate fail-safe cost. To write a commit message or PR body that mentions a blocked command, use `git commit -F - <<'EOF'` or `gh … --body-file - <<'EOF'`. Heredoc bodies are skipped only for those shapes and for `cat > FILE` / `tee FILE > /dev/null`, each with a quoted end marker and nothing after it. `-m "$(cat <<'EOF' …)"` is checked in full.
+
+**Override.** `AGENTSKEL_UNSAFE=i-understand <one command>`, as the first word of a single command, runs it past the block rules (never past remote branch deletes). It is refused for a command that runs its arguments as code, because that could be more than one command: `$'…'`, `<<<`, or a word such as `bash`, `sh`, `eval`, `env`, `sudo`, `xargs`, `ssh`, `python`. It shows up in the transcript. **An agent may use it only after the user has approved that exact command in the current exchange** (core-behavior rule "Never self-approve a safety-hook override"; the block message says so too). Rewording a command to slip past the hook is never acceptable: a variant that gets through is a bug to report.
+
+**Accepted limits.** The hook reads command text before it runs. It cannot see what only exists at run time, and it is not a sandbox:
+- **A flag assembled at run time**, from a substitution's output or from word splitting (`rm $(echo x-rf | cut -c2-) y`, `IFS=a; rm $(echo a-rf) y`), does not exist in the command text until bash runs it, so no static check can see it. Allowing real hyphenated file names necessarily allows these. The old coarse rule blocked them only as a side effect of its false positives. Documented in `pre-bash-commands.py`.
+- **Other values that only exist at run time**, the same class (found in the v1.69.0 review, BL-013):
+  - a variable or array holding the flag (`x=--hard; git reset $x`, `git "${x[@]}"`);
+  - a command name from a substitution or variable (`$(command -v git) reset --hard`, `${GIT:-git} …`);
+  - arguments read from stdin (`… | xargs git push origin`, `parallel git ::: …`);
+  - a shell alias or function that wraps a command (`f(){ git reset "$@"; }; f --hard`).
+- **Interpreters.** Arguments passed to a program as a list are not shell text (`python3 -c 'subprocess.run(["git","reset","--hard"])'`, `perl -e 'system(...)'`, `node -e …`).
+- **Its own files.** The hook checks Bash commands only. Overwriting it from Bash is an ordinary file write (`: > .claude/hooks/pre-bash-safety.sh`), and the Edit / Write tools never pass through a Bash hook (BL-011).
+- **Its own failure.** If the hook times out or cannot start, Claude Code lets the command run, unless the hook's settings entry sets `"onFailure": "block"` (Claude Code v2.1.295+). The shipped template does not set it yet (BL-012). If only `pre-bash-commands.py` fails, the hook falls back to blocking every destructive word.
 
 **Asks instead of blocking (v1.68.0) — remote branch deletes that lose nothing.**
 `git push <remote> --delete <branch>…` (or `-d`) returns Claude Code's own
@@ -113,16 +145,22 @@ the remote's default branch. You click approve; an agent cannot answer that
 prompt, so the guard holds and the `!` workaround is no longer needed for
 routine cleanup. Still **blocked**: unmerged or squash-merged branches, the
 default branch / `main` / `master` / `ai-memory`, the `:branch` refspec form,
-`git -C` / `cd` in the same command, extra push flags, and any failure to
-reach the remote. The ask is decided only after every block rule has run, so
-a delete chained with a blocked command is still blocked. Claude Code only;
-the other tools have no equivalent of "ask".
+anything in the same command that could make the merged check run in a
+different repo than the delete (`git -C`, `cd` / `pushd` / `popd`, `GIT_DIR`,
+`GIT_WORK_TREE`, `GIT_CONFIG*`, a path-qualified git), a delete nested in
+another command, extra push flags, and any failure to reach the remote. A
+remote with a `pushurl` is checked against the URL the push goes to. The ask is decided only after every block
+rule has run, so a delete chained with a blocked command is still blocked.
+**Claude Code only:** in the other tools a merged delete is blocked, because
+none has a verified approval prompt and an output they don't understand could
+be read as "allow".
 
-Verified by `core/claude-hooks/pre-bash-safety.test.sh` (63 cases, including a
-throwaway remote with merged, unmerged and squash-merged branches). It also
-asserts that everyday commands still run: `git branch -d` (safe delete),
-`git checkout main`, `git status`, `git commit -m "reset --hard state"`
-(string in message, not a command).
+Verified by `core/claude-hooks/pre-bash-safety.test.sh` (rules; run it against
+an installed copy with `bash pre-bash-safety.test.sh <path>`) and
+`pre-bash-safety-tools.test.sh` (each tool's wrapper and output contract), on
+bash 5.2 and macOS bash 3.2, in CI. The suites assert both halves: destructive
+commands are blocked, and everyday commands (`git branch -d`, `git checkout
+main`, `git status`, `rm` of a hyphenated file) still run.
 
 ### What still pauses
 
@@ -166,12 +204,12 @@ Claude Code shipped its own **Auto Mode** starting in v2.1.183 (June 19, 2026), 
 
 | Property | agentskel Autopilot Mode + `pre-bash-safety.sh` | Claude Code Auto Mode |
 |---|---|---|
-| **Enforcement mechanism** | Static `permissions.allow` allowlist + a PreToolUse hook that regex-matches destructive patterns and returns exit 2 | Runtime classifier that routes shell/PowerShell through decision layer + hardcoded block list for known-destructive commands (`git reset --hard`, `git checkout -- .`, `terraform destroy`, etc.) |
+| **Enforcement mechanism** | Static `permissions.allow` allowlist + a PreToolUse hook that reads each command the way the shell splits it (regexes as a floor) and returns exit 2 | Runtime classifier that routes shell/PowerShell through decision layer + hardcoded block list for known-destructive commands (`git reset --hard`, `git checkout -- .`, `terraform destroy`, etc.) |
 | **Scope** | Cross-tool — works for Claude Code, Gemini, Cursor, Windsurf, Codex (behavioral for Copilot) | Claude Code only |
-| **What it blocks** | Specific regex-matched patterns: `--force`, `--hard`, `-D`, `checkout --`, `checkout .`, `clean -f`, `rm -rf`, `worktree remove --force` | Destructive git, terraform, pulumi, cdk commands + broader classifier judgments on shell input |
+| **What it blocks** | The list above: force push, `reset --hard`, checkout / switch / restore / clean / stash discards, force branch delete, destructive plumbing and aliases, `rm -rf`, `find -delete`, `gh` deletes and `gh api` writes | Destructive git, terraform, pulumi, cdk commands + broader classifier judgments on shell input |
 | **How to toggle** | `.memory/CONFIG.md` `Autopilot Mode` field (posture); allowlist + hook always active when installed | Claude Code `/config` toggle or `claude auto-mode reset`; `autoMode.classifyAllShell` setting routes all Bash |
 | **Signals when blocked** | stderr message from hook naming the matched pattern + exit 2 | Denial reason in transcript, denial toast, `/permissions` recent denials list |
-| **Configurability** | Edit the hook (bash regex); add patterns as needed | Managed via Claude Code settings; classifier not user-modifiable |
+| **Configurability** | Edit the hook (`pre-bash-commands.py` rules, plus the regex floor in `pre-bash-safety.sh`) and add test cases | Managed via Claude Code settings; classifier not user-modifiable |
 
 **How they compose:**
 

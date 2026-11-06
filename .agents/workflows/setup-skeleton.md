@@ -381,8 +381,17 @@ If `.agents/rules/repo-rules.md` exists (project-specific rules), also copy it t
 ## Step 5b3 — Install enforcement hooks
 
 Enforcement hooks block commits whose skill/workflow descriptions exceed the
-1024-char spec limit, block destructive shell commands (Claude Code), and
-auto-pull before ai-memory pushes. Install for each supported tool.
+1024-char spec limit, block destructive shell commands (every tool with hooks,
+since v1.69.0), and auto-pull before ai-memory pushes. Install for each
+supported tool.
+
+The destructive-command hook has **one rule engine** in every tool:
+`[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` plus its two helpers,
+`pre-bash-heredocs.py` and `pre-bash-commands.py`, which must sit in the same
+folder. Claude Code runs the engine directly as `.claude/hooks/pre-bash-safety.sh`.
+Every other tool installs it as `pre-bash-safety-engine.sh` next to that tool's
+thin wrapper (`core/<tool>-hooks/pre-bash-safety.sh`), which converts the tool's
+hook JSON and blocks, instead of asking, for a merged remote-branch delete.
 
 Every tool's `pre-commit-check.sh` calls `check-skill-descriptions.py` from its
 own directory, so that file is copied next to it for **every** tool below. One
@@ -396,7 +405,7 @@ mkdir -p .claude/hooks
 2. Copy `[SKELETON_PATH]/core/claude-hooks/pre-memory-push.sh` → `.claude/hooks/pre-memory-push.sh`
 3. Copy `[SKELETON_PATH]/core/claude-hooks/pre-edit-check.sh` → `.claude/hooks/pre-edit-check.sh`
 4. Copy `[SKELETON_PATH]/core/claude-hooks/stop-verify.sh` → `.claude/hooks/stop-verify.sh`
-5. Copy `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` → `.claude/hooks/pre-bash-safety.sh` (the settings template wires it as the first Bash hook; pre-v1.68.0 setup never copied it, so fresh installs pointed at a missing script)
+5. Copy `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh`, `pre-bash-heredocs.py` and `pre-bash-commands.py` → `.claude/hooks/` (the settings template wires the hook as the first Bash hook; without its helpers it blocks every `rm` and `git branch` delete; pre-v1.68.0 setup never copied it, so fresh installs pointed at a missing script)
 6. `chmod +x .claude/hooks/*.sh`
 7. If `.claude/settings.json` does not exist, copy `[SKELETON_PATH]/core/claude-hooks/settings.json` → `.claude/settings.json`
 8. If `.claude/settings.json` already exists, merge the `hooks` section from the template.
@@ -409,9 +418,10 @@ mkdir -p .gemini/hooks
 2. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-memory-push.sh` → `.gemini/hooks/pre-memory-push.sh`
 3. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-edit-check.sh` → `.gemini/hooks/pre-edit-check.sh`
 4. Copy `[SKELETON_PATH]/core/gemini-hooks/stop-verify.sh` → `.gemini/hooks/stop-verify.sh`
-5. `chmod +x .gemini/hooks/*.sh`
-6. If `.gemini/settings.json` does not exist, copy `[SKELETON_PATH]/core/gemini-hooks/settings.json` → `.gemini/settings.json`
-7. If `.gemini/settings.json` already exists, merge the `hooks` block from the template.
+5. Copy `[SKELETON_PATH]/core/gemini-hooks/pre-bash-safety.sh` → `.gemini/hooks/pre-bash-safety.sh` (the wrapper), `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` → `.gemini/hooks/pre-bash-safety-engine.sh` (the rules), and `[SKELETON_PATH]/core/claude-hooks/pre-bash-heredocs.py`, `pre-bash-commands.py` → `.gemini/hooks/`
+6. `chmod +x .gemini/hooks/*.sh`
+7. If `.gemini/settings.json` does not exist, copy `[SKELETON_PATH]/core/gemini-hooks/settings.json` → `.gemini/settings.json`
+8. If `.gemini/settings.json` already exists, merge the `hooks` block from the template (the `agentskel-pre-bash-safety` entry goes first under `run_shell_command`).
 
 Gemini hooks use a different I/O contract than Claude's (JSON stdin/stdout, different event names: `BeforeTool`/`AfterAgent`). The Gemini scripts are dedicated bash files in `core/gemini-hooks/` — not the same scripts as Claude's.
 
@@ -423,8 +433,9 @@ mkdir -p .cursor/hooks
 2. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-memory-push.sh` → `.cursor/hooks/pre-memory-push.sh`
 3. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-edit-check.sh` → `.cursor/hooks/pre-edit-check.sh`
 4. Copy `[SKELETON_PATH]/core/cursor-hooks/stop-verify.sh` → `.cursor/hooks/stop-verify.sh`
-5. `chmod +x .cursor/hooks/*.sh`
-6. Copy `[SKELETON_PATH]/core/cursor-hooks/hooks.json` → `.cursor/hooks.json` (workspace root — NOT `.cursor/hooks/`; pre-v1.62.0 path was wrong and Cursor silently ignored it)
+5. Copy `[SKELETON_PATH]/core/cursor-hooks/pre-bash-safety.sh` → `.cursor/hooks/pre-bash-safety.sh` (the wrapper), `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` → `.cursor/hooks/pre-bash-safety-engine.sh` (the rules), and `[SKELETON_PATH]/core/claude-hooks/pre-bash-heredocs.py`, `pre-bash-commands.py` → `.cursor/hooks/`
+6. `chmod +x .cursor/hooks/*.sh`
+7. Copy `[SKELETON_PATH]/core/cursor-hooks/hooks.json` → `.cursor/hooks.json` (workspace root — NOT `.cursor/hooks/`; pre-v1.62.0 path was wrong and Cursor silently ignored it)
 
 Cursor hook scripts use Cursor's own I/O contract — `command` at the top level of stdin JSON; `{"permission":"allow"|"deny", "user_message", "agent_message"}` JSON on stdout. Not the same as Claude's scripts.
 
@@ -438,6 +449,7 @@ mkdir -p .windsurf/hooks
    - `pre-edit-check.sh` → `.windsurf/hooks/pre-edit-check.sh`
    - `stop-verify.sh` → `.windsurf/hooks/stop-verify.sh`
    - and `[SKELETON_PATH]/core/claude-hooks/check-skill-descriptions.py` → `.windsurf/hooks/`
+   - copy `[SKELETON_PATH]/core/windsurf-hooks/pre-bash-safety.sh` → `.windsurf/hooks/pre-bash-safety.sh` (the wrapper), `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` → `.windsurf/hooks/pre-bash-safety-engine.sh` (the rules), and `[SKELETON_PATH]/core/claude-hooks/pre-bash-heredocs.py`, `pre-bash-commands.py` → `.windsurf/hooks/`
 2. `chmod +x .windsurf/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/windsurf-hooks/hooks.json` → `.windsurf/hooks.json`
 
@@ -458,6 +470,7 @@ mkdir -p .codex/hooks
    - `pre-memory-push.sh` → `.codex/hooks/pre-memory-push.sh`
    - `stop-verify.sh` → `.codex/hooks/stop-verify.sh`
    - `check-skill-descriptions.py` → `.codex/hooks/check-skill-descriptions.py`
+   - copy `[SKELETON_PATH]/core/codex-hooks/pre-bash-safety.sh` → `.codex/hooks/pre-bash-safety.sh` (the wrapper), `[SKELETON_PATH]/core/claude-hooks/pre-bash-safety.sh` → `.codex/hooks/pre-bash-safety-engine.sh` (the rules), and `[SKELETON_PATH]/core/claude-hooks/pre-bash-heredocs.py`, `pre-bash-commands.py` → `.codex/hooks/`
 2. `chmod +x .codex/hooks/*.sh`
 3. Copy `[SKELETON_PATH]/core/codex-hooks/hooks.json` → `.codex/hooks.json`
 
@@ -467,7 +480,10 @@ Codex's hook I/O contract is verified to match Claude's: `tool_input.command` fo
 
 Hook scripts are tool-specific because each tool has its own I/O contract. The scripts in each `core/<tool>-hooks/` directory follow that tool's spec. Common enforcement logic (description length via the shared `check-skill-descriptions.py`, ai-memory auto-pull, plan-gate reminder, stop-verify) is mirrored across tools but wrapped in tool-specific JSON I/O. The pre-v1.68.0 CHANGELOG/TIME_LOG commit gate was removed: it never ran in a main checkout, and turning it on would refuse the first commit of every task.
 
-Verify the commit hook before finishing: `bash [SKELETON_PATH]/core/claude-hooks/pre-commit-check.test.sh` (runs all four variants; expect `0 failed`).
+Verify the hooks before finishing (expect `0 failed` from each; these hooks fail open or closed silently, so a visual diff is not enough):
+- Commit hook, all four variants: `bash [SKELETON_PATH]/core/claude-hooks/pre-commit-check.test.sh`
+- Safety rules, against the **installed** Claude hook: `bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety.test.sh .claude/hooks/pre-bash-safety.sh`
+- Safety wrappers for the other tools: `bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety-tools.test.sh`
 
 ---
 

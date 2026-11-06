@@ -227,6 +227,8 @@ Copilot's prompt files at `.github/prompts/*.prompt.md`.
 | `copilot` | none — Copilot has no hooks concept | none |
 | `codex` | `.codex/hooks/` — same 3 | `.codex/hooks.json` |
 
+Every tool's hook directory except Copilot's also gets the destructive-command hook (v1.69.0): for `claude`, `pre-bash-safety.sh` + `pre-bash-heredocs.py` + `pre-bash-commands.py` from `core/claude-hooks/`; for every other tool, that tool's wrapper `core/<tool>-hooks/pre-bash-safety.sh` plus `core/claude-hooks/pre-bash-safety.sh` installed as `pre-bash-safety-engine.sh` and the same two helpers. See Step 5n.
+
 Every tool's hook directory except Copilot's also gets `check-skill-descriptions.py`, copied from `core/claude-hooks/` (one source for all tools, since v1.68.0).
 
 **Pre-v1.62.0 migrations (apply once during sync):**
@@ -593,12 +595,7 @@ For any project whose recorded skeleton version is between v1.66.0 and v1.66.0 (
    ```
    It must run BEFORE the existing `pre-commit-check.sh` and `pre-memory-push.sh` hooks so destructive patterns are blocked regardless of which subsequent hook would run.
 
-4. **Cross-tool coverage** (if the project has other AI tool configs installed):
-   - Gemini/Antigravity: also copy the safety hook to `core/gemini-hooks/` equivalent + wire into `.gemini/settings.json`.
-   - Cursor: also copy to `.cursor/hooks/` + wire into `.cursor/hooks.json`.
-   - Windsurf: also copy to `.windsurf/hooks/` + wire into `.windsurf/hooks.json`.
-   - Codex: same script format as Claude (compatible per v1.62.2 verification).
-   - Copilot: no hooks — skip. Autopilot enforcement is behavioral only for Copilot users.
+4. **Cross-tool coverage.** Do NOT copy the Claude script into another tool's folder: it reads Claude's JSON (`tool_input.command`), so under Cursor or Windsurf it sees an empty command and allows everything (corrected in v1.69.0; pre-v1.69.0 this step said to copy it). The other tools get the safety hook through their own wrappers in **Step 5n**. Copilot has no hooks; enforcement there is behavioral only.
 
 5. **Session-restart hint.** After sync, tell the user: "You must restart your AI tool for the new `permissions.allow` allowlist and hooks to take effect. The `Autopilot Mode | on` flag will now actually reduce harness prompts, subject to the safety-hook boundaries."
 
@@ -640,7 +637,7 @@ Two rule bypasses were also fixed: `git -C <path> <cmd>` evaded every git rule (
    ```
    Expect `0 failed` (39 cases at v1.67.1; later releases add more, so don't pin the count). These rules **fail open** — a broken regex does not error, it silently stops blocking, and that stays invisible until the day it matters. Do not mark this step done on a visual diff alone.
 
-4. **Cross-tool coverage** (if the project has other AI tool configs installed): the Gemini, Cursor, Windsurf, and Codex copies of the safety hook need the same replacement. Copilot has no hooks — behavioral rule only.
+4. **Cross-tool coverage.** Before v1.69.0 there were no Gemini, Cursor, Windsurf or Codex copies of this hook (an earlier version of this step said otherwise). If a project copied the Claude script into one of those folders, remove that copy: it reads the wrong JSON and allows everything. Step 5n installs the real per-tool wrappers. Copilot has no hooks; behavioral rule only.
 
 5. **Session-restart hint.** After sync, tell the user: "Restart your AI tool for the narrowed `permissions.allow` and updated safety hook to take effect."
 
@@ -678,7 +675,7 @@ The 1024-char skill-description check in every tool's `pre-commit-check.sh` neve
 
    If the existing value is not the old default (the project customised it), do not overwrite it — tell the user what the skeleton default is now and why (`git -C <dir> commit` must reach the hook).
 
-3. **Replace `pre-bash-safety.sh`** (Claude Code only). Copy `core/claude-hooks/pre-bash-safety.sh` → `.claude/hooks/pre-bash-safety.sh`, `chmod +x`. If the file did not exist yet, this is the pre-v1.68.0 setup-skeleton gap (the settings template wired a script setup never copied) — installing it now is the fix. Confirm `.claude/settings.json` lists it as the first `PreToolUse` Bash hook (Step 5k item 3).
+3. **Replace `pre-bash-safety.sh`** (Claude Code only). Copy `core/claude-hooks/pre-bash-safety.sh` → `.claude/hooks/pre-bash-safety.sh`, `chmod +x`. If this sync also goes to v1.69.0 or later, do Step 5n as well: from v1.69.0 the hook needs its two helpers next to it, and without them it blocks every `rm` and `git branch` delete. If the file did not exist yet, this is the pre-v1.68.0 setup-skeleton gap (the settings template wired a script setup never copied) — installing it now is the fix. Confirm `.claude/settings.json` lists it as the first `PreToolUse` Bash hook (Step 5k item 3).
 
 4. **Run both suites from the skeleton against the installed hooks** — do not mark this done on a visual diff (these hooks fail open, so a broken one is silent):
    ```bash
@@ -693,6 +690,64 @@ The 1024-char skill-description check in every tool's `pre-commit-check.sh` neve
    - Restart the AI tool so the changed hook config (`settings.json` / `hooks.json`) is reloaded.
 
 Include all of the above in the Step 6 project-files commit; the Skeleton Version bump goes in the Step 5 memory commit.
+
+---
+
+## Step 5n — Migration: → v1.69.0 (safety hook upstreamed from MCU-Watchlist; every tool)
+
+Skip this step only if the project is already on skeleton v1.69.0+.
+
+v1.69.0 replaces `pre-bash-safety.sh` with the version MCU-Watchlist developed over five rounds of adversarial review. It adds two helpers the hook cannot run without (`pre-bash-heredocs.py`, `pre-bash-commands.py`) and wrappers for every tool that has hooks. Behaviour changes users will notice:
+- Real hyphenated file names are no longer blocked (`rm …the-fantastic-four….json`). `rm -rf` is still blocked in every spelling and position, including `bash -c`, `$( )` and brace expansion.
+- Text that only *mentions* a dangerous command may be blocked when it reaches a command that could run it, e.g. `echo "rm -rf is dangerous"` or `gh pr create --body "…rm path -rf…"`. That is the deliberate fail-safe cost. To write such text, use `git commit -F - <<'EOF'` or `gh … --body-file - <<'EOF'`: heredoc bodies are skipped only for those shapes and for `cat > FILE` / `tee FILE > /dev/null`. `-m "$(cat <<'EOF' …)"` is checked in full.
+- `AGENTSKEL_UNSAFE=i-understand <one command>` is an explicit override (first word of a single command; never for remote deletes). The agent may use it **only after the user approved that exact command** (core-behavior rule "Never self-approve a safety-hook override").
+- Newly caught: `git restore`, `git clean --force`, `git worktree remove -f`, every spelling of a force branch delete, `git push origin +branch`, `/usr/bin/git …`, and `git --no-pager …` (or any other global option) in front of a destructive subcommand.
+- Every rule is now decided one command at a time, including inside `bash -c`, `eval`, `ssh`, `$( )` and backticks. So `git push origin main && rm -f tmp` is no longer read as a force push. Also newly blocked:
+  - a lone `git checkout <file>` when that file exists;
+  - `git checkout --ours` / `--theirs`;
+  - destructive git aliases (`git -c alias.x=reset x --hard`, `git config alias.x 'reset --hard'`) and plumbing (`update-ref -d`, `reflog expire`, …);
+  - `GIT reset --hard` (macOS file systems are case-insensitive);
+  - `gh repo` / `issue` / `release` / `label delete`;
+  - `gh api` with `-f` / `-F` / `--input`, which POST without `-X`;
+  - `gh api graphql` mutations.
+- A merged remote-branch delete still asks, but it is blocked when the same command changes which repo it runs in (`cd`, `pushd`, `GIT_DIR=…`).
+
+1. **Install the engine and helpers** (overwrite, don't merge), for each tool in Supported Tools:
+
+   | Tool | Copy | Into |
+   |---|---|---|
+   | `claude` | `core/claude-hooks/pre-bash-safety.sh`, `pre-bash-heredocs.py`, `pre-bash-commands.py` | `.claude/hooks/` |
+   | `antigravity` | `core/gemini-hooks/pre-bash-safety.sh` (wrapper); `core/claude-hooks/pre-bash-safety.sh` **as** `pre-bash-safety-engine.sh`; the two helpers | `.gemini/hooks/` |
+   | `cursor` | `core/cursor-hooks/pre-bash-safety.sh` (wrapper); engine as `pre-bash-safety-engine.sh`; the two helpers | `.cursor/hooks/` |
+   | `windsurf` | `core/windsurf-hooks/pre-bash-safety.sh` (wrapper); engine as `pre-bash-safety-engine.sh`; the two helpers | `.windsurf/hooks/` |
+   | `codex` | `core/codex-hooks/pre-bash-safety.sh` (wrapper); engine as `pre-bash-safety-engine.sh`; the two helpers | `.codex/hooks/` |
+
+   `chmod +x` the `.sh` files.
+
+2. **Wire the wrappers** (these files are not overwritten by sync, so add one entry each; it must come first and have no matcher, so it sees every shell command):
+   - `.gemini/settings.json`: first hook under the `BeforeTool` entry with `"matcher": "run_shell_command"`: `{ "type": "command", "command": ".gemini/hooks/pre-bash-safety.sh", "name": "agentskel-pre-bash-safety" }`.
+   - `.cursor/hooks.json`: first entry of `beforeShellExecution`: `{ "command": ".cursor/hooks/pre-bash-safety.sh" }`.
+   - `.windsurf/hooks.json`: first entry of `pre_run_command`: `{ "command": ".windsurf/hooks/pre-bash-safety.sh" }`.
+   - `.codex/hooks.json`: first hook under the `PreToolUse` entry with `"matcher": "Bash"`: `{ "type": "command", "command": ".codex/hooks/pre-bash-safety.sh" }`.
+   - Claude Code: already wired since v1.66.1 (Step 5k item 3).
+
+   Outside Claude Code, a merged remote-branch delete is **blocked** rather than asked: only Claude Code has a verified approval prompt that the agent cannot answer itself. Tell the user they run those deletes by hand.
+
+3. **Projects carrying MCU-Watchlist's local version** (`.claude/hooks/pre-bash-heredocs.py` already present, a `.claude/rules/repo-rules.md` rule saying not to overwrite the hook on sync). The skeleton's copy is a superset of that hook: its 387 cases pass unchanged, and it adds a macOS fix, the regex-gap fixes, per-command rules for every git / find / gh check, and the override guard. Overwrite all three files as in item 1. Then remove the "never overwrite on sync" carve-out from `repo-rules.md`, and the matching Intentional Deviations row in `.memory/CONFIG.md`. Run the project's own `.claude/hooks/tests/pre-bash-safety.test.sh` once against the overwritten hook; expect `0 failed`. After that the local test file can be deleted, since the skeleton's suite covers it.
+
+4. **Run the suites against the INSTALLED hooks.** A suite that only tests the skeleton's copy passes after a bad overwrite. These hooks fail closed or open silently, so do not mark this done on a visual diff:
+   ```bash
+   bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety.test.sh .claude/hooks/pre-bash-safety.sh   # expect 0 failed
+   # each other installed tool, through its wrapper (Gemini and Codex take Claude-shaped JSON):
+   EXPECT_NO_ASK=1 bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety.test.sh .gemini/hooks/pre-bash-safety.sh
+   EXPECT_NO_ASK=1 bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety.test.sh .codex/hooks/pre-bash-safety.sh
+   bash [SKELETON_PATH]/core/claude-hooks/pre-bash-safety-tools.test.sh   # wrapper contracts, all four tools
+   ```
+   Then `diff` each installed engine and helper against its skeleton source, so you know the suites tested what is installed.
+
+5. **Restart the AI tool** so the changed hook config is reloaded.
+
+Include the project-file changes in the Step 6 commit; the Skeleton Version bump goes in the Step 5 memory commit.
 
 ---
 

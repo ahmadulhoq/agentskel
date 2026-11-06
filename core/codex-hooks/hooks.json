@@ -6,6 +6,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": ".codex/hooks/pre-bash-safety.sh"
+          },
+          {
+            "type": "command",
             "command": ".codex/hooks/pre-commit-check.sh"
           },
           {

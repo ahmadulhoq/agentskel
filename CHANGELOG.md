@@ -1,5 +1,240 @@
 # agentskel Changelog
 
+## v1.69.0 — 2026-11-05
+
+### pre-bash-safety: upstreamed from MCU-Watchlist, every tool, gaps closed
+
+MCU-Watchlist carried a much stronger safety hook as a project-local fix
+(PRs #164, #165, merge commits 1e853ef3 and 32a8c635), developed over five
+rounds of independent adversarial review. Until now, a sync would have
+overwritten it with the weaker skeleton hook. This release makes that hook
+the skeleton's, and extends it.
+
+**Ported verbatim (behaviour and tests preserved):**
+- `core/claude-hooks/pre-bash-commands.py` (new). Recursive force `rm` and
+  force `git branch` delete are decided by a reader that splits the command
+  the way bash does: quotes, `$''`, brace expansion including the command
+  word, `${ }`, `$( )`, backticks, `<( )`/`>( )`, `$(( ))`, `$[ ]`, extglob,
+  `case` patterns, redirections and comments. The old coarse regexes run as
+  a floor, so the reader can only ADD blocks. The floor neutralises a hyphen
+  only when a literal filename character precedes it, so real hyphenated
+  files (`the-fantastic-four-first-steps.json`) are no longer blocked.
+- `core/claude-hooks/pre-bash-heredocs.py` (new). Heredoc bodies are skipped
+  only for a few exact whole-command text-writing shapes: `git commit -F -`,
+  `gh … --body-file -`, `cat > FILE`, `tee FILE > /dev/null`. Each may sit
+  behind `cd`/`git add &&`, and needs a quoted end marker, an exact end line
+  and nothing after it. Three earlier "recognise heredocs anywhere" designs
+  were each defeated in review, and that approach is not coming back.
+- Hook: the `AGENTSKEL_UNSAFE=i-understand` override (first word of a
+  single command, never for remote deletes); `git restore`;
+  `git clean --force`; `git worktree remove -f`; force branch delete in
+  every spelling; quoted `gh api --method "DELETE"`; `NAME=value` /
+  `NAME+=value` before a remote delete; here-strings instead of
+  `echo | grep` (that failed open under pipefail on long commands);
+  `python3 -I` on every call.
+- **Accepted, documented limit** (kept in `pre-bash-commands.py`): a delete
+  flag assembled at run time, from a substitution's output or word
+  splitting, cannot be seen before bash runs. Allowing real hyphenated
+  filenames necessarily allows these.
+- Suite: MCU-Watchlist's 387 cases, now `pre-bash-safety.test.sh`. They are
+  a superset of our previous 63. It takes an optional hook path, so sync
+  can test the **installed** hook. Against the v1.68.1 hook: 134 failures.
+
+**Fixed beyond the port:**
+- **macOS:** `LC_ALL=C` on both awk calls. In a UTF-8 locale, macOS awk
+  splits a non-breaking space in half and dies. The floor then blocked by
+  accident, and the split-flag rule failed OPEN. MCU-Watchlist's own copy
+  scores 386/387 on macOS; the skeleton copy passes its suite 387/387.
+- **Regex-level gaps** (maintainer decision; 19 cases, all allowed before):
+  - a path-qualified git (`/usr/bin/git`, `./git`);
+  - any global option before the subcommand (`git --no-pager …`, `-P`,
+    `--git-dir=…`); only git's value-taking globals consume the next word,
+    so `git --no-pager log --grep restore` stays allowed;
+  - `git push origin +main` (a `+refspec` force push);
+  - the remote-delete check skipping a path-qualified git.
+
+  All git rules now share one `GIT_CMD` prefix. It matches everything the
+  old prefix did, so the change can only add blocks.
+
+**Every tool** (maintainer decision): Gemini CLI, Cursor, Windsurf and Codex
+get `core/<tool>-hooks/pre-bash-safety.sh`, a thin wrapper around the same
+engine (installed next to it as `pre-bash-safety-engine.sh`, with both
+helpers). The wrapper converts the tool's hook JSON in and the verdict out,
+and is wired first, with no matcher, on every shell command.
+- Outside Claude Code, a merged remote-branch delete is **blocked**, not
+  asked (`AGENTSKEL_NO_ASK=1`). None of the other tools has a verified
+  approval prompt.
+- A missing engine blocks loudly rather than leaving every command
+  unchecked.
+- New `pre-bash-safety-tools.test.sh`: 81 cases covering each tool's input
+  and output contract, plus a config-wiring check. The full rule suite also
+  passes through the Gemini and Codex wrappers.
+
+**Override guard** (maintainer decision): the agent can type the override
+itself, so there's a new core-behavior rule, "Never self-approve a
+safety-hook override". It allows the override only after the user has
+approved that exact command in the current exchange. The rule is in all 14
+rule files and is fingerprinted by the validator; the block message says the
+same. Hook behaviour is unchanged.
+
+**Install / sync:**
+- setup-skeleton Step 5b3 and the sync hook-refresh table name the new
+  files.
+- New sync **Step 5n** installs the engine, helpers and wrappers, wires each
+  wrapper, and runs the suites against the installed hooks.
+- **BL-006 fixed:** Steps 5k/5l said to copy the Claude-format script into
+  the other tools' folders, where it reads an empty command and allows
+  everything.
+- MCU-Watchlist can drop its "never overwrite the hook on sync" carve-out
+  after taking Step 5n.
+- CI runs the wrapper suite too.
+
+**Every rule decided per command** (BL-007, BL-008, BL-009, BL-010; first
+filed during this release, then fixed in it at the maintainer's request).
+Tests first: 72 new cases, of which 35 destructive commands were ALLOWED and
+9 harmless ones BLOCKED by the hook before this work.
+- **BL-010:** the per-command reader now decides every rule, not just `rm`
+  and `git branch`:
+  - git push force, including `-uf` clusters, `+refspec`, `--mirror` and
+    `--prune`;
+  - reset --hard;
+  - checkout `-f` / `--` / `.` / `<tree-ish> <paths>`;
+  - switch `-f` / `--discard-changes`;
+  - restore;
+  - clean force;
+  - worktree remove force;
+  - stash drop / clear;
+  - find `-delete` / `-exec rm`;
+  - gh api writes.
+
+  Long options count by unambiguous prefix, as git accepts them.
+- **BL-007:** because the reader re-reads `bash -c`, `eval`, `ssh`, `$( )`
+  and backticks as commands, every rule now sees inside nested shells.
+- **Remote branch deletes:**
+  - A plain top-level delete is reported to the hook, whose ask/block
+    verdict then runs even when its regex prefilter misses the spelling
+    (`\git`, `'git'`).
+  - A delete anywhere nested is blocked, because nothing can ask about a
+    command it cannot see.
+  - If the verdict cannot place a delete that the reader saw, it blocks.
+- **BL-009, gh api:** `-f`/`-F`/`--field`/`--raw-field`/`--input` imply
+  POST without `-X`, so these are blocked as writes. `gh api graphql` is
+  allowed only for an inline query that is not a mutation and does not come
+  from a file, `--input` or `$( )`. Any `$` in the query must be one that
+  bash does not expand: a GraphQL `$variable` and a shell `"$M"` look the
+  same after quote removal, so the raw command is scanned.
+- **BL-008:** the git / find / gh api regexes stay as a floor, but each now
+  stops at the end of one command (`[^;&|]*`), so a flag of the NEXT command
+  no longer counts. The floor reads a copy of the command where:
+  - a separator inside quotes is part of the word (quoting cannot hide a
+    flag);
+  - a redirection `&` is not a separator;
+  - a hyphen inside a word (`update-ref`, `turn-it-off`) cannot read as an
+    option.
+
+  That copy is built in Python: a first awk version took 535 s on a
+  200,000-character command under macOS awk.
+- **Crash fallback:** when the reader cannot run, the fallback also blocks
+  the git / find / gh api words.
+
+**Old-vs-new differential:** the ported MCU hook before the per-command work
+(cf5b1c9) against the final hook, over every suite command plus generated
+variants (4,571 commands, bash 5.2). 91 commands the old hook blocked are now allowed, and each one is
+a false positive:
+- a later command's `-f` (`git push origin main && ls -f`);
+- `+` that does not start a refspec (`feat+x`);
+- `--hard` as a grep pattern;
+- a safe `branch --delete`, or `worktree remove` without force;
+- `git restore --staged`;
+- a GraphQL read sent with `-X POST`.
+
+No timeouts.
+
+**Adversarial review round.** Two independent reviewers probed the hook
+after the per-command work: one took the git rules; the other took gh, find,
+the floor, the override and deletes. Every finding got a test before its
+fix: 163 new cases. Before the fixes, the hook allowed 123 destructive
+commands, blocked 2 harmless ones, and took 61 s on a word of 80,000
+hyphens. A hook that runs past Claude Code's timeout lets the command
+through.
+- **Reading like bash:**
+  - brace sequences `{a..b}`;
+  - backticks up to the next unescaped backtick;
+  - heredoc bodies that cannot swallow the lines after them;
+  - `\r` as an ordinary character;
+  - `(( ))` as arithmetic, where `#` is not a comment;
+  - zsh `${ }` and glob qualifiers `*(e:'…':)`, read as code.
+- **Command names** are matched the way the shell and the file system find
+  them:
+  - any case (`GIT reset --hard`, since macOS file systems are
+    case-insensitive);
+  - globs (`/usr/bin/gi?`), zsh `=git`, dashed builtins (`git-reset`);
+  - an always-empty expansion glued on (`${x}git`, `--ha$()rd`).
+
+  Long options count from a one-letter unambiguous prefix (`git reset
+  --h`), and `--shallow-file` takes a value.
+- **git aliases** are resolved from `-c alias.*`, `--config-env`,
+  `GIT_CONFIG_*`, a `git config alias.*` in the same command, and aliases
+  already stored in the repo. Also blocked:
+  - storing a destructive or shell alias;
+  - config that makes a plain command destructive (`remote.*.mirror`,
+    `remote.*.push=+…`, `clean.requireForce=false`);
+  - destructive plumbing: `update-ref -d`, `read-tree --reset -u`,
+    `checkout-index -f`, `send-pack --force`, `reflog delete`/`expire`,
+    `submodule update`/`deinit -f`, `branch -M`/`-C`.
+- **checkout of one path:** `./`, `..`, `:/`, a glob,
+  `--ours`/`--theirs`/`--conflict`/`-p`, or a file that exists in the
+  session folder. `git restore --staged` alone only unstages, like `git
+  reset <file>`, and is allowed; with `--worktree` it is blocked.
+- **find / fd** running any remover (`rm`, `unlink`, `shred`, or a shell
+  script that runs one), including through wrappers.
+- **gh:**
+  - delete / remove subcommands (`gh repo delete`, `gh issue delete`,
+    `gh release delete-asset`, `gh label delete`, …), which no rule
+    covered before; `gh alias delete` and `gh extension remove` touch only
+    local config and stay allowed;
+  - gh's own flags before `api`, and short-flag bundles (`-iX DELETE`);
+  - any method that is not a literal `GET` / `HEAD` counts as a write;
+  - `gh alias set` values are read as gh commands.
+- **Override:** refused for a command that runs its arguments as code
+  (`$'…'`, `<<<`, `bash`, `sh`, `eval`, `env`, `sudo`, `xargs`, `ssh`,
+  `python`, …). A nested remote delete is never overridable.
+- **Remote-delete verdict:**
+  - redirections are not branch names;
+  - `cd` / `pushd` / `popd`, `GIT_DIR`, `GIT_WORK_TREE` or `GIT_CONFIG*` in
+    the same command block, because the merged check could run in a
+    different repo;
+  - it blocks when the reader counted more deletes than it can place;
+  - a `pushurl` is checked.
+- **Speed:** both floor copies are built by one linear-time Python pass.
+  MCU's awk rm floor was quadratic too.
+
+Re-running every reviewer probe on the fixed hook found one more gap,
+`gh label delete`, now fixed. Everything else it let through falls in the
+accepted limits below.
+
+**Accepted limits**, documented in AUTONOMY-MODES and filed:
+- **BL-013:** values that exist only at run time, the same class as the
+  delete flag above:
+  - variables and arrays (`x=--hard; git reset $x`);
+  - a command name from a substitution or variable (`$(command -v git)`);
+  - arguments from stdin (`xargs`, `parallel`);
+  - shell functions and aliases.
+
+  Also interpreters given list-form arguments (`python3 -c
+  'subprocess.run([...])'`).
+- **BL-011:** the hook's own files. A Bash write, or the Edit / Write tools,
+  can change them.
+- **BL-012:** the hook's own failure. A timeout lets the command run, unless
+  its settings entry has `"onFailure": "block"` (Claude Code v2.1.295+).
+
+Verified:
+- rules 668/668 and wrappers 81/81 on bash 5.2 (docker) and macOS bash 3.2;
+- MCU-Watchlist's unmodified 387-case suite passes 387/387 against the
+  final hook on both shells.
+
+affected: setup-skeleton, sync-skeleton
+
 ## v1.68.1 — 2026-11-02
 
 ### Fix: validator check 12 failed on main right after merging v1.68.0
