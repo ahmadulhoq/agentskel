@@ -639,6 +639,186 @@ check ALLOWED 'git checkout -b feat origin/main'
 check ALLOWED 'git clean -n'
 check ALLOWED 'find . -name "*.ts" -newer x'
 
+# --- v1.69.0 adversarial review round (gh / find / floor / override / deletes) ---
+# Every case below was ALLOWED (or asked) by the hook when an independent
+# reviewer probed it, and is destructive when bash or zsh runs it.
+# brace SEQUENCES, not only comma lists
+check BLOCKED 'git push origin --{d..d}elete main'
+check BLOCKED 'git push --{f..f}orce origin main'
+check BLOCKED 'git reset --{h..h}ard'
+check BLOCKED 'rm -r --f{o..o}rce /tmp/x'
+check BLOCKED 'gh api -X {D..D}ELETE /repos/o/r'
+check BLOCKED "gh api graphql -f query={m..m}'utation{deleteRef(input:{refId:\"x\"}){clientMutationId}}'"
+check ALLOWED 'echo {1..3}'
+check ALLOWED 'mkdir -p out/{a..c}'
+# git aliases run as git <value>
+check BLOCKED "git -c alias.x='push origin --delete main' x"
+check BLOCKED "git -c alias.x='reset --hard' x"
+check BLOCKED "git config alias.x 'reset --hard' && git x"
+check BLOCKED $'GIT_CONFIG_PARAMETERS="\'alias.x=reset --hard\'" git x'
+check BLOCKED "git -c alias.x='!sh -c' x -m 'git push origin --delete main'"
+check BLOCKED "git -c alias.x='!sh -c' x -m 'rm -rf /tmp/x'"
+check ALLOWED "git -c alias.lg='log --oneline' lg"
+check BLOCKED "gh alias set zz 'api -X DELETE /repos/o/r' && gh zz"
+# a glob or zsh's =cmd in the command word is still that command
+check BLOCKED '/usr/bin/gi[t] push origin --delete main'
+check BLOCKED '/bin/r[m] -rf /tmp/x'
+check BLOCKED '/opt/homebrew/bin/g[h] api -X DELETE /repos/o/r'
+check BLOCKED '/usr/bin/fin[d] . -delete'
+check BLOCKED '=git push origin --delete main'
+check BLOCKED '=rm -rf /tmp/x'
+# zsh: a glob qualifier runs code; ${ } closes at the first }
+check BLOCKED "echo a*(e:'git reset --hard':)"
+check BLOCKED $'echo "${x:-\'}" ; \\git reset --hard ; echo "\'}"'
+# an empty expansion glued to a flag or refspec leaves the flag
+check BLOCKED 'git push origin $x:main'
+check BLOCKED 'git push origin $x+main'
+check BLOCKED 'git push origin $x--delete main'
+check BLOCKED 'git push origin $x-d main'
+check BLOCKED 'git push $x--mirror origin'
+# heredoc bodies are not shell text of the outer command
+check BLOCKED $'cat <<\'EOF\'\n${x:-\nEOF\n\\git push origin --delete main\ncat <<\'EOF\'\n}\nEOF'
+check BLOCKED $'cat <<EOF\ngrep \'\nEOF\n\\git reset --hard\ncat <<EOF\n\'\nEOF'
+# a carriage return is an ordinary character, not a blank
+check BLOCKED $'true\r# ; \\git push origin --delete main'
+check BLOCKED $'true\r# ; \\rm -rf /tmp/x'
+check BLOCKED $'true\r# ; \\gh api -X DELETE /repos/o/r'
+# backticks: bash removes one backslash level, and quotes do not stop the closing backtick
+check BLOCKED 'echo `\\git push origin --delete main`'
+check BLOCKED 'echo `\\rm -rf /tmp/x`'
+check BLOCKED "echo \`grep '\`; \\git reset --hard; echo \`'\`"
+# gh: a method that is not a literal GET is not a read; root flags before api
+check BLOCKED 'gh api -X "$M" /repos/o/r'
+check BLOCKED 'gh api -X $(printf DELETE) /repos/o/r'
+check BLOCKED 'gh api --method="$M" /repos/o/r'
+check BLOCKED 'gh api -X="DE"LETE /repos/o/r'
+check BLOCKED 'gh --help=false api -X DELETE /repos/o/r'
+check ALLOWED 'gh api -X GET repos/o/r'
+check BLOCKED "gh api graphql -f query=mutatio?'{deleteRef(input:{refId:\"x\"}){clientMutationId}}'"
+# gh subcommands that delete
+check BLOCKED 'gh repo delete o/r --yes'
+check BLOCKED 'gh release delete v1 --yes'
+check BLOCKED 'gh issue delete 5 --yes'
+check ALLOWED 'gh release list'
+check ALLOWED 'gh repo view o/r'
+# git config that changes what push / clean do
+check BLOCKED 'git -c remote.origin.mirror=true push origin'
+check BLOCKED 'git -c remote.origin.push=+HEAD:refs/heads/main push origin'
+check BLOCKED 'git -c clean.requireForce=false clean -dx'
+check ALLOWED 'git -c remote.origin.push=HEAD push origin'
+# plumbing that does the same as a blocked command
+check BLOCKED 'git update-ref -d refs/heads/x'
+check BLOCKED 'git read-tree -u --reset HEAD'
+check BLOCKED 'git checkout-index -a -f'
+check BLOCKED 'git branch -M feature main'
+check ALLOWED 'git update-ref refs/heads/x HEAD'
+check ALLOWED 'git branch -m old new'
+# find / fd with any remover
+check BLOCKED 'find . -type f -exec env rm {} +'
+check BLOCKED 'find . -type f -exec command rm {} +'
+check BLOCKED "find . -type f -exec sh -c 'rm -- \"\$@\"' sh {} +"
+check BLOCKED 'find . -type f -exec unlink {} \;'
+check BLOCKED 'fd -t f . -X rm'
+check ALLOWED 'find . -name "*.md" -exec grep -l x {} +'
+# the override never reaches a remote delete, and covers one command only
+check BLOCKED "AGENTSKEL_UNSAFE=i-understand bash -c 'git push origin --delete main'"
+check BLOCKED "AGENTSKEL_UNSAFE=i-understand eval 'git push origin :main'"
+check BLOCKED "AGENTSKEL_UNSAFE=i-understand bash -c \$'git branch -D x\\ngit reset --hard'"
+check BLOCKED "AGENTSKEL_UNSAFE=i-understand eval \$'git branch -D x\\x3b git reset --hard'"
+check BLOCKED "AGENTSKEL_UNSAFE=i-understand bash <<< \$'git branch -D x\\ngit reset --hard'"
+# false positives the review found
+check ALLOWED 'git restore --staged src/a.ts'
+check ALLOWED 'git restore -S src/a.ts'
+check BLOCKED 'git restore --staged --worktree src/a.ts'
+check BLOCKED 'git restore -SW src/a.ts'
+
+# --- v1.69.0 adversarial review round (git rules) ---
+# git accepts any unique prefix of a long option
+check BLOCKED 'git reset --h'
+check BLOCKED 'git checkout --fo main'
+check BLOCKED 'git switch --di main'
+check BLOCKED 'git push --m origin'
+# aliases without ! run a git subcommand
+check BLOCKED 'git -c alias.x=reset x --hard'
+check BLOCKED 'git -c alias.p=push p --force origin main'
+check BLOCKED 'git -c alias.b=branch b -D feature'
+check BLOCKED 'git -c alias.s=stash s drop'
+check BLOCKED 'git -c alias.r=restore r .'
+check BLOCKED 'git -c alias.x=!git x reset --hard'
+check BLOCKED 'GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=alias.x GIT_CONFIG_VALUE_0=reset git x --hard'
+check BLOCKED 'V=reset git --config-env=alias.x=V x --hard'
+check BLOCKED 'git config alias.x reset && git x --hard'
+check BLOCKED "git config alias.nuke '!rm -rf build'"
+check BLOCKED "git config alias.wipe 'reset --hard'"
+check ALLOWED "git config alias.st status"
+check BLOCKED 'git -c remote.origin.push=+HEAD:main push'
+check BLOCKED 'git config remote.origin.mirror true'
+# checkout with one path
+check BLOCKED 'git checkout ./'
+check BLOCKED 'git checkout :/'
+check BLOCKED "git checkout '*'"
+check BLOCKED 'git checkout ..'
+check BLOCKED 'git checkout --theirs src/app.ts'
+check BLOCKED 'git checkout --ours src/app.ts'
+check BLOCKED 'git checkout --conflict=merge src/app.ts'
+check ALLOWED 'git checkout -m main'
+check ALLOWED 'git checkout feature/login'
+# case-insensitive file systems: GIT is git
+check BLOCKED 'GIT reset --hard'
+check BLOCKED 'Git reset --hard'
+check BLOCKED '/usr/bin/GIT reset --hard'
+check BLOCKED 'RM -rf /tmp/x'
+# --shallow-file takes a value
+check BLOCKED 'git --shallow-file /dev/null reset --hard'
+check BLOCKED 'git --shallow-file x push --force origin main'
+# heredoc bodies cannot swallow the lines after them
+check BLOCKED $'cat <<\'EOF\'\n${\nEOF\n\\git reset --hard\n'
+check BLOCKED $'cat <<\'EOF\'\n$[\nEOF\n\\git reset --hard\n'
+check BLOCKED $'cat <<\'EOF\'\n@(\nEOF\n\\git reset --hard\n'
+check BLOCKED $'cat > notes.md <<\'EOF\'\nThe price is ${\nEOF\n(git reset --hard)\n'
+check BLOCKED $'cat <<\'EOF\'\ngrep -e \'\nEOF\n\\git reset --hard # \'\n'
+# (( )) is arithmetic: a # inside is not a comment
+check BLOCKED '(( # )) ; \git reset --hard'
+check BLOCKED '(( # )) ; (git reset --hard)'
+check BLOCKED 'for (( ; # ; )) ; do :; done ; \git reset --hard'
+check ALLOWED '(( x = 1 + 2 )) && echo ok'
+# zsh
+check BLOCKED '=git reset --hard'
+check BLOCKED "ls *(e:'git reset --hard':)"
+check BLOCKED "print -l /tmp(e:'git reset --hard':)"
+# globs in the command word
+check BLOCKED '/usr/bin/gi? reset --hard'
+check BLOCKED '/usr/bin/g[i]t reset --hard'
+# an always-empty expansion spliced into a word
+check BLOCKED 'git reset --ha$()rd'
+check BLOCKED 'git reset --ha``rd'
+check BLOCKED 'git reset --ha$@rd'
+check BLOCKED 'git reset --ha${x}rd'
+check BLOCKED 'git re$()set --hard'
+check BLOCKED 'git stash dr$()op'
+check BLOCKED 'git res$()tore .'
+check BLOCKED 'git push --for$()ce origin main'
+check BLOCKED 'git branch --delete --for$()ce x'
+check BLOCKED 'git checkout --for$()ce main'
+check BLOCKED 'git work$()tree remove --force wt'
+check BLOCKED '${x}git reset --hard'
+check BLOCKED '"$x"git reset --hard'
+check BLOCKED '$(:)git reset --hard'
+check BLOCKED '`:`git reset --hard'
+check ALLOWED 'git checkout $BRANCH'
+check ALLOWED 'git push origin $BRANCH'
+# dashed builtins
+check BLOCKED '"$(git --exec-path)/git-reset" --hard'
+check BLOCKED '/Library/Developer/CommandLineTools/usr/libexec/git-core/git-reset --hard'
+# more plumbing
+check BLOCKED 'git send-pack --force git@github.com:o/r.git main'
+check BLOCKED 'git update-ref -d refs/stash'
+check BLOCKED 'git reflog delete refs/stash@{0}'
+check BLOCKED 'git submodule update --force'
+# a long word of hyphens is checked quickly (review: 62 s at 80,000)
+quick BLOCKED 15 "git reset --hard ; echo $(printf -- '-%.0s' $(seq 80000))"
+quick ALLOWED 15 "echo x$(printf -- '-%.0s' $(seq 80000))"
+
 # --- must allow: ordinary work. A hook nobody can work alongside gets removed. ---
 check ALLOWED 'git push origin main'
 check ALLOWED 'git checkout -b feature/new'
@@ -751,6 +931,18 @@ check_in BLOCKED "$R" 'git push --mirror origin'
 check_in BLOCKED "$R" 'git push --prune origin refs/heads/*:refs/heads/*'
 # a bare `:` refspec pushes matching branches; it deletes nothing
 check_in ALLOWED "$R" 'git push origin :'
+# review round: the merged-branch check must run in the repo the delete runs in
+check_in BLOCKED "$R" "{ cd $R; git push origin --delete merged-a; }"
+check_in BLOCKED "$R" "pushd $R && git push origin --delete merged-a"
+check_in BLOCKED "$R" "builtin cd $R && git push origin --delete merged-a"
+check_in BLOCKED "$R" "GIT_DIR=$R/.git git push origin --delete merged-a"
+check_in BLOCKED "$R" "export GIT_DIR=$R/.git; git push origin --delete merged-a"
+check_in BLOCKED "$R" "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=remote.origin.url GIT_CONFIG_VALUE_0=/x git push origin --delete merged-a"
+# ... and an ask may not hide a second delete it could not read
+check_in BLOCKED "$R" 'git push origin --delete merged-a && git push origin --{d..d}elete merged-b'
+# a redirection is not a branch name
+check_in ASKED   "$R" 'git push origin --delete merged-a 2>&1'
+check_in ASKED   "$R" 'git push origin --delete merged-a 2>&1 | tail -3'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

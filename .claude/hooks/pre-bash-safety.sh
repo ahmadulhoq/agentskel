@@ -87,6 +87,13 @@ override_requested() {
     case "$one" in
         *[';&|`']* | *'$('* | *'<('* | *'>('* | *$'\n'*) return 1 ;;
     esac
+    # Nor through anything that runs its arguments as code: an escaped
+    # newline inside $'...' handed to bash -c / eval / <<< is a second
+    # command these checks cannot see (v1.69.0 review).
+    if grep -qE "[\$]'|<<<" <<<"$one" \
+       || grep -qiE '(^|[[:space:]])(eval|bash|sh|zsh|dash|ksh|fish|source|\.|ssh|xargs|env|sudo|doas|exec|command|builtin|parallel|watch|flock|nohup|timeout|su|python[0-9.]*|perl|node|ruby)([[:space:]]|$)' <<<"$one"; then
+        return 1
+    fi
     return 0
 }
 
@@ -129,7 +136,10 @@ EOF
 # (-C, -c, --git-dir, ...) consume the next word: letting any option do so
 # read `git --no-pager log --grep restore` as a `restore` (PR review).
 # `[-_]`: the floor text below turns a hyphen inside a word into `_`.
-GIT_CMD='(^|[;&|[:space:]])([^[:space:];&|]*/)?git([[:space:]]+((-[Cc]|--(git[-_]dir|work[-_]tree|namespace|exec[-_]path|config[-_]env|super[-_]prefix|attr[-_]source|list[-_]cmds))[[:space:]]+[^[:space:]]+|-[^[:space:]]+))*[[:space:]]+'
+# Before `git`: any character that cannot be part of a word (v1.69.0 review:
+# `\git`, `(git`, `${x}git`, `=git` slipped past a space-only boundary), and
+# any case (`GIT reset` runs git on macOS file systems).
+GIT_CMD='(^|[^A-Za-z0-9_.-])([^[:space:];&|]*/)?[Gg][Ii][Tt]([[:space:]]+((-[Cc]|--(git[-_]dir|work[-_]tree|namespace|exec[-_]path|config[-_]env|super[-_]prefix|attr[-_]source|list[-_]cmds|shallow[-_]file))[[:space:]]+[^[:space:]]+|-[^[:space:]]+))*[[:space:]]+'
 
 # --- Floor text for the git / find / gh api rules (v1.69.0, BL-008) ---
 # These rules are a FLOOR under pre-bash-commands.py, which decides each
@@ -149,43 +159,54 @@ GIT_CMD='(^|[;&|[:space:]])([^[:space:];&|]*/)?git([[:space:]]+((-[Cc]|--(git[-_
 # 535 s on a 200,000-character command under macOS awk. This is linear.
 # If python fails, the floor reads the plain command (separators inside
 # quotes then end a command early; the reader still reads those).
-read -r -d '' GITFLOOR_PY <<'PY' || true
+read -r -d '' FLOOR_PY <<'PY' || true
+import re
 import sys
 
 SEP = set(";&|<>")
 LIT = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._/+:%=~^-")
+LONG = re.compile(r"^--[A-Za-z0-9._/+:,%=~^-]*$")
+IDENT = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_")
 
 
-def neutral(w):
+def neutral(w, long_branch):
     # A hyphen with a literal character before it in the same word cannot
     # start an option: make it "_". Not after a $NAME (that may be empty) or
-    # inside ${ } / { , }. Same rule as the rm floor's awk `neutral`.
+    # inside ${ } / { , }. The same rule as MCU-Watchlist's awk `neutral`,
+    # in one pass: the awk walked back over the word for every hyphen and
+    # took 109 s on a word of 20,000 hyphens (v1.69.0 review). long_branch:
+    # the rm floor treats a plain `--long-option` word as all neutral.
+    if long_branch and LONG.match(w):
+        return w.replace("-", "_")
     out = list(w)
-    run_start = 0
+    name_end, last_lit, brace = 0, -1, False
     for k, c in enumerate(w):
         if k == 0 or w[k - 1] not in LIT:
-            run_start = k
-        if c != "-":
-            continue
-        j = run_start
-        lit = w[j:k]
-        b = w[j - 1] if j > 0 else ""
-        if b == "$":
-            m = 0
-            if lit[:1].isdigit():
-                m = 1
-            elif lit[:1].isalpha() or lit[:1] == "_":
-                while m < len(lit) and (lit[m].isalnum() or lit[m] == "_") and lit[m].isascii():
-                    m += 1
-            lit = lit[m:]
-        elif b == "{":
-            lit = ""
-        if any(ch != "-" for ch in lit):
-            out[k] = "_"
+            b = w[k - 1] if k > 0 else ""
+            brace, last_lit, name_end = b == "{", -1, k
+            if b == "$":
+                if w[k:k + 1].isdigit():
+                    name_end = k + 1
+                elif w[k:k + 1] in IDENT:
+                    while name_end < len(w) and w[name_end] in IDENT:
+                        name_end += 1
+        if c == "-":
+            if not brace and last_lit >= name_end:
+                out[k] = "_"
+        elif c in LIT and k >= name_end:
+            last_lit = k
     return "".join(out)
 
 
-def floor_line(line):
+def rm_line(line):
+    # MCU-Watchlist's rm floor: separators and redirections end a word; no
+    # quote awareness (it matches the old rule exactly).
+    for c in ";&|<>":
+        line = line.replace(c, f" {c} ")
+    return " ".join(neutral(w, True) for w in line.replace("\t", " ").split(" ") if w)
+
+
+def git_line(line):
     buf, sq, dq, prev, i, n = [], False, False, "", 0, len(line)
     while i < n:
         c = line[i]
@@ -218,14 +239,15 @@ def floor_line(line):
         prev = line[i]
         buf.append(c)
         i += 1
-    return " ".join(neutral(w) for w in "".join(buf).split(" ") if w)
+    return " ".join(neutral(w, False) for w in "".join(buf).replace("\t", " ").split(" ") if w)
 
 
+mode = sys.argv[1]
 text = sys.stdin.buffer.read().decode("utf-8", "surrogateescape")
-lines = [floor_line(l.replace("\t", " ")) for l in text.split("\n")]
-sys.stdout.buffer.write("\n".join(lines).encode("utf-8", "surrogateescape"))
+f = rm_line if mode == "rm" else git_line
+sys.stdout.buffer.write("\n".join(f(l) for l in text.split("\n")).encode("utf-8", "surrogateescape"))
 PY
-CMD_GITFLOOR=$(printf '%s' "$CMD_STRUCT" | python3 -I -c "$GITFLOOR_PY" 2>/dev/null) || CMD_GITFLOOR="$CMD_STRUCT"
+CMD_GITFLOOR=$(printf '%s' "$CMD_STRUCT" | python3 -I -c "$FLOOR_PY" git 2>/dev/null) || CMD_GITFLOOR="$CMD_STRUCT"
 
 # --- Force pushes ---
 if grep -qE "$GIT_CMD"'push[[:space:]]+[^;&|]*(--force([[:space:]]|=|$)|--force[-_]with[-_]lease|-f([[:space:]]|$))' <<<"$CMD_GITFLOOR" \
@@ -260,7 +282,10 @@ fi
 # --- git restore: the modern spelling of "checkout -- <file>" ---
 # Added 2026-08-16 (MCU-Watchlist). The old spelling was blocked and this one,
 # which discards exactly the same work, was not covered at all.
-if grep -qE "$GIT_CMD"'restore([[:space:]]|$)' <<<"$CMD_GITFLOOR"; then
+# `--staged` / -S alone only unstages (what `git status` suggests): allowed.
+if grep -oE "$GIT_CMD"'restore([[:space:]][^;&|]*|$)' <<<"$CMD_GITFLOOR" | LC_ALL=C awk '
+    !(/(^|[[:space:]])(--staged|-[A-Za-z]*S[A-Za-z]*)([[:space:]]|$)/ && !/(^|[[:space:]])(--worktree|-[A-Za-z]*W[A-Za-z]*)([[:space:]]|$)/) { found = 1 }
+    END { exit !found }'; then
     block "git restore — discards uncommitted changes (modern 'checkout -- <file>')"
 fi
 
@@ -286,19 +311,25 @@ fi
 #
 # If it cannot run or answers anything else, every rm and every git branch
 # delete is blocked until a person runs it. Fail closed.
-CMD_VERDICT=$(printf '%s' "$CMD_HD" | python3 -I "$(dirname "$0")/pre-bash-commands.py" 2>/dev/null) || CMD_VERDICT=""
+CMD_VERDICT=$(printf '%s' "$CMD_HD" | SAFETY_CWD="$SESSION_CWD" python3 -I "$(dirname "$0")/pre-bash-commands.py" 2>/dev/null) || CMD_VERDICT=""
 READER_DELETE=0
 case "$CMD_VERDICT" in
+    "BLOCK-REMOTE "*)
+        # A remote branch delete the hook cannot ask about: never overridable
+        # (v1.69.0 review: the override reached `bash -c 'git push --delete'`).
+        block "${CMD_VERDICT#BLOCK-REMOTE }" no-override
+        ;;
     "BLOCK "*)
         block "${CMD_VERDICT#BLOCK }"
         ;;
     ALLOW)
         ;;
-    "ALLOW DELETE")
-        # A plain top-level remote branch delete: the verdict at the end of
-        # this script decides it (ask / block), even when the regex
-        # prefilter misses the spelling (`\git`, `'git'`, `(git ...)`).
-        READER_DELETE=1
+    "ALLOW DELETE "*)
+        # Plain top-level remote branch deletes (how many): the verdict at the
+        # end of this script decides them (ask / block), even when the regex
+        # prefilter misses the spelling (`\git`, `'git'`, `(git ...)`), and
+        # blocks if it cannot account for every one of them.
+        READER_DELETE="${CMD_VERDICT#ALLOW DELETE }"
         ;;
     *)
         # Only reached when the reader itself is broken, so be blunt: any rm,
@@ -314,11 +345,11 @@ case "$CMD_VERDICT" in
         if grep -qE 'git.*branch' <<<"$CMD_PLAIN"; then
             block "git branch while the per-command check could not run (strict fallback)"
         fi
-        if grep -qE 'git.*(push|reset|checkout|switch|restore|clean|worktree|stash)' <<<"$CMD_PLAIN"; then
+        if grep -qiE 'git.*(push|reset|checkout|switch|restore|clean|worktree|stash|update-ref|read-tree|send-pack|reflog|submodule|config)' <<<"$CMD_PLAIN"; then
             block "git while the per-command check could not run (strict fallback)"
         fi
-        if grep -qE 'find.*-(delete|exec|ok)|gh.*api' <<<"$CMD_PLAIN"; then
-            block "find / gh api while the per-command check could not run (strict fallback)"
+        if grep -qiE 'find.*-(delete|exec|ok)|fd.*-(x|X|-exec)|gh.*(api|delete|remove)' <<<"$CMD_PLAIN"; then
+            block "find / fd / gh while the per-command check could not run (strict fallback)"
         fi
         ;;
 esac
@@ -337,41 +368,12 @@ esac
 # A word that starts with "--" and is all plain characters is a long option:
 # its hyphens are neutralised for the bundled-flag rule (`rm --force x` is not
 # -f...r), and the long-form rule below reads the original.
-# LC_ALL=C (v1.69.0): macOS awk in a UTF-8 locale splits a non-breaking space
-# in half while splitting fields and dies ("towc: multibyte conversion
-# failure"). Under `set -e` that exited the hook with status 2 (blocked by
-# accident); in the split-flag `if` below it made the rule fail OPEN. Byte
-# semantics change nothing else: every class here is ASCII.
-CMD_FLOOR=$(LC_ALL=C awk '
-function neutral(f,    out, n, k, c, j, run, b, lit) {
-    if (f ~ /^--[A-Za-z0-9._\/+:,%=~^-]*$/) { gsub(/-/, "_", f); return f }
-    out = ""; n = length(f)
-    for (k = 1; k <= n; k++) {
-        c = substr(f, k, 1)
-        if (c == "-") {
-            j = k
-            while (j > 1 && substr(f, j - 1, 1) ~ /[A-Za-z0-9._\/+:%=~^-]/) j--
-            run = substr(f, j, k - j)
-            b = (j > 1) ? substr(f, j - 1, 1) : ""
-            lit = run
-            if (b == "$") {
-                if (match(lit, /^[A-Za-z_][A-Za-z0-9_]*/)) lit = substr(lit, RLENGTH + 1)
-                else if (match(lit, /^[0-9]/)) lit = substr(lit, 2)
-            } else if (b == "{") {
-                lit = ""        # inside ${ } or { , }: an expansion, not literal text
-            }
-            if (lit ~ /[^-]/) c = "_"
-        }
-        out = out c
-    }
-    return out
-}
-{
-    gsub(/[;&|<>]/, " & ")      # a separator or redirection ends a word
-    line = ""
-    for (i = 1; i <= NF; i++) line = line (i > 1 ? " " : "") neutral($i)
-    print line
-}' <<<"$CMD_STRUCT")
+# v1.69.0: built by FLOOR_PY (above), the same rule as MCU-Watchlist's awk in
+# one pass. The awk was quadratic (109 s on a word of 20,000 hyphens; a hook
+# that runs past Claude Code's timeout lets the command through) and, in a
+# UTF-8 locale, crashed on a non-breaking space under macOS awk. If python
+# fails, the floor reads the plain command: more blocks, never fewer.
+CMD_FLOOR=$(printf '%s' "$CMD_STRUCT" | python3 -I -c "$FLOOR_PY" rm 2>/dev/null) || CMD_FLOOR="$CMD_STRUCT"
 if grep -qE '(^|[;&|[:space:]])rm[[:space:]]+.*(-[a-zA-Z]*[rR][a-zA-Z]*[fF]|-[a-zA-Z]*[fF][a-zA-Z]*[rR])' <<<"$CMD_FLOOR" \
    || grep -qE '(^|[;&|[:space:]])rm[[:space:]]+.*(--recursive[[:space:]]+.*--force|--force[[:space:]]+.*--recursive)' <<<"$CMD_STRUCT"; then
     block "recursive force delete (rm -rf / -fr / --recursive --force) — cannot be undone"
@@ -451,7 +453,7 @@ fi
 # Network down, parse failure, missing objects: blocked.
 # The "ask" decision is Claude Code's PreToolUse contract; this script is not
 # wired into other tools.
-if [ "$REMOTE_DELETE" = 1 ] || [ "$READER_DELETE" = 1 ]; then
+if [ "$REMOTE_DELETE" = 1 ] || [ "$READER_DELETE" != 0 ]; then
     read -r -d '' DELETE_CHECK_PY <<'PY' || true
 import json, os, re, shlex, subprocess
 
@@ -484,6 +486,22 @@ try:
 except ValueError:
     verdict("BLOCK could not parse the command")
 
+# A redirection and its target are not words of the command (v1.69.0
+# review: `2>&1` became branch names "2" and "1" that did not exist).
+REDIRS = {">", ">>", "<", ">&", "<&", "&>", "&>>", ">|", "<>", "<<", "<<<", "<<-"}
+clean, skip = [], False
+for tok in tokens:
+    if skip:
+        skip = False
+        continue
+    if tok in REDIRS:
+        if clean and clean[-1].isdigit():
+            clean.pop()
+        skip = True
+        continue
+    clean.append(tok)
+tokens = clean
+
 segments, cur = [], []
 for tok in tokens:
     if tok in SEPARATORS:
@@ -493,8 +511,14 @@ for tok in tokens:
         cur.append(tok)
 segments.append(cur)
 
-if any(seg[:1] == ["cd"] for seg in segments):
-    verdict("BLOCK `cd` in the same command; run the delete from the repo itself")
+# The merged-branch check runs in the session's repo, so the delete must run
+# there too (v1.69.0 review: `{ cd X;`, `pushd X`, `builtin cd X`,
+# `GIT_DIR=X` and `export GIT_DIR` all moved the push elsewhere while the
+# check approved it).
+if {"cd", "pushd", "popd"} & set(tokens):
+    verdict("BLOCK `cd` / `pushd` in the same command; run the delete from the repo itself")
+if any(re.match(r"^GIT_(DIR|WORK_TREE|CONFIG\w*|NAMESPACE|COMMON_DIR|INDEX_FILE|OBJECT_DIRECTORY|ALTERNATE_OBJECT_DIRECTORIES)=", t) for t in tokens):
+    verdict("BLOCK a GIT_* variable that moves git to another repo or config; run the delete plainly")
 
 deletes = []
 for words in segments:
@@ -537,10 +561,11 @@ for words in segments:
     names = [b[len("refs/heads/"):] if b.startswith("refs/heads/") else b for b in positional[1:]]
     deletes.append((positional[0], names))
 
-if not deletes and os.environ.get("SAFETY_READER_DELETE") == "1":
-    # The per-command reader saw a remote delete that this parser cannot
-    # place: disagree -> block.
-    verdict("BLOCK could not identify the branches being deleted; run it as a plain `git push <remote> --delete <branch>`")
+if int(os.environ.get("SAFETY_READER_DELETE") or 0) > len(deletes):
+    # The per-command reader saw more remote deletes than this parser can
+    # place (v1.69.0 review: an ask named one branch while a second delete,
+    # spelled --{d..d}elete, went through with it). Disagree -> block.
+    verdict("BLOCK could not identify every branch being deleted; run each as a plain `git push <remote> --delete <branch>`")
 
 if not deletes:
     # The prefilter matched, but no segment is a `git push` delete: e.g. a
@@ -560,7 +585,9 @@ for _, names in deletes:
 asked, bases = [], []
 try:
     for remote, names in deletes:
-        sym = git("ls-remote", "--symref", remote, "HEAD")
+        # A push goes to remote.<name>.pushurl when one is set: check that.
+        target = git("config", "--get", f"remote.{remote}.pushurl").stdout.strip() or remote
+        sym = git("ls-remote", "--symref", target, "HEAD")
         default = ""
         for line in sym.stdout.splitlines():
             if line.startswith("ref: refs/heads/") and line.endswith("\tHEAD"):
@@ -570,7 +597,7 @@ try:
         if default in names:
             verdict(f"BLOCK {default} is {remote}'s default branch")
         heads = {}
-        for line in git("ls-remote", "--heads", remote).stdout.splitlines():
+        for line in git("ls-remote", "--heads", target).stdout.splitlines():
             sha, _, ref = line.partition("\t")
             heads[ref[len("refs/heads/"):]] = sha
         base = heads.get(default, "")

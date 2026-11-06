@@ -75,6 +75,7 @@ allowing the filenames necessarily allows these, so they are an accepted limit
 (MCU-Watchlist owner, 2026-11-03; kept as is in agentskel v1.69.0).
 The environment's own delete-safety check is a second layer underneath.
 """
+import fnmatch
 import os
 import re
 import signal
@@ -93,7 +94,8 @@ MESSAGE_FLAGS = {"-m", "--message"}
 GH_MESSAGE_FLAGS = {"-t", "--title", "-b", "--body"}
 GIT_LOG_PATTERN_FLAGS = {"-S", "-G", "--grep"}
 GIT_OPTS_WITH_VALUE = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--exec-path",
-                       "--config-env", "--super-prefix", "--list-cmds", "--attr-source"}
+                       "--config-env", "--super-prefix", "--list-cmds", "--attr-source",
+                       "--shallow-file"}
 # What bash itself treats as special: ASCII blanks only (a non-breaking space
 # is an ordinary character to bash, but \s in Python matches it).
 SHELL_CHARS = re.compile(r"[ \t\n\r;&|()<>`$\\'\"\x00{!]")
@@ -104,8 +106,10 @@ class TooComplex(Exception):
 
 
 class Reader:
-    def __init__(self, text, depth=0):
+    def __init__(self, text, depth=0, zsh=False):
         self.s = text
+        self.zsh = zsh          # zsh closes ${ ... } at the first } (quotes do not protect it)
+        self.heredocs = []      # (delimiter, strip_tabs) waiting for the end of the line
         self.i = 0
         self.commands = []      # every simple command found: a list of words
         self.nesting = []       # per command: its $( ) / ( ) / backtick depth
@@ -123,6 +127,73 @@ class Reader:
             raise TooComplex("nested too deep")
         self.parse(stop)
         self.depth -= 1
+
+    def backtick(self):
+        """At a backtick: bash takes the text up to the next UNESCAPED
+        backtick (quotes do not protect a backtick), removes one backslash
+        before \\, ` and $, and reads the result as commands (review: the
+        old reading honoured quotes inside and kept `\\git` as a word)."""
+        s = self.s
+        j = self.i + 1
+        while j < len(s) and s[j] != "`":
+            j += 2 if s[j] == "\\" else 1
+        body = re.sub(r"\\([\\`$])", r"\1", s[self.i + 1:min(j, len(s))])
+        if j >= len(s):
+            self.unterminated = True
+        self.i = min(j + 1, len(s))
+        if self.depth + 1 > MAX_DEPTH:
+            raise TooComplex("nested too deep")
+        inner = Reader(body, self.depth + 1, self.zsh)
+        inner.parse()
+        self.commands += inner.commands
+        self.nesting += inner.nesting
+        self.strings += inner.strings
+        self.unterminated = self.unterminated or inner.unterminated
+
+    def arithmetic_command(self):
+        """At `((`: arithmetic up to the matching `))`, reading $( ), ${ }
+        and backticks inside (review: read only as two subshells, a `#`
+        inside became a comment that hid the rest of the line)."""
+        self.i += 2
+        level = 2
+        s = self.s
+        while self.i < len(s) and level:
+            c = s[self.i]
+            if c == "$" and self.peek(1) == "(" and self.peek(2) != "(":
+                self.i += 2
+                self.nested(")")
+                continue
+            if c == "$" and self.peek(1) == "{":
+                self.parameter()
+                continue
+            if c == "`":
+                self.backtick()
+                continue
+            if c == "(":
+                level += 1
+            elif c == ")":
+                level -= 1
+            self.i += 1
+        if level:
+            self.unterminated = True
+
+    def heredoc_bodies(self):
+        """After the line that opened them: skip each pending heredoc body
+        and keep its text to read again as commands of its own (review: read
+        as shell text of the outer command, a `${` or `'` in a body swallowed
+        the real lines after it)."""
+        s = self.s
+        for delim, strip_tabs in self.heredocs:
+            body = []
+            while self.i < len(s):
+                end = s.find("\n", self.i)
+                line = s[self.i:] if end < 0 else s[self.i:end]
+                self.i = len(s) if end < 0 else end + 1
+                if (line.lstrip("\t") if strip_tabs else line) == delim:
+                    break
+                body.append(line)
+            self.strings.append("\n".join(body))
+        self.heredocs = []
 
     def substitution_or_arithmetic(self):
         """At `$((`: bash reads arithmetic, unless that fails, when it reads a
@@ -151,8 +222,7 @@ class Reader:
                 self.parameter()
                 continue
             if c == "`":
-                self.i += 1
-                self.nested("`")
+                self.backtick()
                 continue
             if c == "(":
                 level += 1
@@ -172,8 +242,7 @@ class Reader:
                 self.nested(")")
                 continue
             if c == "`":
-                self.i += 1
-                self.nested("`")
+                self.backtick()
                 continue
             if c == "[":
                 level += 1
@@ -215,10 +284,10 @@ class Reader:
             if c == "\\":
                 self.i += 2
                 continue
-            if c == "'":
+            if c == "'" and not self.zsh:
                 self.single_quoted()
                 continue
-            if c == '"':
+            if c == '"' and not self.zsh:
                 self.double_quoted()
                 continue
             if c == "$" and self.peek(1) == "(":
@@ -233,8 +302,7 @@ class Reader:
                 level += 1
                 continue
             if c == "`":
-                self.i += 1
-                self.nested("`")
+                self.backtick()
                 continue
             if c in "<>" and self.peek(1) == "(":
                 self.i += 2
@@ -318,15 +386,28 @@ class Reader:
                 self.parameter()
                 out.append(PLACEHOLDER)
                 continue
+            if c == "$" and self.simple_expansion():
+                out.append(PLACEHOLDER)
+                continue
             if c == "`":
-                self.i += 1
-                self.nested("`")
+                self.backtick()
                 out.append(PLACEHOLDER)
                 continue
             out.append(c)
             self.i += 1
         self.unterminated = True
         return "".join(out)
+
+    def simple_expansion(self):
+        """At `$`: consume $NAME, $1 or a special parameter and say so. Its
+        value is unknown; a word built from it holds a PLACEHOLDER, and a
+        command is also checked as if every such value were empty (review:
+        `$x:main` is `:main`, `--ha${x}rd` is `--hard`)."""
+        m = re.match(r"\$([A-Za-z_][A-Za-z0-9_]*|[0-9@*#?!$-])", self.s[self.i:self.i + 256])
+        if not m:
+            return False
+        self.i += len(m.group(0))
+        return True
 
     def parse(self, stop=None):
         cmd = []
@@ -340,7 +421,11 @@ class Reader:
             if word is not None:
                 text = "".join(word)
                 if target:
-                    self.strings.append(text)
+                    if target in ("<<", "<<-"):
+                        # a heredoc: its body follows the end of this line
+                        self.heredocs.append((text, target == "<<-"))
+                    else:
+                        self.strings.append(text)
                     target = False
                 else:
                     if not cmd and text == "case":
@@ -378,12 +463,14 @@ class Reader:
                 self.i += len(stop)
                 end_command()
                 return
-            if c in " \t\r":
+            if c in " \t":            # \r is an ordinary character to bash (review)
                 end_word()
                 self.i += 1
             elif c == "\n":
                 end_command()
                 self.i += 1
+                if self.heredocs:
+                    self.heredoc_bodies()
             elif c == "#" and word is None:
                 end = s.find("\n", self.i)
                 if stop == "`":     # bash finds the closing backtick first
@@ -394,10 +481,6 @@ class Reader:
             elif c == "\\":
                 if nxt == "\n":
                     self.i += 2
-                elif nxt == "`" and stop == "`":
-                    self.i += 2                 # \` inside backticks nests
-                    self.nested("\\`")
-                    add(PLACEHOLDER)
                 else:
                     add(nxt)
                     self.i += 2
@@ -423,11 +506,12 @@ class Reader:
             elif c == "$" and nxt == "[":
                 self.old_arithmetic()      # $[ ... ]: one word (fourth review)
                 add(PLACEHOLDER)
+            elif c == "$" and self.simple_expansion():
+                add(PLACEHOLDER)
             elif c == "(" and word is not None and word[-1][-1:] in ("@", "!", "*", "+", "?"):
                 self.extglob(add)          # @(a|b) etc.: part of the word
             elif c == "`":
-                self.i += 1
-                self.nested("`")
+                self.backtick()
                 add(PLACEHOLDER)
             elif c in "<>" and nxt == "(":
                 self.i += 2
@@ -440,11 +524,20 @@ class Reader:
                 end_word()
                 m = re.match(r"&>>?|<<<|<<-?|<>|>>|>&|<&|>\||[<>]", s[self.i:self.i + 3])
                 self.i += len(m.group(0))
-                target = True
+                target = m.group(0) if m.group(0) in ("<<", "<<-") else True
             elif c in ";&|":
                 end_command()
                 while self.i < len(s) and s[self.i] in ";&|":
                     self.i += 1
+            elif c == "(" and nxt == "(" and word is None:
+                # `((` / `for ((`: arithmetic to bash; read it that way AND
+                # as two subshells (the older reading), keeping both.
+                end_command()
+                start, saved = self.i, self.unterminated
+                self.i += 1
+                self.nested(")")
+                self.i, self.unterminated = start, saved
+                self.arithmetic_command()
             elif c == "(":
                 end_command()
                 self.i += 1
@@ -465,6 +558,14 @@ def read(text, depth=0):
     r.parse()
     commands, strings = r.commands, r.strings
     top = [n == depth for n in r.nesting]
+    if "${" in text:
+        # zsh (the shell some agents run) closes ${ at the first } even
+        # inside quotes; read that way too and keep both readings (review).
+        z = Reader(text, depth, zsh=True)
+        z.parse()
+        commands = commands + z.commands
+        strings = strings + z.strings
+        top = top + [n == depth for n in z.nesting]
     if r.unterminated:
         # bash would refuse to run this; read it once more with the quotes
         # removed so flags inside the unclosed quote still count (fail safe).
@@ -476,16 +577,38 @@ def read(text, depth=0):
     return commands, strings, top
 
 
+def sequence(m):
+    """The items of {a..b} / {a..b..step} (numbers or single letters), or None."""
+    a, b, step = m.group(1), m.group(2), int(m.group(3) or 1) or 1
+    if re.fullmatch(r"-?\d+", a) and re.fullmatch(r"-?\d+", b):
+        lo, hi = int(a), int(b)
+        rng = range(lo, hi + 1, abs(step)) if lo <= hi else range(lo, hi - 1, -abs(step))
+        if len(rng) > BRACE_LIMIT:
+            raise TooComplex("brace sequence too large")
+        return [str(n) for n in rng]
+    if len(a) == 1 and len(b) == 1:
+        lo, hi = ord(a), ord(b)
+        rng = range(lo, hi + 1, abs(step)) if lo <= hi else range(lo, hi - 1, -abs(step))
+        return [chr(n) for n in rng]
+    return None
+
+
 def braces(word):
-    """Brace expansion, in order: {-r,-f} -> ['-r', '-f'], {r,}m -> ['rm', 'm']."""
+    """Brace expansion, in order: {-r,-f} -> ['-r', '-f'], {r,}m -> ['rm', 'm'],
+    and sequences: --{d..d}elete -> ['--delete'] (review, v1.69.0)."""
     words = [word]
     while True:
         changed, out = False, []
         for w in words:
             m = re.search(r"\{([^{}]*,[^{}]*)\}", w)
+            q = re.search(r"\{([^{}.]+)\.\.([^{}.]+)(?:\.\.(-?\d+))?\}", w)
+            items = sequence(q) if q else None
             if m:
                 changed = True
                 out.extend(w[:m.start()] + part + w[m.end():] for part in m.group(1).split(","))
+            elif items is not None:
+                changed = True
+                out.extend(w[:q.start()] + part + w[q.end():] for part in items)
             else:
                 out.append(w)
             if len(out) > BRACE_LIMIT:
@@ -506,6 +629,21 @@ def expand(args):
 
 def name(word):
     return os.path.basename(word)
+
+
+GLOB_CHARS = re.compile(r"[*?\[]")
+
+
+def is_cmd(word, target):
+    """Is `word`, as a command word, the program `target`? Case-insensitive
+    (macOS file systems: `GIT reset` runs git), a glob (`gi[t]`, `r?`), zsh's
+    `=git`, and an empty expansion glued on (`${x}git`) all count (review)."""
+    b = os.path.basename(word.replace(PLACEHOLDER, "")).lower()
+    if b.startswith("="):
+        b = b[1:]
+    if b == target:
+        return True
+    return bool(GLOB_CHARS.search(b)) and fnmatch.fnmatchcase(target, b)
 
 
 def command_name(cmd):
@@ -617,7 +755,7 @@ def exempt_words(cmd, definitions):
     k = command_name(cmd)
     if k >= len(cmd):
         return exempt
-    prog = name(cmd[k])
+    prog = name(cmd[k]).lower()
     if prog in ("grep", "egrep", "fgrep", "zgrep"):
         return pattern_word(cmd, k + 1, GREP_VALUE_OPTS)
     if prog == "rg":
@@ -700,22 +838,26 @@ def letters(arg, short_values=""):
 
 
 PUSH_VALUES = {"push-option", "repo", "receive-pack", "exec"}
+TRUE_VALUES = {"", "1", "true", "yes", "on"}
+FALSE_VALUES = {"0", "false", "no", "off"}
 
 
 def git_push(args):
-    """A reason to block, "DELETE" for a remote branch delete, or None."""
+    """A reason to block, "DELETE" for a remote branch delete, or None.
+    Long options count from a 1-letter prefix: git accepts any unique prefix
+    (`--m` is --mirror), and an ambiguous one is refused by git anyway."""
     opts, pos, rest = split_args(args, PUSH_VALUES, "o")
     refs = pos + rest
     delete = False
     for a in opts:
-        if (is_long(a, "force", 3) or is_long(a, "force-with-lease", 3)
+        if (is_long(a, "force", 1) or is_long(a, "force-with-lease", 1)
                 or "f" in letters(a, "o")):
             return "force push (--force / -f / --force-with-lease) — overwrites remote history"
-        if is_long(a, "mirror", 2):
+        if is_long(a, "mirror", 1):
             return "git push --mirror — deletes remote branches that are not local"
-        if is_long(a, "prune", 3):
+        if is_long(a, "prune", 2):
             return "git push --prune — deletes remote branches that are not local"
-        if is_long(a, "delete", 2) or "d" in letters(a, "o"):
+        if is_long(a, "delete", 1) or "d" in letters(a, "o"):
             delete = True
     for r in refs:
         if r.startswith("+") and not r.startswith("+:"):
@@ -726,16 +868,32 @@ def git_push(args):
 
 
 def git_reset(args):
-    if any(is_long(a, "hard", 2) for a in args):
+    if any(is_long(a, "hard", 1) for a in args):
         return "hard reset (git reset --hard) — discards uncommitted work"
     return None
 
 
-def git_checkout(args):
+CHECKOUT_PATH_ONLY = ("ours", "theirs", "conflict", "patch", "pathspec-from-file")
+
+
+def looks_like_path(p, cwd):
+    """A checkout argument that is a path, not a branch: . .. ./x ../x :/x
+    :(magic)x, a glob, or a file or folder that exists in the session folder."""
+    if p in (".", "..", "*") or p.startswith(("./", "../", ":/", ":(")) or GLOB_CHARS.search(p):
+        return True
+    return bool(p) and bool(cwd) and os.path.lexists(os.path.join(cwd, p))
+
+
+def git_checkout(args, cwd=""):
     opts, pos, rest = split_args(args, {"orphan"}, "bB")
-    if any(is_long(a, "force", 3) or "f" in letters(a, "bB") for a in opts):
+    if any(is_long(a, "force", 1) or "f" in letters(a, "bB") for a in opts):
         return "git checkout --force / -f — discards uncommitted changes"
-    if rest or "." in pos or len(pos) >= 2 or any(is_long(a, "pathspec-from-file", 5) for a in opts):
+    path_mode = any(any(is_long(a, o, 2) for o in CHECKOUT_PATH_ONLY) for a in opts) or any(
+        "p" in letters(a, "bB") for a in opts)
+    creates = any(a in ("-b", "-B") or is_long(a, "orphan", 2) or letters(a, "bB")[-1:] in (["b"], ["B"])
+                  for a in opts)
+    if (rest or len(pos) >= 2 or (pos and path_mode)
+            or (len(pos) == 1 and not creates and looks_like_path(pos[0], cwd))):
         return "git checkout <paths> — overwrites uncommitted changes in those files"
     return None
 
@@ -743,22 +901,33 @@ def git_checkout(args):
 def git_switch(args):
     opts, _, _ = split_args(args, {"create", "force-create", "orphan"}, "cC")
     for a in opts:
-        if is_long(a, "force", 3) and not is_long(a, "force-create", 7) or "f" in letters(a, "cC"):
+        if is_long(a, "force", 1) and not is_long(a, "force-create", 7) or "f" in letters(a, "cC"):
             return "git switch --force / -f — discards uncommitted changes"
-        if is_long(a, "discard-changes", 4):
+        if is_long(a, "discard-changes", 2):
             return "git switch --discard-changes — discards uncommitted changes"
     return None
 
 
+def git_restore(args):
+    """Any restore that touches the working tree. `--staged` alone only
+    unstages (what `git status` suggests), so it is allowed."""
+    opts, _, _ = split_args(args, {"source"}, "s")
+    staged = any(is_long(a, "staged", 2) or "S" in letters(a, "s") for a in opts)
+    worktree = any(is_long(a, "worktree", 1) or "W" in letters(a, "s") for a in opts)
+    if staged and not worktree:
+        return None
+    return "git restore — discards uncommitted changes (modern 'checkout -- <file>')"
+
+
 def git_clean(args):
     opts, _, _ = split_args(args, {"exclude"}, "e")
-    if any(is_long(a, "force", 2) or "f" in letters(a, "e") for a in opts):
+    if any(is_long(a, "force", 1) or "f" in letters(a, "e") for a in opts):
         return "git clean force (-f / --force) — removes untracked files, cannot be undone"
     return None
 
 
 def git_worktree(args):
-    if args[:1] == ["remove"] and any(is_long(a, "force", 2) or "f" in letters(a) for a in args[1:]):
+    if args[:1] == ["remove"] and any(is_long(a, "force", 1) or "f" in letters(a) for a in args[1:]):
         return "git worktree remove force (--force / -f) — discards uncommitted worktree changes"
     return None
 
@@ -769,25 +938,198 @@ def git_stash(args):
     return None
 
 
-GIT_RULES = {"push": git_push, "reset": git_reset, "checkout": git_checkout, "switch": git_switch,
-             "clean": git_clean, "worktree": git_worktree, "stash": git_stash}
+def git_branch_move(args):
+    opts, _, _ = split_args(args)
+    forced = any(is_long(a, "force", 1) or "f" in letters(a) for a in opts)
+    for a in opts:
+        ls = letters(a)
+        if "M" in ls or "C" in ls:
+            return "git branch -M / -C — overwrites an existing branch"
+        if forced and ("m" in ls or "c" in ls or is_long(a, "move", 1) or is_long(a, "copy", 1)):
+            return "git branch --move/--copy --force — overwrites an existing branch"
+    return None
 
 
-def git_destructive(cmd, i):
+def git_update_ref(args):
+    if any(a == "-d" or is_long(a, "delete", 1) for a in args):
+        return "git update-ref -d — deletes a ref (a branch, the stash) without any check"
+    return None
+
+
+def git_read_tree(args):
+    if any(is_long(a, "reset", 1) for a in args) and any(a == "-u" or "u" in letters(a) for a in args):
+        return "git read-tree --reset -u — overwrites the working tree (like reset --hard)"
+    return None
+
+
+def git_checkout_index(args):
+    if any(is_long(a, "force", 1) or "f" in letters(a) for a in args):
+        return "git checkout-index --force — overwrites files in the working tree"
+    return None
+
+
+def git_send_pack(args):
+    if any(is_long(a, "force", 1) or "f" in letters(a) for a in args) or any(
+            a.startswith("+") for a in args if not a.startswith("-")):
+        return "git send-pack --force — overwrites remote history"
+    return None
+
+
+def git_reflog(args):
+    if args[:1] in (["delete"], ["expire"]):
+        return "git reflog delete/expire — removes the history that recovers lost work"
+    return None
+
+
+def git_submodule(args):
+    if args[:1] in (["update"], ["deinit"]) and any(is_long(a, "force", 1) or "f" in letters(a) for a in args[1:]):
+        return "git submodule update/deinit --force — discards changes in submodules"
+    return None
+
+
+GIT_RULES = {"push": git_push, "reset": git_reset, "switch": git_switch, "restore": git_restore,
+             "clean": git_clean, "worktree": git_worktree, "stash": git_stash, "branch": git_branch_move,
+             "update-ref": git_update_ref, "read-tree": git_read_tree,
+             "checkout-index": git_checkout_index, "send-pack": git_send_pack,
+             "reflog": git_reflog, "submodule": git_submodule}
+
+
+def config_danger(key, value):
+    """A config setting that makes a plain git command destructive."""
+    key, value = key.strip().lower(), value.strip().lower()
+    if re.fullmatch(r"remote\..+\.mirror", key) and value not in FALSE_VALUES:
+        return f"git config {key}={value} — a plain push then mirrors (deletes remote branches)"
+    if re.fullmatch(r"remote\..+\.push", key) and value.startswith("+"):
+        return f"git config {key}={value} — a plain push then force-pushes"
+    if key == "clean.requireforce" and value in FALSE_VALUES:
+        return "git config clean.requireForce=false — git clean then deletes without -f"
+    return None
+
+
+def git_globals(cmd, i, j):
+    """(key, value) config pairs set for this git invocation: -c k=v,
+    --config-env=k=ENV (value unknown), and GIT_CONFIG_KEY_n / VALUE_n
+    environment words before git."""
+    pairs = []
+    k = i + 1
+    while k < j:
+        w = cmd[k]
+        if w == "-c" and k + 1 < j:
+            key, _, val = cmd[k + 1].partition("=")
+            pairs.append((key, val))
+            k += 2
+            continue
+        if w.startswith("-c") and len(w) > 2:
+            key, _, val = w[2:].partition("=")
+            pairs.append((key, val))
+        if w.startswith("--config-env"):
+            spec = w.split("=", 1)[1] if "=" in w else (cmd[k + 1] if k + 1 < j else "")
+            key = spec.rsplit("=", 1)[0]
+            pairs.append((key, "\x01"))         # value from the environment: unknown
+        k += 1
+    env = {w.split("=", 1)[0]: w.split("=", 1)[1] for w in cmd[:i] if re.match(r"^[A-Z_][A-Z0-9_]*=", w)}
+    for name_, key in env.items():
+        m = re.fullmatch(r"GIT_CONFIG_KEY_(\d+)", name_)
+        if m:
+            pairs.append((key, env.get(f"GIT_CONFIG_VALUE_{m.group(1)}", "\x01")))
+    params = env.get("GIT_CONFIG_PARAMETERS", "")
+    for key, val in re.findall(r"'?([A-Za-z0-9._-]+\.[A-Za-z0-9._-]+)=([^']*)'?", params):
+        pairs.append((key, val))
+    return pairs
+
+
+def git_destructive(cmd, i, aliases, cwd="", depth=0):
+    """A reason to block, "DELETE", or None, for the git at cmd[i]."""
     j = git_subcommand(cmd, i)
+    pairs = git_globals(cmd, i, min(j, len(cmd)))
+    local_aliases = dict(aliases)
+    for key, val in pairs:
+        found = config_danger(key, val) if val != "\x01" else None
+        if found:
+            return found
+        if key.lower().startswith("alias."):
+            local_aliases[key[6:]] = val
     if j >= len(cmd):
         return None
-    if cmd[j] == "restore":
-        return "git restore — discards uncommitted changes (modern 'checkout -- <file>')"
-    rule = GIT_RULES.get(cmd[j])
-    return rule(cmd[j + 1:]) if rule else None
+    sub, args = cmd[j], cmd[j + 1:]
+    if sub in local_aliases and depth < 3:
+        val = local_aliases[sub]
+        if val == "\x01" or val.startswith("!"):
+            return "a git alias defined in this command that runs a shell or an unseen value — run the command itself"
+        expanded = cmd[:j] + val.split() + args
+        if git_branch_force_delete(expanded, i):
+            return "force branch delete through a git alias — discards unmerged work"
+        return git_destructive(expanded, i, {}, cwd, depth + 1)
+    if sub == "config":
+        return git_config(args)
+    if sub == "checkout":
+        return git_checkout(args, cwd)
+    rule = GIT_RULES.get(sub)
+    return rule(args) if rule else None
+
+
+def git_config(args):
+    """`git config` that stores a destructive alias or setting, used by a
+    later command this hook will not see as such."""
+    opts, pos, _ = split_args(args, {"file", "blob", "type", "default", "comment"}, "f")
+    pos = [p for p in pos if p not in ("set", "--add")]
+    if len(pos) >= 2:
+        key, value = pos[0], pos[1]
+    elif len(pos) == 1 and "=" in pos[0]:
+        key, value = pos[0].split("=", 1)
+    else:
+        return None
+    found = config_danger(key, value)
+    if found:
+        return found
+    if key.lower().startswith("alias."):
+        if value.startswith("!"):
+            return f"git config {key} — stores a shell alias; run the command itself"
+        inner = ["git"] + value.split()
+        found = git_destructive(inner, 0, {}, "", 3)
+        if found or git_branch_force_delete(inner, 0):
+            return f"git config {key} — stores an alias for a destructive git command"
+    return None
+
+
+REMOVERS = {"rm", "unlink", "shred", "srm"}
+SHELLS = {"sh", "bash", "zsh", "dash", "ksh", "fish", "busybox"}
+
+
+def runs_remover(words, depth=0):
+    """Do `words` (what -exec / fd -x runs) start a remover, after any
+    wrappers? For a shell (`sh -c '...'`), does its script run one?"""
+    k = 0
+    while k < len(words) and (name(words[k]) in WRAPPERS or re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", words[k])):
+        k += 1
+    if k >= len(words):
+        return False
+    if any(is_cmd(words[k], t) for t in REMOVERS):
+        return True
+    if any(is_cmd(words[k], t) for t in SHELLS) and depth < 3:
+        script = next((words[n + 1] for n in range(k + 1, len(words) - 1) if words[n] == "-c"), None)
+        if script is None:
+            return True             # a shell reading commands from elsewhere
+        inner = Reader(script.replace(PLACEHOLDER, " "))
+        inner.parse()
+        return any(runs_remover(c, depth + 1) for c in inner.commands)
+    return False
 
 
 def find_destructive(args):
     for k, a in enumerate(args):
         if a == "-delete":
             return True
-        if a in ("-exec", "-execdir", "-ok", "-okdir") and k + 1 < len(args) and name(args[k + 1]) == "rm":
+        if a in ("-exec", "-execdir", "-ok", "-okdir") and runs_remover(args[k + 1:]):
+            return True
+    return False
+
+
+def fd_destructive(args):
+    for k, a in enumerate(args):
+        if a in ("-x", "-X", "--exec", "--exec-batch") and runs_remover(args[k + 1:]):
+            return True
+        if (a.startswith("--exec=") or a.startswith("--exec-batch=")) and runs_remover([a.split("=", 1)[1]]):
             return True
     return False
 
@@ -796,19 +1138,41 @@ GH_API_LONG_VALUE_OPTS = {"--method", "--raw-field", "--field", "--header", "--i
                           "--template", "--cache", "--hostname", "--preview"}
 GH_API_SHORT_VALUE = "XfFHqtp"    # short flags that take a value
 GH_SHORT_TO_LONG = {"X": "-X", "f": "-f", "F": "-F", "H": "-H", "q": "-q", "t": "-t", "p": "-p"}
-WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+READ_METHODS = {"GET", "HEAD"}
 GRAPHQL_VAR_DECL = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)\s*:")
 # A $ reference as bash reads it: a name, one digit, or one special parameter.
 DOLLAR_REF = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*|[0-9@*#?!$-])")
+GH_DELETE_ACTIONS = {"delete", "delete-asset", "remove"}
+GH_HARMLESS_GROUPS = {"alias", "extension", "label"}
 
 
-def gh_api(cmd, i, expansions):
-    """A reason to block a `gh api` call, or None. `expansions`: the $
-    references bash expands in the raw command (shell_expansions)."""
-    if i + 1 >= len(cmd) or cmd[i + 1] != "api":
+def gh_subcommand(cmd, i):
+    """Index of gh's first non-flag word (gh's own flags come first)."""
+    k = i + 1
+    while k < len(cmd) and cmd[k].startswith("-"):
+        k += 1
+    return k
+
+
+def gh_check(cmd, i, raw):
+    """A reason to block a gh command, or None. `raw`: (expansions, globs)
+    of the raw command text."""
+    k = gh_subcommand(cmd, i)
+    if k >= len(cmd):
         return None
+    group = cmd[k]
+    if group != "api":
+        rest = [w for w in cmd[k + 1:] if not w.startswith("-")]
+        if rest and rest[0] in GH_DELETE_ACTIONS and group not in GH_HARMLESS_GROUPS:
+            return f"gh {group} {rest[0]} — deletes on GitHub"
+        return None
+    return gh_api(cmd, k, raw)
+
+
+def gh_api(cmd, a_idx, raw):
+    expansions, globs = raw
     method, fields, has_input, endpoint = None, [], False, None
-    k = i + 2
+    k = a_idx + 1
     while k < len(cmd):
         a = cmd[k]
         if a in GH_API_LONG_VALUE_OPTS:
@@ -819,14 +1183,15 @@ def gh_api(cmd, i, expansions):
             opt, val, k = a, None, k + 1
         elif a.startswith("-") and len(a) > 1:
             # gh's flag parser (pflag) bundles short flags: -iX DELETE is
-            # --include plus -X DELETE, and -iXDELETE the same (PR review:
-            # read as one unknown flag, a repo DELETE passed as a GET).
+            # --include plus -X DELETE; -X=DELETE is -X DELETE.
             opt, val, step = a, None, 1
             for pos_, ch in enumerate(a[1:], start=1):
                 if ch in GH_API_SHORT_VALUE:
                     opt = GH_SHORT_TO_LONG[ch]
                     if pos_ + 1 < len(a):
                         val = a[pos_ + 1:]
+                        if val.startswith("="):
+                            val = val[1:]
                     else:
                         val, step = (cmd[k + 1] if k + 1 < len(cmd) else ""), 2
                     break
@@ -837,14 +1202,14 @@ def gh_api(cmd, i, expansions):
             k += 1
             continue
         if opt in ("-X", "--method"):
-            method = (val or "").strip().upper()
+            method = (val or "").strip()
         elif opt in ("-f", "--raw-field"):
             fields.append(("raw", val or ""))
         elif opt in ("-F", "--field"):
             fields.append(("typed", val or ""))
         elif opt == "--input":
             has_input = True
-    if endpoint is not None and endpoint.lstrip("/") == "graphql":
+    if endpoint is not None and endpoint.lstrip("/").lower() == "graphql":
         if has_input:
             return "gh api graphql --input — the hook cannot see the query (it may be a mutation)"
         queries = [(kind, v.split("=", 1)[1]) for kind, v in fields if v.split("=", 1)[0] == "query" and "=" in v]
@@ -854,32 +1219,34 @@ def gh_api(cmd, i, expansions):
             if kind == "typed" and q.startswith("@"):
                 return "gh api graphql -F query=@file — the hook cannot see the query (it may be a mutation)"
             if PLACEHOLDER in q:
-                return "gh api graphql query built by a command substitution — the hook cannot see it"
+                return "gh api graphql query built by a shell expansion — the hook cannot see the final query"
             if re.search(r"\bmutation\b", q):
                 return "gh api graphql mutation — writes to GitHub"
-            # After quote removal, a GraphQL variable ($owner, in single
-            # quotes) and a shell expansion bash fills in ("$M", "$1") look
-            # the same. Block when a $ reference in the query is one bash
-            # expands somewhere in the raw command, or is not a declared
-            # GraphQL variable. A shell variable elsewhere (-F o="$OWNER") is
-            # fine.
+            if globs:
+                return "gh api graphql with an unquoted glob in the command — the shell may rewrite the query"
+            # A GraphQL $variable in single quotes is literal; one bash would
+            # expand, or one the query does not declare, is not.
             refs = set(DOLLAR_REF.findall(q))
-            declared = set(GRAPHQL_VAR_DECL.findall(q))
-            if refs & expansions or refs - declared:
+            if refs & expansions or refs - set(GRAPHQL_VAR_DECL.findall(q)):
                 return "gh api graphql query with a $ the shell may expand — the hook cannot see the final query"
         return None
-    effective = method or ("POST" if fields or has_input else "GET")
-    if effective in WRITE_METHODS:
-        return (f"gh api {effective} — can delete repos, remove branch protection or post content "
-                "(-f/-F/--field/--input imply POST without -X)")
+    if method is not None:
+        if method.upper() not in READ_METHODS:
+            # Anything but a literal GET / HEAD: a write, or a method the
+            # hook cannot see ("$M", $(...)). Fail closed (review).
+            return (f"gh api -X {method.replace(PLACEHOLDER, '<expansion>') or '?'} — only a literal GET or "
+                    "HEAD is a read; this can delete repos or post content")
+        return None
+    if fields or has_input:
+        return "gh api POST — -f/-F/--field/--raw-field/--input imply POST without -X"
     return None
 
 
-def shell_expansions(text):
-    """The $ references bash expands in `text` (outside single quotes, not
-    backslash-escaped): names, digits and special parameters. `${x}` counts
-    as `x`."""
-    found = set()
+def shell_scan(text):
+    """(expansions, globs) of the raw command: the $ references bash expands
+    (outside single quotes, not escaped) and whether an unquoted glob
+    character (* ? [) appears."""
+    found, globs = set(), False
     single = double = False
     i = 0
     while i < len(text):
@@ -898,41 +1265,96 @@ def shell_expansions(text):
             m = re.match(r"\{?([A-Za-z_][A-Za-z0-9_]*|[0-9@*#?!$-])", text[i + 1:i + 200])
             if m:
                 found.add(m.group(1))
+        elif c in "*?[" and not double:
+            globs = True
         i += 1
-    return found
+    return found, globs
 
 
-def check_command(cmd, top=False, expansions=frozenset()):
-    """A "BLOCK <reason>" for `cmd`, "DELETE" for a top-level remote branch
-    delete (the hook's own verdict decides it), or None."""
-    words = expand(cmd)     # {rm,-rf,y} and {r,}m are commands too
-    rms = [i for i, w in enumerate(words) if name(w) == "rm"]
+def collect_aliases(commands):
+    """git aliases this text defines: -c alias.x=v / git config alias.x v
+    (and alias.x=v) anywhere in it; their invocations are checked as git."""
+    aliases = {}
+    for cmd in commands:
+        for k, w in enumerate(cmd):
+            m = re.match(r"^(?:-c)?alias\.([^=\s]+)=(.*)\Z", w, re.S)
+            if m:
+                aliases[m.group(1)] = m.group(2)
+            elif re.match(r"^alias\.[^=\s]+\Z", w) and k + 1 < len(cmd) and "config" in cmd[:k]:
+                aliases[w[6:]] = cmd[k + 1]
+    return aliases
+
+
+def git_names(words):
+    """Indexes of words that run git: `git`, a path to it, a glob that
+    matches it, or a dashed builtin (`git-reset`, `$(git --exec-path)/git-reset`)."""
+    return [k for k, w in enumerate(words) if is_cmd(w, "git")]
+
+
+def dashed(words):
+    """Rewrite a dashed builtin word (git-reset) to `git reset`."""
+    out = []
+    for w in words:
+        b = os.path.basename(w.replace(PLACEHOLDER, "")).lower()
+        m = re.fullmatch(r"git-([a-z][a-z-]*)", b)
+        if m and m.group(1) not in ("lfs", "credential", "upload-pack", "receive-pack", "shell"):
+            out += ["git", m.group(1)]
+        else:
+            out.append(w)
+    return out
+
+
+def check_words(words, top, raw, aliases, cwd):
+    rms = [i for i, w in enumerate(words) if is_cmd(w, "rm")]
     if len(rms) > MAX_RM_WORDS:
         raise TooComplex("too many rm words")
     for i in rms:           # every rm: `env -u rm -- rm -rf y` runs the second
         if rm_forced_recursive(words[i + 1:]):
             return "BLOCK recursive force delete (rm with recursive + force flags) — cannot be undone"
     delete = False
+    for i in git_names(words):
+        if git_branch_force_delete(words, i):
+            return "BLOCK force branch delete (git branch delete + force, any spelling) — discards unmerged work"
+        found = git_destructive(words, i, aliases, cwd)
+        if found == "DELETE":
+            if not top:
+                return ("BLOCK-REMOTE remote branch delete inside $( ), backticks, ( ), bash -c, eval or"
+                        " similar — nothing can ask about a command it cannot see; run it as a plain command")
+            delete = True
+        elif found:
+            return "BLOCK " + found
     for i, w in enumerate(words):
-        n = name(w)
-        if n == "git":
-            if git_branch_force_delete(words, i):
-                return "BLOCK force branch delete (git branch delete + force, any spelling) — discards unmerged work"
-            found = git_destructive(words, i)
-            if found == "DELETE":
-                if not top:
-                    return ("BLOCK remote branch delete inside $( ), backticks, ( ), bash -c, eval or similar"
-                            " — nothing can ask about a command it cannot see; run it as a plain command")
-                delete = True
-            elif found:
-                return "BLOCK " + found
-        elif n == "find" and find_destructive(words[i + 1:]):
+        if is_cmd(w, "find") and find_destructive(words[i + 1:]):
             return "BLOCK find with -delete / -exec rm — bulk delete"
-        elif n == "gh":
-            found = gh_api(words, i, expansions)
+        if (is_cmd(w, "fd") or is_cmd(w, "fdfind")) and fd_destructive(words[i + 1:]):
+            return "BLOCK fd --exec rm — bulk delete"
+        if is_cmd(w, "gh"):
+            found = gh_check(words, i, raw)
             if found:
                 return "BLOCK " + found
     return "DELETE" if delete else None
+
+
+def check_command(cmd, top=False, raw=(frozenset(), False), aliases=None, cwd=""):
+    """A "BLOCK <reason>" / "BLOCK-REMOTE <reason>" for `cmd`, "DELETE" for
+    a top-level remote branch delete (the hook's own verdict decides it), or
+    None. The command is checked as written AND as if every expansion whose
+    value is unknown were empty (bash drops an empty unquoted word, and glues
+    an empty one into its neighbours: `$x:main` is `:main`)."""
+    aliases = aliases or {}
+    words = dashed(expand(cmd))     # {rm,-rf,y} and {r,}m are commands too
+    variants = [words]
+    empty = [w.replace(PLACEHOLDER, "") for w in words]
+    empty = [w for w in empty if w != ""]
+    if empty != words:
+        variants.append(dashed(expand(empty)))
+    result = None
+    for v in variants:
+        found = check_words(v, top, raw, aliases, cwd)
+        if found and found != "DELETE":
+            return found
+        result = result or found
+    return result
 
 
 def readings(w):
@@ -952,17 +1374,43 @@ def readings(w):
     return out
 
 
+SESSION_CWD = ""            # from the hook (SAFETY_CWD): where relative paths point
+_PERSISTED = None
+
+
+def persisted_aliases():
+    """git aliases already stored in the session's repo config: `git x` may
+    be one (an alias stored by an earlier command runs here)."""
+    global _PERSISTED
+    if _PERSISTED is None:
+        _PERSISTED = {}
+        try:
+            import subprocess
+            out = subprocess.run(["git", "-C", SESSION_CWD or os.getcwd(), "config", "--get-regexp", r"^alias\."],
+                                 capture_output=True, text=True, timeout=2).stdout
+            for line in out.splitlines():
+                key, _, val = line.partition(" ")
+                _PERSISTED[key[6:]] = val
+        except Exception:
+            pass
+    return _PERSISTED
+
+
 def verdict(text, depth=0):
     commands, strings, top = read(text, depth)
-    expansions = shell_expansions(text)
-    delete = False
+    raw = shell_scan(text)
+    aliases = dict(persisted_aliases()) if any(is_cmd(w, "git") for c in commands for w in c) else {}
+    aliases.update(collect_aliases(commands))
+    deletes = 0
     for cmd, is_top in zip(commands, top):
-        found = check_command(cmd, top=is_top and depth == 0, expansions=expansions)
+        found = check_command(cmd, top=is_top and depth == 0, raw=raw, aliases=aliases, cwd=SESSION_CWD)
         if found == "DELETE":
-            delete = True
+            deletes += 1
         elif found:
             return found
-    definitions = bool(DEFINITION.search(text))
+    # A definition (function, alias, git alias) can make grep / git / gh
+    # mean anything: no search-pattern or message exemptions then.
+    definitions = bool(DEFINITION.search(text)) or bool(collect_aliases(commands)) or "alias." in text
     again = []
     for w in strings:
         again.extend(readings(w))
@@ -973,9 +1421,15 @@ def verdict(text, depth=0):
                 again.extend(readings(w))
             if name(w) in JOINERS and idx + 1 < len(cmd):
                 again.append(" ".join(cmd[idx + 1:]))
+        k = next((n for n, w in enumerate(cmd) if is_cmd(w, "gh")), None)
+        if k is not None and cmd[k + 1:k + 3] == ["alias", "set"] and len(cmd) > k + 4:
+            again.append("gh " + cmd[k + 4])      # gh alias set NAME 'api -X DELETE ...'
+    # zsh glob qualifiers run code: *(e:'cmd':) / /tmp(e:'cmd':)
+    for m in re.finditer(r"\(e([:'\"/|!+])(.*?)\1\)", text, re.S):
+        again.append(m.group(2))
     if again and depth >= REREAD_DEPTH:
         # Out of depth with text still to read: do not guess. The hook then
-        # blocks any rm or git branch delete in the command (fail closed).
+        # blocks any destructive word in the command (fail closed).
         raise TooComplex("quoted text nested too deep")
     for text_again in again:
         text_again = text_again.replace(PLACEHOLDER, " ")
@@ -984,14 +1438,14 @@ def verdict(text, depth=0):
         found = verdict(text_again, depth + 1)
         if not found.startswith("ALLOW"):
             return found
-    return "ALLOW DELETE" if delete else "ALLOW"
-
+    return f"ALLOW DELETE {deletes}" if deletes else "ALLOW"
 
 def on_timeout(signum, frame):
     raise TooComplex("took too long")
 
 
 if __name__ == "__main__":
+    SESSION_CWD = os.environ.get("SAFETY_CWD", "")
     data = sys.stdin.buffer.read().decode("utf-8", "replace")
     try:
         signal.signal(signal.SIGALRM, on_timeout)
