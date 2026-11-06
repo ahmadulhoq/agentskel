@@ -702,6 +702,15 @@ v1.69.0 replaces `pre-bash-safety.sh` with the version MCU-Watchlist developed o
 - Text that only *mentions* a dangerous command may be blocked when it reaches a command that could run it, e.g. `echo "rm -rf is dangerous"` or `gh pr create --body "…rm path -rf…"`. That is the deliberate fail-safe cost. To write such text, use `git commit -F - <<'EOF'` or `gh … --body-file - <<'EOF'`: heredoc bodies are skipped only for those shapes and for `cat > FILE` / `tee FILE > /dev/null`. `-m "$(cat <<'EOF' …)"` is checked in full.
 - `AGENTSKEL_UNSAFE=i-understand <one command>` is an explicit override (first word of a single command; never for remote deletes). The agent may use it **only after the user approved that exact command** (core-behavior rule "Never self-approve a safety-hook override").
 - Newly caught: `git restore`, `git clean --force`, `git worktree remove -f`, every spelling of a force branch delete, `git push origin +branch`, `/usr/bin/git …`, and `git --no-pager …` (or any other global option) in front of a destructive subcommand.
+- Every rule is now decided one command at a time, including inside `bash -c`, `eval`, `ssh`, `$( )` and backticks. So `git push origin main && rm -f tmp` is no longer read as a force push. Also newly blocked:
+  - a lone `git checkout <file>` when that file exists;
+  - `git checkout --ours` / `--theirs`;
+  - destructive git aliases (`git -c alias.x=reset x --hard`, `git config alias.x 'reset --hard'`) and plumbing (`update-ref -d`, `reflog expire`, …);
+  - `GIT reset --hard` (macOS file systems are case-insensitive);
+  - `gh repo` / `issue` / `release` / `label delete`;
+  - `gh api` with `-f` / `-F` / `--input`, which POST without `-X`;
+  - `gh api graphql` mutations.
+- A merged remote-branch delete still asks, but it is blocked when the same command changes which repo it runs in (`cd`, `pushd`, `GIT_DIR=…`).
 
 1. **Install the engine and helpers** (overwrite, don't merge), for each tool in Supported Tools:
 
@@ -724,7 +733,7 @@ v1.69.0 replaces `pre-bash-safety.sh` with the version MCU-Watchlist developed o
 
    Outside Claude Code, a merged remote-branch delete is **blocked** rather than asked: only Claude Code has a verified approval prompt that the agent cannot answer itself. Tell the user they run those deletes by hand.
 
-3. **Projects carrying MCU-Watchlist's local version** (`.claude/hooks/pre-bash-heredocs.py` already present, a `.claude/rules/repo-rules.md` rule saying not to overwrite the hook on sync). The skeleton's copy is a superset of that hook: its 387 cases pass unchanged, and it adds a macOS fix, the regex-gap fixes and the override guard. Overwrite all three files as in item 1. Then remove the "never overwrite on sync" carve-out from `repo-rules.md`, and the matching Intentional Deviations row in `.memory/CONFIG.md`. Run the project's own `.claude/hooks/tests/pre-bash-safety.test.sh` once against the overwritten hook; expect `0 failed`. After that the local test file can be deleted, since the skeleton's suite covers it.
+3. **Projects carrying MCU-Watchlist's local version** (`.claude/hooks/pre-bash-heredocs.py` already present, a `.claude/rules/repo-rules.md` rule saying not to overwrite the hook on sync). The skeleton's copy is a superset of that hook: its 387 cases pass unchanged, and it adds a macOS fix, the regex-gap fixes, per-command rules for every git / find / gh check, and the override guard. Overwrite all three files as in item 1. Then remove the "never overwrite on sync" carve-out from `repo-rules.md`, and the matching Intentional Deviations row in `.memory/CONFIG.md`. Run the project's own `.claude/hooks/tests/pre-bash-safety.test.sh` once against the overwritten hook; expect `0 failed`. After that the local test file can be deleted, since the skeleton's suite covers it.
 
 4. **Run the suites against the INSTALLED hooks.** A suite that only tests the skeleton's copy passes after a bad overwrite. These hooks fail closed or open silently, so do not mark this done on a visual diff:
    ```bash

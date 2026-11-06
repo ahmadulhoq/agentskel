@@ -8,16 +8,36 @@ find -delete / -exec rm, and gh api writes:
     git push   --force / -f (any cluster, e.g. -uf) / --force-with-lease /
                a +refspec / --mirror / --prune
     git reset --hard
-    git checkout -f / -- <paths> / . / <tree-ish> <paths>
+    git checkout -f / -- <paths> / . / <tree-ish> <paths> / --ours /
+               --theirs / --conflict / -p / one path (./ .. :/ a glob, or a
+               file that exists in the session folder)
     git switch -f / --discard-changes
-    git restore (any)
+    git restore (any, except --staged alone, which only unstages)
     git clean -f / --force
     git worktree remove -f / --force
     git stash drop / clear
-    find -delete / -exec|-execdir|-ok|-okdir rm
+    git branch -M / -C (and --move/--copy --force)
+    plumbing: update-ref -d, read-tree --reset -u, checkout-index -f,
+               send-pack --force / +ref, reflog delete / expire,
+               submodule update / deinit -f
+    git aliases that run any of these (-c alias.*, --config-env,
+               GIT_CONFIG_*, git config alias.* in the same command, aliases
+               stored in the repo); a shell (!) alias defined and run in one
+               command; git config storing a destructive or shell alias,
+               remote.*.mirror, remote.*.push=+..., clean.requireForce=false
+    find -delete / -exec|-execdir|-ok|-okdir and fd -x/-X running a remover
+               (rm, unlink, shred, or a shell script that runs one)
+    gh <group> delete / delete-asset / remove (not alias / extension:
+           local config only)
     gh api with a writing method, including the POST that -f/-F/--field/
            --raw-field/--input imply without -X; graphql only for an inline
            query that is not a mutation and that the shell cannot change
+
+Command names match the way the shell and file system find them: any case
+(macOS file systems are case-insensitive), a glob, zsh =cmd, git's dashed
+builtins (git-reset), and with an always-empty expansion glued on (${x}git).
+Each command is also checked as if every unknown expansion were empty
+(--ha$()rd is --hard).
 
 A remote branch delete (git push --delete / -d / :branch) is NOT decided here
 when it is a plain top-level command: the hook's own verdict asks or blocks
@@ -73,6 +93,12 @@ pre-v1.69.0 coarse substring rule blocked some of these by accident (it also
 blocked real hyphenated filenames, the bug MCU-Watchlist PR #165 fixed);
 allowing the filenames necessarily allows these, so they are an accepted limit
 (MCU-Watchlist owner, 2026-11-03; kept as is in agentskel v1.69.0).
+The same class, found in the v1.69.0 review and filed as agentskel BL-013:
+a variable or array holding a flag (`x=--hard; git reset $x`), a command
+name from a variable (`${GIT:-git} reset --hard`), arguments read from stdin
+(`... | xargs git push origin`, `parallel`), a shell function or alias
+wrapping a command (`f(){ git reset "$@"; }; f --hard`), and interpreters
+given list-form arguments (`python3 -c 'subprocess.run([...])'`).
 The environment's own delete-safety check is a second layer underneath.
 """
 import fnmatch
@@ -1143,7 +1169,7 @@ GRAPHQL_VAR_DECL = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)\s*:")
 # A $ reference as bash reads it: a name, one digit, or one special parameter.
 DOLLAR_REF = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*|[0-9@*#?!$-])")
 GH_DELETE_ACTIONS = {"delete", "delete-asset", "remove"}
-GH_HARMLESS_GROUPS = {"alias", "extension", "label"}
+GH_HARMLESS_GROUPS = {"alias", "extension"}     # local gh config only
 
 
 def gh_subcommand(cmd, i):

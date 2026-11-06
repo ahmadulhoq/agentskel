@@ -699,6 +699,11 @@ check BLOCKED "gh api graphql -f query=mutatio?'{deleteRef(input:{refId:\"x\"}){
 check BLOCKED 'gh repo delete o/r --yes'
 check BLOCKED 'gh release delete v1 --yes'
 check BLOCKED 'gh issue delete 5 --yes'
+# a label delete strips it from every issue on GitHub; alias / extension
+# deletes only touch local gh config
+check BLOCKED 'gh label delete bug --yes'
+check ALLOWED 'gh alias delete co'
+check ALLOWED 'gh extension remove owner/gh-x'
 check ALLOWED 'gh release list'
 check ALLOWED 'gh repo view o/r'
 # git config that changes what push / clean do
@@ -943,6 +948,13 @@ check_in BLOCKED "$R" 'git push origin --delete merged-a && git push origin --{d
 # a redirection is not a branch name
 check_in ASKED   "$R" 'git push origin --delete merged-a 2>&1'
 check_in ASKED   "$R" 'git push origin --delete merged-a 2>&1 | tail -3'
+# re-probe: a lone checkout argument is a path when that file exists in the
+# session folder (`a` is a tracked file in $R, `unmerged` only a branch)
+check_in BLOCKED "$R" 'git checkout a'
+check_in BLOCKED "$R" 'git checkout -m a'
+check_in BLOCKED "$R" 'git checkout -q a'
+check_in ALLOWED "$R" 'git checkout unmerged'
+check_in ALLOWED "$R" 'git checkout -m unmerged'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
