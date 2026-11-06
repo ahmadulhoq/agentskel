@@ -589,6 +589,13 @@ check BLOCKED 'gh api --input body.json repos/o/r/pulls'
 check BLOCKED 'gh api -XPOST repos/o/r/issues'
 check BLOCKED 'gh api --method=delete /repos/o/r'
 check BLOCKED 'gh api -X delete /repos/o/r'
+# gh's flag parser lets short flags be bundled: -iX DELETE is --include + -X DELETE
+check BLOCKED 'gh api -iX DELETE /repos/o/r'
+check BLOCKED 'gh api -iXDELETE /repos/o/r'
+check BLOCKED 'gh api --include -XPATCH /repos/o/r'
+check BLOCKED 'gh api -if title=x repos/o/r/issues'
+check ALLOWED 'gh api -i repos/o/r'
+check ALLOWED 'gh api --paginate -i repos/o/r/issues'
 check ALLOWED 'gh api -X GET search/issues -f q=repo:o/r'
 check ALLOWED 'gh api --method GET repos/o/r/issues -F per_page=100'
 check ALLOWED 'gh api --paginate repos/o/r/issues'
@@ -742,6 +749,8 @@ check_in BLOCKED "$R" 'echo $(git push origin --delete merged-a)'
 # BL-010: --mirror / --prune delete remote branches without naming them
 check_in BLOCKED "$R" 'git push --mirror origin'
 check_in BLOCKED "$R" 'git push --prune origin refs/heads/*:refs/heads/*'
+# a bare `:` refspec pushes matching branches; it deletes nothing
+check_in ALLOWED "$R" 'git push origin :'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

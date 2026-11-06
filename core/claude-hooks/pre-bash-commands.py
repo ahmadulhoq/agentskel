@@ -720,8 +720,8 @@ def git_push(args):
     for r in refs:
         if r.startswith("+") and not r.startswith("+:"):
             return "force push of a +refspec — overwrites remote history"
-        if r.startswith(":") or r.startswith("+:"):
-            delete = True
+        if (r.startswith(":") and len(r) > 1) or (r.startswith("+:") and len(r) > 2):
+            delete = True       # `:` alone pushes matching branches
     return "DELETE" if delete else None
 
 
@@ -792,9 +792,10 @@ def find_destructive(args):
     return False
 
 
-GH_API_VALUE_OPTS = {"-X", "--method", "-f", "--raw-field", "-F", "--field", "-H", "--header",
-                     "--input", "-q", "--jq", "-t", "--template", "--cache", "--hostname", "-p",
-                     "--preview"}
+GH_API_LONG_VALUE_OPTS = {"--method", "--raw-field", "--field", "--header", "--input", "--jq",
+                          "--template", "--cache", "--hostname", "--preview"}
+GH_API_SHORT_VALUE = "XfFHqtp"    # short flags that take a value
+GH_SHORT_TO_LONG = {"X": "-X", "f": "-f", "F": "-F", "H": "-H", "q": "-q", "t": "-t", "p": "-p"}
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 GRAPHQL_VAR_DECL = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)\s*:")
 # A $ reference as bash reads it: a name, one digit, or one special parameter.
@@ -810,14 +811,26 @@ def gh_api(cmd, i, expansions):
     k = i + 2
     while k < len(cmd):
         a = cmd[k]
-        if a in GH_API_VALUE_OPTS:
+        if a in GH_API_LONG_VALUE_OPTS:
             opt, val, k = a, (cmd[k + 1] if k + 1 < len(cmd) else ""), k + 2
         elif a.startswith("--") and "=" in a:
             (opt, val), k = a.split("=", 1), k + 1
-        elif re.match(r"^-[XfFHqtp].", a):
-            opt, val, k = a[:2], a[2:], k + 1
-        elif a.startswith("-") and len(a) > 1:
+        elif a.startswith("--"):
             opt, val, k = a, None, k + 1
+        elif a.startswith("-") and len(a) > 1:
+            # gh's flag parser (pflag) bundles short flags: -iX DELETE is
+            # --include plus -X DELETE, and -iXDELETE the same (PR review:
+            # read as one unknown flag, a repo DELETE passed as a GET).
+            opt, val, step = a, None, 1
+            for pos_, ch in enumerate(a[1:], start=1):
+                if ch in GH_API_SHORT_VALUE:
+                    opt = GH_SHORT_TO_LONG[ch]
+                    if pos_ + 1 < len(a):
+                        val = a[pos_ + 1:]
+                    else:
+                        val, step = (cmd[k + 1] if k + 1 < len(cmd) else ""), 2
+                    break
+            k += step
         else:
             if endpoint is None:
                 endpoint = a

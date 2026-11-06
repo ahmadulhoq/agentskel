@@ -424,10 +424,11 @@ fi
 #     and other endpoints can strip branch protection. Read-only is fine. ---
 # Per command (v1.69.0). A POST to graphql passes the floor: whether it is a
 # read (an inline query) or a write (a mutation) is the reader's call.
+# `-[A-Z]*X`: gh bundles short flags, so `-iX DELETE` is `-X DELETE`.
 if grep -oE '(^|[;&|[:space:]])([^[:space:];&|]*/)?gh[[:space:]]+api([[:space:]][^;&|]*)?' <<<"$CMD_GITFLOOR" | LC_ALL=C awk '
     { line = toupper($0) }
-    line ~ /(-X|--METHOD)[[:space:]]*=?[[:space:]]*["\047]?(POST|PUT|PATCH|DELETE)/ {
-        graphql_post = (line ~ /(^|[[:space:]])\/?GRAPHQL([[:space:]]|$)/) && (line !~ /(-X|--METHOD)[[:space:]]*=?[[:space:]]*["\047]?(PUT|PATCH|DELETE)/)
+    line ~ /(-[A-Z]*X|--METHOD)[[:space:]]*=?[[:space:]]*["\047]?(POST|PUT|PATCH|DELETE)/ {
+        graphql_post = (line ~ /(^|[[:space:]])\/?GRAPHQL([[:space:]]|$)/) && (line !~ /(-[A-Z]*X|--METHOD)[[:space:]]*=?[[:space:]]*["\047]?(PUT|PATCH|DELETE)/)
         if (!graphql_post) found = 1
     }
     END { exit !found }'; then
