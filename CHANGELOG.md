@@ -89,14 +89,58 @@ same. Hook behaviour is unchanged.
   after taking Step 5n.
 - CI runs the wrapper suite too.
 
-**Filed, not fixed** (BACKLOG):
-- the whole-line false-positive shape in the other git rules (BL-008);
-- `gh api -f/-F/--input`, which implies POST without `-X` (GraphQL queries
-  are POSTs too, so this needs a design);
-- nested shells for rules other than `rm`/`git branch` (BL-007);
-- generalising the per-command reader to every rule.
+**Every rule decided per command** (BL-007, BL-008, BL-009, BL-010; first
+filed during this release, then fixed in it at the maintainer's request).
+Tests first: 72 new cases, of which 35 destructive commands were ALLOWED and
+9 harmless ones BLOCKED by the hook before this work.
+- **BL-010:** the per-command reader now decides every rule, not just `rm`
+  and `git branch`:
+  - git push force, including `-uf` clusters, `+refspec`, `--mirror` and
+    `--prune`;
+  - reset --hard;
+  - checkout `-f` / `--` / `.` / `<tree-ish> <paths>`;
+  - switch `-f` / `--discard-changes`;
+  - restore;
+  - clean force;
+  - worktree remove force;
+  - stash drop / clear;
+  - find `-delete` / `-exec rm`;
+  - gh api writes.
 
-Verified: rules 421/421 and wrappers 81/81 on bash 5.2 (docker) and macOS
+  Long options count by unambiguous prefix, as git accepts them.
+- **BL-007:** because the reader re-reads `bash -c`, `eval`, `ssh`, `$( )`
+  and backticks as commands, every rule now sees inside nested shells.
+- **Remote branch deletes:**
+  - A plain top-level delete is reported to the hook, whose ask/block
+    verdict then runs even when its regex prefilter misses the spelling
+    (`\git`, `'git'`).
+  - A delete anywhere nested is blocked, because nothing can ask about a
+    command it cannot see.
+  - If the verdict cannot place a delete that the reader saw, it blocks.
+- **BL-009, gh api:** `-f`/`-F`/`--field`/`--raw-field`/`--input` imply
+  POST without `-X`, so these are blocked as writes. `gh api graphql` is
+  allowed only for an inline query that is not a mutation and does not come
+  from a file, `--input` or `$( )`. Any `$` in the query must be one that
+  bash does not expand: a GraphQL `$variable` and a shell `"$M"` look the
+  same after quote removal, so the raw command is scanned.
+- **BL-008:** the git / find / gh api regexes stay as a floor, but each now
+  stops at the end of one command (`[^;&|]*`), so a flag of the NEXT command
+  no longer counts. The floor reads a copy of the command where:
+  - a separator inside quotes is part of the word (quoting cannot hide a
+    flag);
+  - a redirection `&` is not a separator;
+  - a hyphen inside a word (`update-ref`, `turn-it-off`) cannot read as an
+    option.
+
+  That copy is built in Python: a first awk version took 535 s on a
+  200,000-character command under macOS awk.
+- **Crash fallback:** when the reader cannot run, the fallback also blocks
+  the git / find / gh api words.
+
+**Filed:** BL-011 (`gh issue delete`, `gh repo delete` and other `gh`
+subcommands are not covered by any rule; `gh issue *` is allowlisted).
+
+Verified: rules 493/493 and wrappers 81/81 on bash 5.2 (docker) and macOS
 bash 3.2; MCU-Watchlist's unmodified 387-case suite passes 387/387 against
 the skeleton hook.
 

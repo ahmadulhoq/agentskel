@@ -94,20 +94,29 @@ Blocks destructive patterns with exit code 2 + a stderr message, **regardless of
 
 One rule engine serves every tool: `core/claude-hooks/pre-bash-safety.sh` with its helpers `pre-bash-heredocs.py` and `pre-bash-commands.py`. Claude Code runs it directly. Gemini CLI, Cursor, Windsurf and Codex run it through a thin wrapper of their own (`core/<tool>-hooks/pre-bash-safety.sh`) that converts their hook JSON. Copilot has no hooks. The v1.69.0 engine was developed in MCU-Watchlist over five rounds of independent adversarial review and upstreamed with its 387-case suite.
 
-Blocked operations. Every git rule also applies to a path-qualified git (`/usr/bin/git`) and to any global options before the subcommand (`git --no-pager …`, `git -C <path> …`):
-- `git push --force` / `-f` / `--force-with-lease`, and a `+refspec` push (`git push origin +main`)
+Blocked operations. Each applies in every position: after `&&` or `;`, inside `bash -c`, `eval`, `ssh`, `$( )` or backticks, behind a path-qualified binary (`/usr/bin/git`), and behind any global options before the subcommand (`git --no-pager …`, `git -C <path> …`). Long options count by any unambiguous prefix, as git accepts them.
+- `git push --force` / `-f` (in any cluster, e.g. `-uf`) / `--force-with-lease`; a `+refspec` push (`git push origin +main`); `--mirror` and `--prune`, which delete remote branches
 - `git reset --hard`
 - force branch delete in every spelling (`-D`, `-d -f`, `--delete --force`, …)
-- `git checkout -- <file>`, `git checkout .`, `git checkout -f`, `git restore` (discard uncommitted changes)
+- `git checkout -f`, `git checkout -- <file>`, `git checkout .`, `git checkout <tree-ish> <paths>`, `git switch -f` / `--discard-changes`, `git restore` (discard uncommitted changes)
 - `git clean -f` / `--force` (force-remove untracked)
 - `git stash drop` / `git stash clear`
-- recursive force `rm` in every spelling and position: `-rf`, `-r -f`, `--recursive --force`, `rm x -rf`, inside `bash -c`, `$( )`, backticks, `eval`, brace expansion
+- recursive force `rm` in every spelling and position: `-rf`, `-r -f`, `--recursive --force`, `rm x -rf`, brace expansion
 - `find … -delete` / `-exec rm`
 - `git worktree remove --force` / `-f`
-- `gh api` with a writing method (`POST`/`PUT`/`PATCH`/`DELETE`, quoted or not)
-- Remote branch deletes, **except** the case below
+- `gh api` writes:
+  - a writing method (`POST`/`PUT`/`PATCH`/`DELETE`, quoted or not);
+  - **and the POST that `-f`, `-F`, `--field`, `--raw-field` or `--input` imply without `-X`**.
 
-**How `rm` and `git branch` are decided.** `pre-bash-commands.py` reads the command the way bash splits it: quotes, `$''`, braces, `${ }`, `$( )`, backticks, `<( )`, arithmetic, `case`, redirections and comments. It blocks when one `rm` carries recursive + force, or one `git branch` carries delete + force. The old regexes still run as a floor, so the reader can only *add* blocks. That is why real hyphenated file names (`the-fantastic-four-first-steps.json`) are now allowed while every spelling of `-rf` is still caught.
+  `gh api graphql` is allowed only for an inline query that is not a `mutation`, does not come from a file, `--input` or `$( )`, and contains no `$` that bash would expand. A GraphQL variable inside single quotes (`'query($owner: String!) …'`) is fine.
+- Remote branch deletes, **except** the case below. A delete nested anywhere (inside `bash -c`, `$( )` and so on) is always blocked, because nothing can ask about a command it cannot see.
+
+**How commands are decided.** `pre-bash-commands.py` reads the command the way bash splits it: quotes, `$''`, braces, `${ }`, `$( )`, backticks, `<( )`, arithmetic, `case`, redirections and comments. It decides every rule above, one command at a time, and reads nested shells as commands. MCU-Watchlist built it for `rm` and `git branch`; v1.69.0 extended it to the rest. The old regexes still run as a floor, so the reader can only *add* blocks. Each floor rule stops at the end of its own command and ignores hyphens inside words. That is why:
+- real hyphenated file names (`the-fantastic-four-first-steps.json`) are allowed;
+- `git push origin main && rm -f tmp` is not a force push;
+- `git checkout x && git update-ref …` is not a forced checkout;
+
+while every spelling of the destructive forms is still caught. If the reader cannot run, the hook blocks every `rm` and every destructive git, find or gh api word until a person runs the command.
 
 **Text that mentions a dangerous command.** Quoted text is read as commands unless it is a search pattern (`grep`, `rg`, `git log -S`) or a message value (`-m`, gh `--title`/`--body`). So `echo "rm -rf is dangerous"` is blocked: that is the deliberate fail-safe cost. To write a commit message or PR body that mentions a blocked command, use `git commit -F - <<'EOF'` or `gh … --body-file - <<'EOF'`. Heredoc bodies are skipped only for those shapes and for `cat > FILE` / `tee FILE > /dev/null`, each with a quoted end marker and nothing after it. `-m "$(cat <<'EOF' …)"` is checked in full.
 
