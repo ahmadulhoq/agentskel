@@ -797,12 +797,13 @@ GH_API_VALUE_OPTS = {"-X", "--method", "-f", "--raw-field", "-F", "--field", "-H
                      "--preview"}
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 GRAPHQL_VAR_DECL = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)\s*:")
-GRAPHQL_VAR_USE = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*)")
+# A $ reference as bash reads it: a name, one digit, or one special parameter.
+DOLLAR_REF = re.compile(r"\$([A-Za-z_][A-Za-z0-9_]*|[0-9@*#?!$-])")
 
 
-def gh_api(cmd, i, expands):
-    """A reason to block a `gh api` call, or None. `expands`: the raw command
-    has a $ that bash expands (outside single quotes, not escaped)."""
+def gh_api(cmd, i, expansions):
+    """A reason to block a `gh api` call, or None. `expansions`: the $
+    references bash expands in the raw command (shell_expansions)."""
     if i + 1 >= len(cmd) or cmd[i + 1] != "api":
         return None
     method, fields, has_input, endpoint = None, [], False, None
@@ -843,12 +844,15 @@ def gh_api(cmd, i, expands):
                 return "gh api graphql query built by a command substitution — the hook cannot see it"
             if re.search(r"\bmutation\b", q):
                 return "gh api graphql mutation — writes to GitHub"
+            # After quote removal, a GraphQL variable ($owner, in single
+            # quotes) and a shell expansion bash fills in ("$M", "$1") look
+            # the same. Block when a $ reference in the query is one bash
+            # expands somewhere in the raw command, or is not a declared
+            # GraphQL variable. A shell variable elsewhere (-F o="$OWNER") is
+            # fine.
+            refs = set(DOLLAR_REF.findall(q))
             declared = set(GRAPHQL_VAR_DECL.findall(q))
-            used = set(GRAPHQL_VAR_USE.findall(q))
-            if used and (expands or used - declared):
-                # After quote removal, a GraphQL variable ($owner) and a shell
-                # expansion bash fills in ("$M") look the same. Allow $ only
-                # when no $ in the raw command is expanded by bash.
+            if refs & expansions or refs - declared:
                 return "gh api graphql query with a $ the shell may expand — the hook cannot see the final query"
         return None
     effective = method or ("POST" if fields or has_input else "GET")
@@ -858,9 +862,11 @@ def gh_api(cmd, i, expands):
     return None
 
 
-def shell_expands(text):
-    """True if `text` has a $ that bash expands: outside single quotes and
-    not escaped by a backslash (inside double quotes or unquoted)."""
+def shell_expansions(text):
+    """The $ references bash expands in `text` (outside single quotes, not
+    backslash-escaped): names, digits and special parameters. `${x}` counts
+    as `x`."""
+    found = set()
     single = double = False
     i = 0
     while i < len(text):
@@ -875,13 +881,15 @@ def shell_expands(text):
             single = True
         elif c == '"':
             double = not double
-        elif c == "$" and i + 1 < len(text) and (text[i + 1].isalnum() or text[i + 1] in "_{(@*#?!$-"):
-            return True
+        elif c == "$":
+            m = re.match(r"\{?([A-Za-z_][A-Za-z0-9_]*|[0-9@*#?!$-])", text[i + 1:i + 200])
+            if m:
+                found.add(m.group(1))
         i += 1
-    return False
+    return found
 
 
-def check_command(cmd, top=False, expands=True):
+def check_command(cmd, top=False, expansions=frozenset()):
     """A "BLOCK <reason>" for `cmd`, "DELETE" for a top-level remote branch
     delete (the hook's own verdict decides it), or None."""
     words = expand(cmd)     # {rm,-rf,y} and {r,}m are commands too
@@ -908,7 +916,7 @@ def check_command(cmd, top=False, expands=True):
         elif n == "find" and find_destructive(words[i + 1:]):
             return "BLOCK find with -delete / -exec rm — bulk delete"
         elif n == "gh":
-            found = gh_api(words, i, expands)
+            found = gh_api(words, i, expansions)
             if found:
                 return "BLOCK " + found
     return "DELETE" if delete else None
@@ -933,10 +941,10 @@ def readings(w):
 
 def verdict(text, depth=0):
     commands, strings, top = read(text, depth)
-    expands = shell_expands(text)
+    expansions = shell_expansions(text)
     delete = False
     for cmd, is_top in zip(commands, top):
-        found = check_command(cmd, top=is_top and depth == 0, expands=expands)
+        found = check_command(cmd, top=is_top and depth == 0, expansions=expansions)
         if found == "DELETE":
             delete = True
         elif found:

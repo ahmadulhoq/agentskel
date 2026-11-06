@@ -602,6 +602,13 @@ check ALLOWED "gh api graphql -X POST -f query='{ viewer { login } }'"
 check BLOCKED "gh api graphql -f query='mutation { addStar(input: {starrableId: \"x\"}) { clientMutationId } }'"
 check BLOCKED "gh api graphql -f query='mutation X { deleteRef(input: {refId: \"x\"}) { clientMutationId } }'"
 check BLOCKED "gh api graphql -f 'query=mutation{deleteRef(input:{refId:\"x\"}){clientMutationId}}'"
+# only a $ INSIDE the query that bash expands matters (differential review):
+# a shell variable elsewhere in the command is the normal way to pass values
+check ALLOWED "gh api graphql -f query='query(\$o: String!) { repositoryOwner(login: \$o) { id } }' -F o=\"\$OWNER\""
+check ALLOWED "echo \$(gh api graphql -F owner=o -f query='query(\$owner: String!) { repositoryOwner(login: \$owner) { id } }')"
+check BLOCKED 'gh api graphql -f query="query A(\$M: String) { viewer { login } } $M"'
+check BLOCKED "bash -c 'gh api graphql -f query=\"{ viewer { login } } \$1\"' _ 'mutation { x }'"
+check BLOCKED 'gh api graphql -f query="{ viewer { login } } ${M}"'
 check BLOCKED 'gh api graphql -F query=@q.graphql'
 check BLOCKED 'gh api graphql --input q.json'
 check BLOCKED 'gh api graphql -f owner=o'
