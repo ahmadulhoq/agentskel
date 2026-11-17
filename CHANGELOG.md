@@ -213,10 +213,90 @@ Re-running every reviewer probe on the fixed hook found one more gap,
 `gh label delete`, now fixed. Everything else it let through falls in the
 accepted limits below.
 
+**MCU-Watchlist PRs #167 and #179 merged in (2026-11-17/18).** MCU-Watchlist
+kept developing the hook after PR #165. PR #167 decides every git rule from
+one command's own words (six review rounds). PR #179 scopes the rm floor and
+reads flags written in a variable or an `echo` in the same command. Both were
+written in parallel with this PR's own per-command work, from the same base,
+so neither hook passed the other's suite: MCU's 1,038 cases failed 170 here,
+and this PR's 668 failed 112 there.
+- **How:** a three-way merge of the suites from their common ancestor (MCU
+  32a8c635 = this PR's 77d074b). No shared case changed its expected result on
+  either side. Red: 174 of 1,340 failing against this PR's previous hook. The
+  reader is MCU's as of #179, with this PR's rules ported onto it, each driven
+  by its own failing cases:
+  - gh and find / fd rules;
+  - any-case and `=cmd` names, `{a..b}`, zsh glob qualifiers, `\r`, backtick
+    bodies read de-escaped, `re$()set` / `dr$()op`;
+  - restore / reflog / submodule rules;
+  - aliases from the whole line and the repo config, and `!` alias arguments;
+  - deletes asked about only as top-level commands.
+- **Hook:** MCU's reader protocol (`ASK-DELETE n`, an exact count; `CRASH
+  [GIT] [RM]`, where a crash on git push blocks with no override). #179's
+  scoped rm floor. The git floor stops at `--` (#167).
+- **Not ported:** MCU's `NEUTRAL_AWK` pass. It walks back over a word for every
+  hyphen, so its time grows with the square of a hyphen run. On MCU-Watchlist
+  main, a must-block command followed by 160,000 hyphens took 691 s, past
+  Claude Code's 600 s timeout, which lets the command run. Here the same rule
+  is `FLOOR_PY`'s linear `rmseg` mode: 0.1 s.
+- **Owner decisions (2026-11-17): block what can lose work, allow the rest.**
+  - `git checkout --ours/--theirs <path>`: blocked (MCU allows it).
+  - `git branch -M/-C` (and `-f -m`, `--move --force`): blocked only when the
+    target branch exists or can't be checked. MCU allows every single-name
+    form and blocks every two-name form.
+  - A delete in quoted text chained after one that could be asked about:
+    blocked (MCU asks).
+  - Push options or refspecs built from a variable: blocked, overridable (as
+    MCU).
+  - Flags written in the same command are seen (#179), which closes BL-013's
+    first probe.
+  - Floor exception: the rm floor no longer catches a delete that the old rule
+    caught only because an unrelated word held the letters `-rf`.
+- **Differential:** 11,599 commands (every suite command plus nine chained or
+  wrapped variants), each run through four hooks: v1.68.1, PR #61's previous
+  hook, the merged hook, and each of those with its reader switched off.
+  - **v1.68.1 blocks, merged allows (373):** all intended: the override,
+    heredoc bodies, prose that mentions rm, flags of another command on the
+    line, hyphenated names, `-- -f`, read-only GraphQL. One exception predates
+    this work: `git branch -f main origin/main`, which v1.68.1 blocked only by
+    accident (filed as BL-014).
+  - **PR #61 blocks, merged allows (329):** all intended (ffmpeg and friends,
+    `"$BRANCH-fix"`, `checkout-index --prefix`, `cp * -rf`, variables that
+    bash really runs harmlessly), once the four fixes below were in.
+  - **PR #61 allows, merged blocks (908):** MCU's catches. No new wrong
+    refusals beyond the decisions above.
+  - **Floor alone (the reader switched off):** against PR #61's floor, the
+    merged floor newly allows 14 base commands. Twelve are #179's intended
+    fixes (`rm x.jpg; ffmpeg … -frames:v …`, `rm x.jpg; echo -fr`, `rm -i --
+    -frames:v`, a PR body that mentions rm, …); the other two are `git clean
+    -n -- -f` and `git push origin main -- -f`. That is what the brief
+    predicted (about 17 such fixes, plus `-- -f`). The other variants it
+    newly allows were caught only through the letters of `ffmpeg -frames:v` or
+    a `# note -rf` comment on the same line (the accepted floor exception).
+    Overall the merged floor blocks more: 4,733 against 4,640. Against
+    v1.68.1, the floor alone allows 456 that v1.68.1 blocked, and PR #61's
+    floor already allowed 441 of the same kinds (its per-command narrowing,
+    the override and heredoc bodies).
+  - No timeouts. The slowest calls were batches paused while the machine
+    slept.
+- **Fixed from the differential, tests first:**
+  - With the reader off, the override passed `git push -f --prune` (the floor
+    had only the overridable force-push rule). A floor rule now blocks a
+    literal `--mirror` / `--prune` with no override; `$x--mirror` stays an
+    overridable option built from a variable.
+  - The merged-delete parser missed a delete inside backticks once a comment
+    followed it.
+  - An rm in `( )`, `$( )` or backticks: the reader read `$x-rf` as a name,
+    and the floor only found an rm after a space or `; & |`.
+- **Independent review:** both reviewer agents stopped immediately with an API
+  safeguards error, before probing anything. They were not rerun by rewording
+  the brief. The review is still open (see the PR).
+
 **Accepted limits**, documented in AUTONOMY-MODES and filed:
 - **BL-013:** values that exist only at run time, the same class as the
-  delete flag above:
-  - variables and arrays (`x=--hard; git reset $x`);
+  delete flag above. A flag written as a plain value in the same command is
+  seen since the MCU merge (`x=--hard; git reset $x`); still not seen:
+  - arrays, and values from an earlier separate command (`git "${x[@]}"`);
   - a command name from a substitution or variable (`$(command -v git)`);
   - arguments from stdin (`xargs`, `parallel`);
   - shell functions and aliases.
@@ -229,9 +309,14 @@ accepted limits below.
   its settings entry has `"onFailure": "block"` (Claude Code v2.1.295+).
 
 Verified:
-- rules 668/668 and wrappers 81/81 on bash 5.2 (docker) and macOS bash 3.2;
-- MCU-Watchlist's unmodified 387-case suite passes 387/387 against the
-  final hook on both shells.
+- before the MCU merge: rules 668/668 and wrappers 81/81 on bash 5.2
+  (docker) and macOS bash 3.2; MCU-Watchlist's unmodified 387-case suite
+  387/387 on both shells;
+- after it: rules 1,373/1,373 on macOS bash 3.2 (the merge commit's 1,341
+  also on bash 5.2 in docker; the final Linux run is CI's); wrappers 81/81;
+  MCU-Watchlist's unmodified #179 suite 1,025/1,038 from this repo, all 13
+  failures maintainer decisions (3 `--ours`/`--theirs`, 1 echo after a
+  delete, 9 `branch -M/-C` that depend on which branches the repo has).
 
 affected: setup-skeleton, sync-skeleton
 
