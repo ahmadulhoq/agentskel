@@ -251,6 +251,10 @@ def git_line(line):
     return " ".join(neutral(w, False) for w in "".join(buf).replace("\t", " ").split(" ") if w)
 
 
+LEAD_EXPANSION_OPTION = re.compile(
+    r"^(?:\$(?:\{[^{}]*\}|\([^()]*\)|[A-Za-z_][A-Za-z0-9_]*|[0-9@*#?$!-])|`[^`]*`)+(--?[A-Za-z][A-Za-z-]*)\)?$")
+
+
 def rmseg_line(line):
     # MCU-Watchlist's NEUTRAL_AWK as its rm floor runs it (keeplong=0,
     # rmlong=1): separators and redirections end a word; a plain --long word
@@ -262,6 +266,12 @@ def rmseg_line(line):
         if not w:
             continue
         out.append("--" + w[2:].replace("-", "_") if LONG.match(w) else neutral(w, False))
+        # A whole option once the expansions in front are empty (`$x-rf`,
+        # `$(:)-rf`, a backtick, `$x--force`) also stands on its own, so the
+        # doubtful reading counts it too (agentskel v1.69.0 differential).
+        m = LEAD_EXPANSION_OPTION.match(w)
+        if m:
+            out.append(m.group(1))
     return " ".join(out)
 
 
@@ -296,6 +306,17 @@ if git_floor push '--force([[:space:]]|=|$)|--force[-_]with[-_]lease|-f([[:space
     # decided by the remote-delete verdict below. Bounded to one command, so
     # `git push origin main && echo +5` is not a force push.
     block "force push (git push --force / -f / --force-with-lease / +refspec)"
+fi
+
+# --- Pushes that delete remote branches without naming them ---
+# --mirror and --prune delete every remote branch the local repo lacks. A
+# remote delete: never overridable (v1.69.0 differential: with the reader
+# off, the overridable force-push rule above was the only floor rule here,
+# so `AGENTSKEL_UNSAFE=i-understand git push -f --prune origin` ran).
+# Only a literal word: `$x--mirror` is an option built from a variable,
+# blocked but overridable by the reader (owner, 2026-11-17, as MCU-Watchlist).
+if [ -n "$PUSH_SEG" ] && grep -qE 'push[[:space:]]+([^;&|]*[[:space:]])?["'\'']?--(mirror|prune)(["'\''[:space:]=]|$)' <<<"$PUSH_SEG"; then
+    block "git push --mirror / --prune — deletes remote branches the local repo does not have" no-override
 fi
 
 # --- Hard reset ---
@@ -662,7 +683,7 @@ END {
         if (!index(L[i], "rm")) continue
         load(i); n = LEN[i]; found = 0
         for (j = 1; j + 2 <= n; j++)
-            if (CH[i, j] == "r" && CH[i, j + 1] == "m" && (j == 1 || index(";&|" WS, CH[i, j - 1])) && index(WS, CH[i, j + 2])) {
+            if (CH[i, j] == "r" && CH[i, j + 1] == "m" && (j == 1 || index(";&|(`" WS, CH[i, j - 1])) && index(WS, CH[i, j + 2])) {
                 K++; SL[K] = i; SC[K] = j; START[i, j] = K; found = 1
             }
         if (found) prescan(i)
@@ -763,8 +784,8 @@ RM_SEP=$(printf '\034')
 RM_SEGS=$(LC_ALL=C awk -v SEP="$RM_SEP" "$RM_SCOPE_AWK" <<<"$CMD_STRUCT" 2>/dev/null) || RM_SEGS=WHOLE
 if [ "$RM_SEGS" = WHOLE ]; then
     # the old rule on every rm: to the end of the line, and to the next ; & |
-    RM_SEGS=$( { grep -oE '(^|[;&|[:space:]])rm[[:space:]].*' <<<"$CMD_STRUCT" | sed "s/^/D $RM_SEP $RM_SEP /"
-                 grep -oE '(^|[;&|[:space:]])rm[[:space:]][^;&|]*' <<<"$CMD_STRUCT" | sed "s/^/D $RM_SEP /; s/\$/ $RM_SEP/"; } ) || true
+    RM_SEGS=$( { grep -oE '(^|[;&|[:space:](`])rm[[:space:]].*' <<<"$CMD_STRUCT" | sed "s/^/D $RM_SEP $RM_SEP /"
+                 grep -oE '(^|[;&|[:space:](`])rm[[:space:]][^;&|]*' <<<"$CMD_STRUCT" | sed "s/^/D $RM_SEP /; s/\$/ $RM_SEP/"; } ) || true
 fi
 if [ -n "$RM_SEGS" ]; then
     # Either step failing is a block, not a pass.
@@ -985,14 +1006,32 @@ if int(os.environ.get("SAFETY_READER_DELETE") or 0) != len(deletes):
     # exactly n, in either direction). Disagree -> block.
     verdict("BLOCK could not identify every branch being deleted; run each as a plain `git push <remote> --delete <branch>`")
 
+def nested_delete(words):
+    # A git push delete that starts inside backticks, $( ), ( ) or quotes in
+    # this segment (v1.69.0 differential: `echo \`git push origin --delete
+    # x\` # note` went through once the comment was read as one).
+    for k, w in enumerate(words):
+        core = re.sub(r"^[`$(\"'{\\]+", "", w)
+        if core != w and os.path.basename(core).lower() == "git":
+            rest = [re.sub(r"[`)\"'}]+$", "", x) for x in words[k + 1:]]
+            if "push" in rest:
+                tail = rest[rest.index("push") + 1:]
+                if ({"--delete", "-d", "--mirror", "--prune"} & set(tail)
+                        or any(re.match(r"^\+?:[^:]", x) for x in tail)):
+                    return True
+    return False
+
+
+# A whole push-delete in one word (`bash -c "git push --delete …"`) or one
+# that starts inside a substitution: this parser cannot ask about either.
+nested = ([t for t in tokens if "push" in t and ("--delete" in t or " -d" in t or " :" in t)]
+          or any(nested_delete(s) for s in segments))
+if nested:
+    verdict("BLOCK branch delete inside a nested command string; run it directly")
+
 if not deletes:
     # The prefilter matched, but no segment is a `git push` delete: e.g. a
-    # plain push chained with `date -d …`. Allow it — unless a single word
-    # carries a whole push-delete (a nested `bash -c "git push --delete …"`),
-    # which this parser cannot see into.
-    nested = [t for t in tokens if "push" in t and ("--delete" in t or " -d" in t or " :" in t)]
-    if nested:
-        verdict("BLOCK branch delete inside a nested command string; run it directly")
+    # plain push chained with `date -d …`. Allow it.
     verdict("ALLOW")
 
 for _, names in deletes:

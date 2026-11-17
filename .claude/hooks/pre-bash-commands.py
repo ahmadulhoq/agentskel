@@ -963,6 +963,23 @@ def command_name(cmd):
     return i
 
 
+WHOLE_OPTION = re.compile(r"--?[A-Za-z][A-Za-z-]*")
+
+
+def rm_args(args):
+    """rm's words plus, for a word that is a whole option once the expansions
+    in front of it are empty (`$x-rf`, `$(:)-rf`, `$x--force`), that option
+    (agentskel v1.69.0 differential: `(rm $x-rf y)` was read as a name).
+    Only a whole option: `"$OUT-firmware.bin"` stays a name."""
+    out = []
+    for a in args:
+        out.append(a)
+        b = bare(a)
+        if b != a and WHOLE_OPTION.fullmatch(b):
+            out.append(b)
+    return out
+
+
 def rm_forced_recursive(args):
     recursive = force = False
     for arg in args:
@@ -1862,7 +1879,7 @@ def check_command(cmd, depth=0, raw=(frozenset(), False), top=True):
     # so `git push -f --prune` cannot be overridden through its -f.
     plain = None
     for i in rms:           # every rm: `env -u rm -- rm -rf y` runs the second
-        if rm_forced_recursive(words[i + 1:]):
+        if rm_forced_recursive(rm_args(words[i + 1:])):
             plain = "BLOCK recursive force delete (rm with recursive + force flags) — cannot be undone"
             break
     # tail[k]: some word from k on may be an option or a +/: refspec. Without
