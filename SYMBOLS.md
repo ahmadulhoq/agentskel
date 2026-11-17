@@ -133,26 +133,27 @@
 | GIT_CMD | regex prefix shared by every git rule (path-qualified git + global options) | core/claude-hooks/pre-bash-safety.sh |
 | override_requested | function (AGENTSKEL_UNSAFE first-word check) | core/claude-hooks/pre-bash-safety.sh |
 | block | function (block message; no-override for remote deletes) | core/claude-hooks/pre-bash-safety.sh |
-| FLOOR_PY | inline python (linear-time floor copies: `rm` and `git` modes → CMD_FLOOR / CMD_GITFLOOR) | core/claude-hooks/pre-bash-safety.sh |
-| pre-bash-commands.py | script (per-command reader: every rule since v1.69.0 — rm, git, find/fd, gh) | core/claude-hooks/pre-bash-commands.py |
-| Reader | class (splits a command the way bash does; backticks, heredocs, arithmetic, zsh mode) | core/claude-hooks/pre-bash-commands.py |
-| verdict | function (BLOCK/ALLOW/ALLOW DELETE n, re-reads quoted text, zsh qualifiers, gh alias set) | core/claude-hooks/pre-bash-commands.py |
-| check_command | function (checks words + empty-expansion variant) | core/claude-hooks/pre-bash-commands.py |
-| is_cmd / command_name | functions (case-insensitive, glob, =cmd, PLACEHOLDER-stripped name match) | core/claude-hooks/pre-bash-commands.py |
-| GIT_RULES | constant (subcommand → rule function: push, reset, switch, restore, clean, worktree, stash, branch, update-ref, read-tree, checkout-index, send-pack, reflog, submodule) | core/claude-hooks/pre-bash-commands.py |
-| git_push / git_reset / git_checkout / git_switch / git_restore / git_clean / git_worktree / git_stash / git_branch_move | functions (one per git rule) | core/claude-hooks/pre-bash-commands.py |
-| git_update_ref / git_read_tree / git_checkout_index / git_send_pack / git_reflog / git_submodule | functions (destructive plumbing) | core/claude-hooks/pre-bash-commands.py |
-| looks_like_path | function (lone checkout arg is a path: ./ .. :/ glob, or exists in SESSION_CWD) | core/claude-hooks/pre-bash-commands.py |
-| git_destructive | function (git command incl. alias expansion) | core/claude-hooks/pre-bash-commands.py |
-| git_config / config_danger / git_globals | functions (stored aliases + dangerous config; -c / --config-env / GIT_CONFIG_*) | core/claude-hooks/pre-bash-commands.py |
-| collect_aliases / persisted_aliases | functions (aliases defined in the command / already in repo config) | core/claude-hooks/pre-bash-commands.py |
-| find_destructive / fd_destructive / runs_remover | functions (find -delete/-exec, fd -x/-X running rm/unlink/shred or a shell script) | core/claude-hooks/pre-bash-commands.py |
-| gh_check / gh_subcommand / gh_api | functions (gh delete subcommands; api methods, field-implied POST, graphql) | core/claude-hooks/pre-bash-commands.py |
-| shell_scan | function (raw-text expansions + globs, for the graphql $ check) | core/claude-hooks/pre-bash-commands.py |
-| rm_forced_recursive | function | core/claude-hooks/pre-bash-commands.py |
-| git_branch_force_delete | function | core/claude-hooks/pre-bash-commands.py |
+| FLOOR_PY | inline python (linear floor copies: `rm`, `git` and `rmseg` modes; rmseg = MCU's NEUTRAL_AWK rule, linear, plus whole options behind empty expansions) | core/claude-hooks/pre-bash-safety.sh |
+| RM_SCOPE_AWK / RM_FLAGS_AWK | awk (MCU #179's rm floor: each rm's own arguments when it can tell where they end (P), the old reach where not (D); an rm also starts after ( and a backtick) | core/claude-hooks/pre-bash-safety.sh |
+| git_floor / git_floor_seg | functions (git floor rule on one git command, cut at a `--` word) | core/claude-hooks/pre-bash-safety.sh |
+| strip_comments / nested_delete | functions in DELETE_CHECK_PY (comments only at word start; a push delete starting inside `` / $( ) / quotes) | core/claude-hooks/pre-bash-safety.sh |
+| pre-bash-commands.py | script (per-command reader; since the v1.69.0 MCU merge MCU-Watchlist's #179 reader + agentskel rules; protocol BLOCK-REMOTE / BLOCK / ASK-DELETE n / ALLOW / CRASH [GIT] [RM]) | core/claude-hooks/pre-bash-commands.py |
+| Reader | class (splits a command as bash does; variable / substitution refs and command spans for resolve(); backtick_again reads a body de-escaped) | core/claude-hooks/pre-bash-commands.py |
+| verdict | function (BLOCK-REMOTE wins; re-reads quoted text, resolve() fill-ins, zsh qualifiers, gh alias set; collects ALIASES at depth 0) | core/claude-hooks/pre-bash-commands.py |
+| resolve / var_events / value_of / printed | functions (MCU #179: values the command itself spells out, filled in and read again) | core/claude-hooks/pre-bash-commands.py |
+| check_command | function (rm, git, then find / fd / gh; plain deletes counted only top-level at depth 0) | core/claude-hooks/pre-bash-commands.py |
+| name / is_cmd / globbed / command_starts | functions (lower-cased basename, =cmd, leading expansions dropped; globs only where a command can stand) | core/claude-hooks/pre-bash-commands.py |
+| git_destructive / git_rule / git_push_rule / git_options | functions (MCU #167: every git rule from one command's own words, up to `--`) | core/claude-hooks/pre-bash-commands.py |
+| git_config_given / config_risk / git_config_write | functions (-c / --config-env / GIT_CONFIG_* incl. 'k=v'; dangerous config; config writes) | core/claude-hooks/pre-bash-commands.py |
+| collect_aliases / persisted_aliases / ALIASES | functions + global (aliases defined anywhere in the line or stored in the repo; `!` aliases read with their arguments) | core/claude-hooks/pre-bash-commands.py |
+| repo_state / branch_move_overwrites / single_path / exists_path | functions (repo-state rules: branch -M/-C only onto an existing target; a lone checkout name that is a file and not a branch) | core/claude-hooks/pre-bash-commands.py |
+| sub_name / action_names | functions (subcommand / action word with expansions empty: re$()set, dr$()op) | core/claude-hooks/pre-bash-commands.py |
+| find_destructive / fd_destructive / runs_remover | functions (find -delete/-exec, fd -x/-X running a remover or a shell script) | core/claude-hooks/pre-bash-commands.py |
+| gh_check / gh_subcommand / gh_api / shell_scan | functions (gh delete subcommands; api methods, field-implied POST, graphql) | core/claude-hooks/pre-bash-commands.py |
+| rm_forced_recursive / rm_args | functions (rm recursive + force; whole options behind empty expansions) | core/claude-hooks/pre-bash-commands.py |
 | exempt_words | function (search patterns / message values) | core/claude-hooks/pre-bash-commands.py |
-| braces | function (brace expansion) | core/claude-hooks/pre-bash-commands.py |
+| crash_flags | function (CRASH GIT / RM: does the text name git or rm once decoded) | core/claude-hooks/pre-bash-commands.py |
+| braces / sequence | functions (brace expansion incl. {a..b}; a too-large word is kept unexpanded) | core/claude-hooks/pre-bash-commands.py |
 | pre-bash-heredocs.py | script (strips bodies of exact text-writing shapes) | core/claude-hooks/pre-bash-heredocs.py |
 | strip | function | core/claude-hooks/pre-bash-heredocs.py |
 | SHAPES | constant (the allowed whole-command shapes) | core/claude-hooks/pre-bash-heredocs.py |

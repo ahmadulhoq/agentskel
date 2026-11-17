@@ -4,6 +4,50 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-11-18 — v1.69.0 (same PR #61): MCU-Watchlist #167 + #179 merged in
+
+Brief: port MCU's per-command rewrite (#167; later #179) into core/claude-hooks
+so MCU can drop its Intentional Deviation. Found that PR #61 (unmerged) was a
+parallel rewrite from the same base: MCU's 1,038 cases failed 170 on PR #61's
+hook, PR #61's 668 failed 112 on MCU's. User decisions (2026-11-17): land in
+PR #61; principle "block destructive, allow others"; --ours/--theirs <path>
+blocked; branch -M/-C only when the target exists/can't be checked; variable-
+built push options overridable (as MCU); #179 variable fill-in adopted; floor
+exception (unrelated -rf letters) accepted; nested/quoted delete after an
+asked one blocked (stricter than MCU).
+
+How: three-way merge of the suites from the common ancestor (MCU 32a8c635 =
+77d074b), red 174/1,340 on the PR #61 hook. Reader = MCU #179's, with
+agentskel's rules ported (gh, find/fd, names, {a..b}, zsh, \r, backticks,
+re$()set/dr$()op, restore/reflog/submodule, aliases incl. repo config and !
+args, top-level-only deletes). Hook: MCU protocol (ASK-DELETE exact count,
+CRASH GIT/RM), #179's RM_SCOPE_AWK + RM_FLAGS_AWK with NEUTRAL_AWK replaced by
+FLOOR_PY rmseg (linear), git floor cut at `--`, merged-delete parser strips
+comments only at word start (shlex commenters would cut `a#b`).
+
+Found: MCU main's NEUTRAL_AWK is quadratic — 691 s at 160k hyphens after a
+hard reset = past the 600 s hook timeout = command runs. Not ported.
+
+Differential: 11,599 cmds × (v1.68.1, PR #61 hook+floor, merged hook+floor).
+Floor alone vs PR #61 floor: exactly #179's 12 intended fixes + `clean -n --
+-f` + `push origin main -- -f` (the brief's prediction). It found 4 gaps,
+fixed tests-first: floor let the override through `push -f --prune`; delete
+in backticks + comment slipped the merged-delete parser; rm in ( )/$( )/``
+($x-rf read as a name, floor only found rm after space/;&|); `$x--mirror`
+must stay overridable. Found a pre-existing gap: `git branch -f <existing>`,
+`checkout -B`, `switch -C` (BL-014, owner to decide).
+
+Reviewers: both adversarial subagents died at once with an API safeguards
+error; not reworded. Review open in the PR. Docker daemon stopped mid-session;
+final bash 5.2 run left to CI. Orphaned test processes from killed background
+tasks (MCU hook stuck in its quadratic awk for 26 h) had to be killed by pid:
+TaskStop kills the parent shell, not the hook's children.
+
+Files: core/claude-hooks/{pre-bash-safety.sh, pre-bash-commands.py,
+pre-bash-safety.test.sh}, .claude/hooks copies, CHANGELOG.md,
+docs/AUTONOMY-MODES.md, roles/dev/workflows/sync-skeleton.md (+.agents).
+affected: sync-skeleton
+
 ## 2026-11-07 — v1.69.0 (same PR #61): every rule per command (BL-007..010), differential, adversarial review round
 
 User: "fix the filed ones now" — same PR/version, add the obvious new forms
