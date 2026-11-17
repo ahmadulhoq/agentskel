@@ -24,6 +24,15 @@
 # -f, and per-command checks for rm and git branch (pre-bash-commands.py)
 # with the old regexes kept as a floor. Developed over five rounds of
 # independent adversarial review there. Tests: pre-bash-safety.test.sh.
+# Then MCU-Watchlist PR #167 (every git rule decided per command, six review
+# rounds) and PR #179 (the rm floor reads each rm's own arguments; flags
+# written in a variable or an echo in the same command count), merged with
+# agentskel's own v1.69.0 rules (gh, find / fd, nested shells, any-case
+# names, aliases). Reader protocol: BLOCK-REMOTE / BLOCK / ASK-DELETE n /
+# ALLOW / CRASH [GIT] [RM]. Every floor here is linear: an awk pass that
+# walked back over a word per hyphen kept MCU-Watchlist's hook past Claude
+# Code's 600 s timeout on 160,000 hyphens (691 s), and a timed-out hook lets
+# the command run.
 set -euo pipefail
 
 # Read the tool input from stdin (Claude Code passes JSON with tool details)
@@ -242,16 +251,46 @@ def git_line(line):
     return " ".join(neutral(w, False) for w in "".join(buf).replace("\t", " ").split(" ") if w)
 
 
+def rmseg_line(line):
+    # MCU-Watchlist's NEUTRAL_AWK as its rm floor runs it (keeplong=0,
+    # rmlong=1): separators and redirections end a word; a plain --long word
+    # keeps its leading "--" and only its inner hyphens are neutralised.
+    for c in ";&|<>":
+        line = line.replace(c, f" {c} ")
+    out = []
+    for w in re.split(r"[ \t]+", line.strip(" \t")):
+        if not w:
+            continue
+        out.append("--" + w[2:].replace("-", "_") if LONG.match(w) else neutral(w, False))
+    return " ".join(out)
+
+
 mode = sys.argv[1]
 text = sys.stdin.buffer.read().decode("utf-8", "surrogateescape")
-f = rm_line if mode == "rm" else git_line
+f = {"rm": rm_line, "rmseg": rmseg_line}.get(mode, git_line)
 sys.stdout.buffer.write("\n".join(f(l) for l in text.split("\n")).encode("utf-8", "surrogateescape"))
 PY
 CMD_GITFLOOR=$(printf '%s' "$CMD_STRUCT" | python3 -I -c "$FLOOR_PY" git 2>/dev/null) || CMD_GITFLOOR="$CMD_STRUCT"
 
+# git_floor <subcommand regex> <option pattern>: true when one `git
+# <subcommand>`, read up to the end of its own command (; & | or line end) or
+# a `--` word (MCU-Watchlist PR #167: after `--` come paths, so `git clean -n
+# -- -f` and `git push origin main -- -f` are not forced), matches the
+# pattern, on the floor text above. `x\ --` is not a `--`.
+git_floor_seg() { # git_floor_seg <subcommand regex>: each such git command, cut at `--`
+    grep -oE "$GIT_CMD$1([[:space:]][^;&|]*)?" <<<"$CMD_GITFLOOR" \
+        | sed -E 's/([^\\])[[:space:]]--([[:space:]].*)?$/\1/' || true
+}
+git_floor() {
+    local seg
+    seg=$(git_floor_seg "$1")
+    [ -n "$seg" ] && grep -qE "$1[[:space:]]+.*($2)" <<<"$seg"
+}
+
 # --- Force pushes ---
-if grep -qE "$GIT_CMD"'push[[:space:]]+[^;&|]*(--force([[:space:]]|=|$)|--force[-_]with[-_]lease|-f([[:space:]]|$))' <<<"$CMD_GITFLOOR" \
-   || grep -qE "$GIT_CMD"'push[[:space:]]+([^;&|]*[[:space:]])?["'\'']?\+[^:[:space:]"'\'']' <<<"$CMD_GITFLOOR"; then
+PUSH_SEG=$(git_floor_seg push)
+if git_floor push '--force([[:space:]]|=|$)|--force[-_]with[-_]lease|-f([[:space:]]|$)' \
+   || { [ -n "$PUSH_SEG" ] && grep -qE 'push[[:space:]]+([^;&|]*[[:space:]])?["'\'']?\+[^:[:space:]"'\'']' <<<"$PUSH_SEG"; }; then
     # The second pattern (v1.69.0): a `+` refspec (`+main`, `+HEAD:main`)
     # force-pushes that ref with no --force flag at all. `+:x` is a delete,
     # decided by the remote-delete verdict below. Bounded to one command, so
@@ -260,12 +299,12 @@ if grep -qE "$GIT_CMD"'push[[:space:]]+[^;&|]*(--force([[:space:]]|=|$)|--force[
 fi
 
 # --- Hard reset ---
-if grep -qE "$GIT_CMD"'reset[[:space:]]+[^;&|]*--hard' <<<"$CMD_GITFLOOR"; then
+if git_floor reset '--hard'; then
     block "hard reset (git reset --hard) — discards uncommitted work"
 fi
 
 # --- Force delete branch ---
-if grep -qE "$GIT_CMD"'branch[[:space:]]+[^;&|]*(-D([[:space:]]|$)|--delete[[:space:]]+[^;&|]*(--force|-f)([[:space:]]|$)|(--force|-f)[[:space:]]+[^;&|]*--delete([[:space:]]|$))' <<<"$CMD_GITFLOOR"; then
+if git_floor branch '-D([[:space:]]|$)|--delete[[:space:]]+.*(--force|-f)([[:space:]]|$)|(--force|-f)[[:space:]]+.*--delete([[:space:]]|$)'; then
     block "force branch delete (short or long form) — discards unmerged work"
 fi
 
@@ -290,7 +329,7 @@ if grep -oE "$GIT_CMD"'restore([[:space:]][^;&|]*|$)' <<<"$CMD_GITFLOOR" | LC_AL
 fi
 
 # --- git clean with -f (force) ---
-if grep -qE "$GIT_CMD"'clean[[:space:]]+[^;&|]*(-[a-zA-Z]*f|--force)' <<<"$CMD_GITFLOOR"; then
+if git_floor clean '-[a-zA-Z]*f|--force'; then
     block "git clean force (-f / --force) — removes untracked files, cannot be undone"
 fi
 
@@ -324,28 +363,44 @@ case "$CMD_VERDICT" in
         ;;
     ALLOW)
         ;;
-    "ALLOW DELETE "*)
-        # Plain top-level remote branch deletes (how many): the verdict at the
-        # end of this script decides them (ask / block), even when the regex
-        # prefilter misses the spelling (`\git`, `'git'`, `(git ...)`), and
-        # blocks if it cannot account for every one of them.
-        READER_DELETE="${CMD_VERDICT#ALLOW DELETE }"
+    "ASK-DELETE "[0-9]*)
+        # Plain top-level remote branch deletes and nothing else (how many):
+        # the verdict at the end of this script decides them (ask / block),
+        # even when the regex prefilter misses the spelling (`\git`, `'git'`,
+        # `(git ...)`), and blocks unless it reads exactly that many.
+        READER_DELETE="${CMD_VERDICT#ASK-DELETE }"
         ;;
     *)
-        # Only reached when the reader itself is broken, so be blunt: any rm,
-        # and any git branch delete, waits for a person. Reads CMD_HD so a
-        # $( ) inside a commit message is not hidden.
+        # Only reached when the reader itself is broken (it prints
+        # "CRASH [GIT] [RM]" when it gives up, nothing at all when python is
+        # missing), so be blunt: any rm, and any git command these rules
+        # cover, waits for a person. Reads CMD_HD so a $( ) inside a commit
+        # message is not hidden.
         # Quotes, backslashes, $ and braces removed first, so r\m, r$'m',
         # {r,}m and {rm,-rf,y} all read as rm; and "rm" anywhere counts
         # (-O'rm ...', rm${IFS}-rf, \nrm): this path is rare, so blunt is fine.
+        # The reader's own flags (it decodes $'...' and globbed command
+        # words) add to this, never replace it.
         CMD_PLAIN=$(tr -d '\\"'"'"'${},' <<<"$CMD_HD")
-        if grep -q 'rm' <<<"$CMD_PLAIN"; then
+        case "$CMD_VERDICT" in
+            CRASH*" GIT"*) block "git while the per-command check could not run (strict fallback; may delete remote branches)" no-override ;;
+        esac
+        if grep -qiE 'git.*(push|send-pack)' <<<"$CMD_PLAIN"; then
+            # A push the reader could not read may delete remote branches
+            # (--delete, :branch, --mirror, --prune), which the override
+            # never covers (MCU-Watchlist PR #167).
+            block "git push while the per-command check could not run (strict fallback; may delete remote branches)" no-override
+        fi
+        case "$CMD_VERDICT" in
+            CRASH*" RM"*) block "rm while the per-command check could not run (strict fallback)" ;;
+        esac
+        if grep -qi 'rm' <<<"$CMD_PLAIN"; then
             block "rm while the per-command check could not run (strict fallback)"
         fi
-        if grep -qE 'git.*branch' <<<"$CMD_PLAIN"; then
+        if grep -qiE 'git.*branch' <<<"$CMD_PLAIN"; then
             block "git branch while the per-command check could not run (strict fallback)"
         fi
-        if grep -qiE 'git.*(push|reset|checkout|switch|restore|clean|worktree|stash|update-ref|read-tree|send-pack|reflog|submodule|config)' <<<"$CMD_PLAIN"; then
+        if grep -qiE 'git.*(reset|checkout|switch|restore|clean|worktree|stash|update-ref|read-tree|reflog|submodule|config)' <<<"$CMD_PLAIN"; then
             block "git while the per-command check could not run (strict fallback)"
         fi
         if grep -qiE 'find.*-(delete|exec|ok)|fd.*-(x|X|-exec)|gh.*(api|delete|remove)' <<<"$CMD_PLAIN"; then
@@ -354,41 +409,373 @@ case "$CMD_VERDICT" in
         ;;
 esac
 
-# --- Floor: the pre-v1.69.0 rm rules, which apply whatever the reader says ---
+# --- Floor: the rm rule, read precisely only where that is safe ---
+# MCU-Watchlist PR #179 (2026-11-10), ported in agentskel v1.69.0. Until then
+# the floor read from `rm` to the end of the line, so the -fr of ffmpeg's
+# `-frames:v` in the NEXT command counted against `rm x.jpg`. Accepted
+# exception (owner, 2026-11-17): the floor no longer catches a delete that
+# the old rule caught only because an unrelated word on the line held the
+# letters -rf; the reader still reads rm's own options.
 # The reader may only ADD blocks (third and fourth reviews, 2026-11-02: every
-# round found a place where it misread bash). The floor is the old rule,
-# unchanged, run on a copy of the command in which some hyphens are
-# neutralised: those that cannot start a working rm option. A hyphen that has
-# a literal character before it in the same word (other than a $NAME variable
-# name, and other than more hyphens) is either inside a word that does not
-# start with "-" or in the middle of an option cluster, where rm rejects the
-# option and deletes nothing. That is the "-confirmed" / "-four" / "-verify"
-# case, and `$DIR/run-after.txt`. Everything else is matched exactly as the old rule
-# matches it: `$x-rf` (x empty), `$(:)-rf`, `` `:`-rf ``, `*-rf`, `$x--force`.
-# A word that starts with "--" and is all plain characters is a long option:
-# its hyphens are neutralised for the bundled-flag rule (`rm --force x` is not
-# -f...r), and the long-form rule below reads the original.
-# v1.69.0: built by FLOOR_PY (above), the same rule as MCU-Watchlist's awk in
-# one pass. The awk was quadratic (109 s on a word of 20,000 hyphens; a hook
-# that runs past Claude Code's timeout lets the command through) and, in a
-# UTF-8 locale, crashed on a non-breaking space under macOS awk. If python
-# fails, the floor reads the plain command: more blocks, never fewer.
-CMD_FLOOR=$(printf '%s' "$CMD_STRUCT" | python3 -I -c "$FLOOR_PY" rm 2>/dev/null) || CMD_FLOOR="$CMD_STRUCT"
-if grep -qE '(^|[;&|[:space:]])rm[[:space:]]+.*(-[a-zA-Z]*[rR][a-zA-Z]*[fF]|-[a-zA-Z]*[fF][a-zA-Z]*[rR])' <<<"$CMD_FLOOR" \
-   || grep -qE '(^|[;&|[:space:]])rm[[:space:]]+.*(--recursive[[:space:]]+.*--force|--force[[:space:]]+.*--recursive)' <<<"$CMD_STRUCT"; then
-    block "recursive force delete (rm -rf / -fr / --recursive --force) — cannot be undone"
+# round found a place where it misread bash). The floor is main's rule — an rm
+# given a recursive option and a force option is refused — applied to each rm
+# in one of two ways:
+#
+# P (precise, 2026-11-08). When the rm is at the top level of its line (not
+# inside a quote, a substitution or a comment there) and RM_SCOPE_AWK can
+# follow its arguments to a real end (; & | line break or # comment, as bash
+# ends a command), only those arguments count. A quoted or escaped separator,
+# `2>&1`, `&>`, `>|`, $( ), ` `, ${ }, $[ ] and ( ) do not end rm, and an
+# escaped line break carries it on (joined as bash joins it). This is what
+# lets `rm x.jpg; ffmpeg -i a.mp4 -frames:v 1 b.jpg` through: main's rule read
+# from `rm` to the end of the line and counted ffmpeg's options. The options
+# of a command inside $( ) or ` ` are not rm's (`rm -r dir $(ls -f)`), but a
+# whole -rf or a long option there counts, and so does any -r or -f main's
+# one-command rule counted: a blank-separated word up to the next ; & |, a
+# substitution included (mainflags), and it pairs with any other option of
+# that rm (`rm $(echo --force) $(echo -r x)`). Bash pastes the output into rm's
+# arguments: `rm -f $(echo -r x)` is a real delete main caught, and the first
+# P reading let it through (second review, 2026-11-09).
+#
+# D (doubt: main's reach exactly, review of 2026-11-09). Anywhere the floor
+# cannot be sure where the rm starts or ends, it reads the rm as main did:
+# bundled options and long-option pairs to the end of the line, separate -r
+# and -f up to the next ; & | (a redirection such as >| or 2>&1 is not one).
+# That is: the rm sits inside a quote, a substitution or a comment on its line
+# (an rm inside `bash -c "..."`, a backtick or eval, or just the word in prose
+# or a message); its arguments
+# hold an escaped quote or backtick (inside such a string \" is a real quote);
+# a quote, separator, comment or backslash inside $( ), ` `, ${ }, $[ ] or
+# ( ), or a `case` there (its pattern closes a parenthesis); or a quote still
+# open where the line ends. The first version (cc17b6b) read these precisely
+# and was wrong both ways: it let through five real recursive force deletes
+# that only main's floor caught (`` echo "` rm \"a;b\" -rf`" ``, `rm $(case a
+# in a) echo y;; esac) -rf`), and an apostrophe after an "rm" in prose ("Don't
+# rm it's needed" in a heredoc) read every later line as rm's arguments.
+#
+# Both ways count whole option words only (RM_FLAGS_AWK): a word is an option
+# when nothing literal follows its letters, so -frames:v and -rf.txt are not
+# (rm would reject them and delete nothing). Both read the spellings main
+# never saw: "-rf", -r'f', -rf"", -rf$x, -{r,f}, -r{f,}, and long options by
+# the prefixes rm accepts (--rec, --forc), except that the D way pairs long
+# options across the whole line only as the full words, as main did. The
+# options in one brace list combine ({-r,-f} is -r -f to rm). Both ways also
+# read a long word glued to something (`"--force"`, `--force)` as in
+# `$(echo --force)`) as -f...r, as main did: that is how main caught real
+# deletes the second and third versions missed (`rm "a;b" $(echo --force)
+# $(echo -r x)`), at the cost main paid too (`rm $(echo --force) x`). (A D way
+# that counted words exactly as main did lost real deletes main had caught only
+# because an unrelated word held the letters, tried and measured 2026-11-09.)
+# Hyphens that cannot start a working option are set aside first
+# (NEUTRAL_AWK above): one inside a word that does not start with
+# "-", or in the middle of an option cluster ("-confirmed", "-four",
+# `$DIR/run-after.txt`); `$x-rf` (x empty), `$(:)-rf`, `` `:`-rf ``, `*-rf`,
+# `$x--force` and `{-rf,}` stay.
+#
+# If RM_SCOPE_AWK runs out of its step budget, fails, or finds an awk that
+# cannot split a line into characters, every rm is read exactly as main read it
+# (to the end of its line, and to the next ; & | with no redirection
+# exception), with whole option words. If RM_FLAGS_AWK fails, every rm is
+# refused. The price, as on main: an rm the floor cannot tell is inside a
+# string or comment counts (`gh pr create --body "Blocks rm path -rf now"`), so
+# does one bash would not run (behind a || that succeeds, in a heredoc whose end
+# line has more on it) or that also holds an option rm rejects, and so does -rf
+# after `--`. Measured on 5,300 generated commands, those are the only kinds of
+# refusal the floor adds over main (2026-11-09).
+#
+# Lines are read once into characters: substr() on a long line is slow in
+# BWK awk (macOS), and a character loop over it was quadratic. No [[:space:]]
+# inside awk: some mawk builds do not have it.
+#
+# agentskel: MCU's NEUTRAL_AWK pass between the two awk programs below is
+# replaced by FLOOR_PY's linear "rmseg" mode (the same rule): the awk walked
+# back over a word for every hyphen, and a long run of hyphens kept the hook
+# past Claude Code's 600 s timeout, which lets the command run (measured on
+# MCU-Watchlist main, 2026-11-16: 691 s at 160,000 hyphens).
+RM_SCOPE_AWK='
+function load(l,    n, i) {       # the characters of line l, read once
+    if (l in LEN) return
+    n = split(L[l], T, "")
+    if (n != length(L[l])) bail = 1
+    LEN[l] = n
+    for (i = 1; i <= n; i++) CH[l, i] = T[i]
+}
+function ch(l, c) { load(l); if (c <= LEN[l]) return CH[l, c]; return (l < N) ? "\n" : "" }
+function nxt() { return (Cc <= LEN[Cl]) ? ch(Cl, Cc + 1) : ch(Cl + 1, 1) }
+function adv() {
+    if (++steps > 1000000) bail = 1
+    load(Cl)
+    if (Cc <= LEN[Cl]) Cc++
+    else { Cl++; Cc = 1 }
+}
+# where a $( ), ` ` or ( ) starts and ends at the top of rm k (its text is not rm k)
+function open(k) { if (++BD == 1) { NIV[k]++; IVSL[k, NIV[k]] = Cl; IVSC[k, NIV[k]] = Cc } }
+function shut(k) { if (--BD == 0) { IVEL[k, NIV[k]] = Cl; IVEC[k, NIV[k]] = Cc } }
+# Mark the rm starts on line l that sit at its top level (TOP). Stops at a
+# comment, or where it cannot follow a quote inside a substitution: every rm
+# after that is read the D way.
+function prescan(l,    c, n, x, y, st, top, prev) {
+    load(l); n = LEN[l]; st = ""; prev = " "
+    for (c = 1; c <= n; c++) {
+        x = CH[l, c]; y = (c < n) ? CH[l, c + 1] : ""
+        top = substr(st, length(st), 1)
+        if (st == "") {
+            if ((l, c) in START) TOP[START[l, c]] = 1
+            if (x == "\\") { c++; prev = "x"; continue }
+            if (x == "\047" || (x == "$" && y == "\047")) {
+                if (x == "$") c++
+                for (c++; c <= n && CH[l, c] != "\047"; c++) if (x == "$" && CH[l, c] == "\\") c++
+                prev = "x"; continue
+            }
+            if (x == "#" && (prev == " " || prev == "\t")) return
+        } else if (top == "D") {
+            if (x == "\\") { c++; continue }
+            if (x == "\"") { st = ""; prev = x; continue }
+        } else {
+            if (x == top) { st = substr(st, 1, length(st) - 1); prev = x; continue }
+            if (x == "\"" || x == "\047" || x == "\\" || x == "#") return
+        }
+        if (x == "(" && top != "D") { st = st ")"; prev = x; continue }
+        if ((x == "$" || (top != "D" && (x == "<" || x == ">"))) && y == "(") { st = st ")"; c++; prev = y; continue }
+        if (x == "$" && y == "[") { st = st "]"; c++; prev = y; continue }
+        if (x == "$" && y == "{") { st = st "}"; c++; prev = y; continue }
+        if (x == "`") { st = st "`"; prev = x; continue }
+        if (x == "\"" && st == "") { st = "D"; prev = x; continue }
+        prev = x
+    }
+}
+# Read rm k from after its name. A stack holds what is open: D for a double
+# quote, and the closer of each $( ), ` `, ${ }, $[ ] or ( ). MODE ends P or D.
+function scan(k,    st, x, y, top, prev, np, i) {
+    Cl = SL[k]; Cc = SC[k] + 2; st = ""; prev = ""; BD = 0; NIV[k] = 0; np = 0; MODE = "P"
+    while (!bail) {
+        x = ch(Cl, Cc)
+        if (x == "") { if (st != "") MODE = "D"; break }
+        y = nxt()
+        top = substr(st, length(st), 1)
+        if (st == "") {
+            # a later rm passed here unquoted reads exactly as this one does from now on
+            if (((Cl, Cc) in START) && START[Cl, Cc] > k) PEND[++np] = START[Cl, Cc]
+            if (x == "\\") {
+                if (y == "\"" || y == "\047" || y == "`") { MODE = "D"; break }
+                adv(); adv()
+                if (y != "\n") prev = "x"   # a line continuation keeps the character before it
+                continue
+            }
+            if (x == "\047" || (x == "$" && y == "\047")) {
+                if (x == "$") adv()
+                adv()
+                while (!bail) {
+                    y = ch(Cl, Cc)
+                    if (y == "\047" || y == "" || y == "\n") break
+                    if (x == "$" && y == "\\") { if (nxt() == "\n") { y = "\n"; break } adv() }
+                    adv()
+                }
+                if (y != "\047") { MODE = "D"; break }
+                adv(); prev = "x"; continue
+            }
+            if (x == ";" || x == "\n" || (x == "|" && prev != ">") ||
+                (x == "&" && prev != ">" && prev != "<" && y != ">") ||
+                (x == "#" && (prev == " " || prev == "\t"))) break
+        } else if (top == "D") {
+            if (x == "\n" || (x == "\\" && (y == "\"" || y == "`" || y == "\n"))) { MODE = "D"; break }
+            if (x == "\\") { adv(); adv(); prev = "x"; continue }
+            if (x == "\"") { st = ""; adv(); prev = x; continue }
+        } else {
+            if (x == top) { st = substr(st, 1, length(st) - 1); if (x == ")" || x == "`") shut(k); adv(); prev = x; continue }
+            if (x == "\"" || x == "\047" || x == "\\" || x == ";" || x == "&" || x == "|" || x == "#" || x == "\n" ||
+                (x == "c" && y == "a" && ch(Cl, Cc + 2) == "s" && ch(Cl, Cc + 3) == "e")) { MODE = "D"; break }
+        }
+        # openers: valid unquoted, inside a double quote, and inside each other
+        if (x == "(" && top != "D") { st = st ")"; adv(); open(k); prev = x; continue }
+        if ((x == "$" || (top != "D" && (x == "<" || x == ">"))) && y == "(") { st = st ")"; adv(); adv(); open(k); prev = y; continue }
+        if (x == "$" && y == "[") { st = st "]"; adv(); adv(); prev = y; continue }
+        if (x == "$" && y == "{") { st = st "}"; adv(); adv(); prev = y; continue }
+        if (x == "`") { st = st "`"; adv(); open(k); prev = x; continue }
+        if (x == "\"" && st == "") { st = "D"; adv(); prev = x; continue }
+        adv(); prev = x
+    }
+    EL[k] = Cl; EC[k] = Cc
+    if (MODE == "P") for (i = 1; i <= np; i++) if (!(PEND[i] in SAME)) SAME[PEND[i]] = k
+}
+# text from (l1, c1) up to (l2, c2); a line continuation joins with nothing between
+function piece(l1, c1, l2, c2,    out, l) {
+    if (l1 == l2) return substr(L[l1], c1, c2 - c1)
+    out = substr(L[l1], c1)
+    for (l = l1 + 1; l <= l2; l++) {
+        sub(/\\$/, "", out)
+        out = out ((l < l2) ? L[l] : substr(L[l], 1, c2 - 1))
+    }
+    return out
+}
+function outer(k,    s, m, pl, pc) {    # rm k without the text of its $( ), ` ` and ( )
+    pl = SL[k]; pc = SC[k]; s = ""
+    for (m = 1; m <= NIV[k]; m++) { s = s piece(pl, pc, IVSL[k, m], IVSC[k, m]); pl = IVEL[k, m]; pc = IVEC[k, m] }
+    return s piece(pl, pc, EL[k], EC[k])
+}
+function clean(s) { gsub(SEP, " ", s); return s }
+# rm k read the D way: to the end of its line (once per line), and to the next ; & | (once per stretch)
+function dline(k,    l, c, n, e, x) {
+    l = SL[k]; c = SC[k]; load(l); n = LEN[l]
+    if (!(l in DL)) { DL[l] = 1; OUT[++no] = "D " SEP " " SEP " " clean(substr(L[l], c)) }
+    if (c >= DP[l]) {
+        e = plainend(l, c, 1)
+        DP[l] = e
+        OUT[++no] = "D " SEP " " clean(substr(L[l], c, e - c)) " " SEP
+    }
+}
+# Where main stopped reading rm k: the next ; & | on its line. One escaped by a
+# backslash is not a separator in any quoting, so it never ends the stretch;
+# with redir, neither does a redirection (>| 2>&1 <&0 &>).
+function plainend(l, c, redir,    n, e, x, b) {
+    load(l); n = LEN[l]
+    for (e = c; e <= n; e++) {
+        x = CH[l, e]
+        if (x != ";" && x != "&" && x != "|") continue
+        for (b = 0; e - b - 1 >= 1 && CH[l, e - b - 1] == "\\"; b++) ;
+        if (b % 2) continue
+        if (redir && ((x == "|" && e > 1 && CH[l, e - 1] == ">") ||
+            (x == "&" && ((e > 1 && (CH[l, e - 1] == ">" || CH[l, e - 1] == "<")) || (e < n && CH[l, e + 1] == ">"))))) continue
+        break
+    }
+    if ((steps += e - c) > 1000000) bail = 1
+    return e
+}
+# main one-command rule on rm k: R when a -r (or --recursive) and F when a -f
+# (or --force) stands as a whole blank-separated word before the next ; & |,
+# a substitution included (bash pastes its output into rm arguments).
+function mainflags(k,    l, c, e, s, out) {
+    l = SL[k]; c = SC[k]
+    e = plainend(l, c, 0)
+    if (k in SAME) { if (c < MP[l]) return ""; MP[l] = e }   # a stretch already read
+    s = " " substr(L[l], c, e - c) " "
+    gsub(/[\t\r\f]/, " ", s)
+    out = (s ~ / (-[A-Za-z]*[rR][A-Za-z]*|--recursive) /) ? "R" : ""
+    if (s ~ / (-[A-Za-z]*[fF][A-Za-z]*|--force) /) out = out "F"
+    return out
+}
+BEGIN { if (SEP == "") SEP = sprintf("%c", 28); WS = " \t\r\v\f" }
+{ L[++N] = $0 }
+END {
+    if (split("ab", T, "") != 2) { print "WHOLE"; exit }
+    for (i = 1; i <= N; i++) {      # every rm that main would start reading at
+        if (!index(L[i], "rm")) continue
+        load(i); n = LEN[i]; found = 0
+        for (j = 1; j + 2 <= n; j++)
+            if (CH[i, j] == "r" && CH[i, j + 1] == "m" && (j == 1 || index(";&|" WS, CH[i, j - 1])) && index(WS, CH[i, j + 2])) {
+                K++; SL[K] = i; SC[K] = j; START[i, j] = K; found = 1
+            }
+        if (found) prescan(i)
+    }
+    for (k = 1; k <= K && !bail; k++) {
+        if (!(k in TOP)) { dline(k); continue }
+        if (k in SAME) {            # ends where an earlier rm ends: inside its text
+            if (mainflags(k) == "RF") OUT[++no] = "H " SEP " " SEP
+            continue
+        }
+        scan(k)
+        if (bail) break
+        if (MODE == "D") dline(k)
+        else OUT[++no] = "P " SEP " " clean(outer(k)) " " SEP " " clean(piece(SL[k], SC[k], EL[k], EC[k])) " " SEP " x" mainflags(k)
+    }
+    if (bail) { print "WHOLE"; exit }
+    for (i = 1; i <= no; i++) print OUT[i]
+}'
+# One line per rm: "P outer full flags", "D plain line", or "H" when main's
+# one-command rule already refuses (SEP between; flags: R and F for a -r and a
+# -f that main's one-command rule counted). A word is an
+# option when its letters (quotes, backslashes and a brace list inside it are
+# bash's, not the word's) are followed by nothing literal. One hyphen: a
+# cluster, read by its letters. Two at the start of a word: a long option,
+# read by prefix. Two or more glued to something else are read both ways,
+# since an expansion before them may come out empty (`$x--force`) or be an
+# operator (`${u:--rf}` is -rf, `${u:---force}` is --force).
+# P: one cluster with r and f anywhere, or a recursive and a force option where
+# short options come from outside $( ), long ones from anywhere, and -r / -f
+# from wherever main's one-command rule counted them. D: one such
+# cluster to the end of the line; --recursive and --force as whole words to the
+# end of the line (as main read long options); or a recursive and a force
+# option before the next ; & |, where a word that ends a $( ) or ` ` opened
+# after the rm (the -f of `$(ls -f)`) does not count. Prints HIT when an rm qualifies, else NONE.
+RM_FLAGS_AWK='
+function part(s, dmode,    n, i, j, h, w, x, br, glued, r, f, sub_end, dp, bt, bo, bR, bF, odd) {
+    R = 0; F = 0; B = 0; LR = 0; LF = 0; dp = 0; bt = 0; bo = 0
+    n = split(s, T, "")
+    for (i = 1; i <= n; i++) {
+        if (T[i] == "(") dp++         # a $( ) or ` ` opened after the rm started
+        else if (T[i] == ")" && dp) dp--
+        else if (T[i] == "`") bt = !bt
+        # a brace list is one word to the reader but several to rm: {-r,-f} is -r -f
+        if (T[i] == "{") { bo = 1; bR = 0; bF = 0 }
+        else if (T[i] == "}" && bo) { if (bR && bF) B = 1; bo = 0 }
+        else if (T[i] == " " || T[i] == "\t") bo = 0
+        if (T[i] != "-" || (i > 1 && T[i - 1] == "-")) continue
+        for (j = i; j <= n && T[j] == "-"; j++) ;
+        h = j - i; w = ""; br = 0; odd = 0
+        for (; j <= n; j++) {
+            x = T[j]
+            if (x ~ /[A-Za-z]/) w = w x
+            else if (x == "{") { br = 1; odd = 1 }
+            else if (br && x == ",") continue
+            else if (br && x == "}") br = 0
+            else if (x != "\"" && x != "\047" && x != "\\") break
+            else odd = 1
+        }
+        if (w == "" || (j <= n && index(LIT, T[j]))) continue
+        glued = (h > 1 && i > 1 && !index(" \t\"\047", T[i - 1]))
+        sub_end = dmode && j <= n && ((T[j] == ")" && dp) || (T[j] == "`" && bt))
+        if (h == 1 || glued) {
+            r = (w ~ /[rR]/); f = (w ~ /[fF]/)
+            if (r && f) B = 1
+            if (!sub_end) { if (r) R = 1; if (f) F = 1 }
+            if (bo && (T[i - 1] == "{" || T[i - 1] == ",")) { if (r) bR = 1; if (f) bF = 1 }
+        }
+        # main kept the hyphens of a long word that is not plain (`"--force"`,
+        # `--force)`, as in $(echo --force)) and read -force as -f...r; both
+        # ways keep that reading, so neither misses what main caught this way
+        if (h == 2 && !glued && w ~ /[rR]/ && w ~ /[fF]/ &&
+            (odd || (i > 1 && !index(" \t", T[i - 1])) || (j <= n && !index(" \t", T[j])))) B = 1
+        if (h == 2 || glued) {
+            if (index("recursive", w) == 1) { if (!dmode || w == "recursive") LR = 1; if (!sub_end) R = 1 }
+            if (index("force", w) == 1) { if (!dmode || w == "force") LF = 1; if (!sub_end) F = 1 }
+        }
+    }
+}
+BEGIN {
+    if (SEP == "") SEP = sprintf("%c", 28)
+    LIT = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._/:=~^%#_-"
+}
+{
+    k = index($0, SEP); if (!k) { hit = 1; next }
+    kind = substr($0, 1, k - 1); rest = substr($0, k + 1)
+    k = index(rest, SEP); if (!k) { hit = 1; next }
+    if (index(kind, "H")) { hit = 1; next }
+    dmode = !index(kind, "P")
+    a = substr(rest, 1, k - 1); rest = substr(rest, k + 1); fl = ""
+    if (!dmode) { k = index(rest, SEP); if (!k) { hit = 1; next } fl = substr(rest, k + 1); rest = substr(rest, 1, k - 1) }
+    part(a, dmode); ra = R; fa = F
+    part(rest, dmode)
+    if (!dmode) { if (B || ((ra || LR || index(fl, "R")) && (fa || LF || index(fl, "F")))) hit = 1 }
+    else if (B || (LR && LF) || (ra && fa)) hit = 1
+}
+END { print (hit ? "HIT" : "NONE") }'
+RM_SEP=$(printf '\034')
+RM_SEGS=$(LC_ALL=C awk -v SEP="$RM_SEP" "$RM_SCOPE_AWK" <<<"$CMD_STRUCT" 2>/dev/null) || RM_SEGS=WHOLE
+if [ "$RM_SEGS" = WHOLE ]; then
+    # the old rule on every rm: to the end of the line, and to the next ; & |
+    RM_SEGS=$( { grep -oE '(^|[;&|[:space:]])rm[[:space:]].*' <<<"$CMD_STRUCT" | sed "s/^/D $RM_SEP $RM_SEP /"
+                 grep -oE '(^|[;&|[:space:]])rm[[:space:]][^;&|]*' <<<"$CMD_STRUCT" | sed "s/^/D $RM_SEP /; s/\$/ $RM_SEP/"; } ) || true
 fi
-# Split flags (rm -r x -f) within one command, up to the next ; & | or line
-# break, in a single pass (one grep per segment took 110 s on 30,000 segments).
-if grep -oE '(^|[;&|[:space:]])rm[[:space:]][^;&|]*' <<<"$CMD_STRUCT" | LC_ALL=C awk '
-    /(^|[[:space:]])(-[a-zA-Z]*[rR][a-zA-Z]*|--recursive)([[:space:]]|$)/ &&
-    /(^|[[:space:]])(-[a-zA-Z]*[fF][a-zA-Z]*|--force)([[:space:]]|$)/ { found = 1 }
-    END { exit !found }'; then
-    block "recursive force delete (rm with -r and -f) — cannot be undone"
+if [ -n "$RM_SEGS" ]; then
+    # Either step failing is a block, not a pass.
+    RM_FLAGS=$(printf '%s\n' "$RM_SEGS" | python3 -I -c "$FLOOR_PY" rmseg 2>/dev/null | LC_ALL=C awk -v SEP="$RM_SEP" "$RM_FLAGS_AWK" 2>/dev/null) || RM_FLAGS=HIT
+    if [ "$RM_FLAGS" != NONE ]; then
+        block "recursive force delete (rm -rf / -fr / -r -f / --recursive --force) — cannot be undone"
+    fi
 fi
 
 # --- Worktree force remove ---
-if grep -qE "$GIT_CMD"'worktree[[:space:]]+remove[[:space:]]+[^;&|]*(--force|-f([[:space:]]|$))' <<<"$CMD_GITFLOOR"; then
+if git_floor 'worktree[[:space:]]+remove' '--force|-f([[:space:]]|$)'; then
     block "git worktree remove force (--force / -f) — discards uncommitted worktree changes"
 fi
 
@@ -406,7 +793,7 @@ if grep -qE "$GIT_CMD"'push[[:space:]]+.*((--delete|[[:space:]"'\'']-d)(["'\''[:
 fi
 
 # --- Forced checkout: discards every uncommitted change without naming a path ---
-if grep -qE "$GIT_CMD"'checkout[[:space:]]+[^;&|]*(--force([[:space:]]|$)|-[a-zA-Z]*f([[:space:]]|$))' <<<"$CMD_GITFLOOR"; then
+if git_floor checkout '--force([[:space:]]|$)|-[a-zA-Z]*f([[:space:]]|$)'; then
     block "git checkout --force / -f — discards uncommitted changes"
 fi
 
@@ -476,7 +863,37 @@ def git(*args):
 
 # A newline ends a command, as ; does (MCU-Watchlist 2026-11-02: a delete on
 # the second line was not seen).
-cmd = cmd.replace("\\\n", " ").replace("\n", " ; ")
+def strip_comments(text):
+    # A `#` that STARTS a word, outside quotes, starts a comment that ends at
+    # the line break (MCU-Watchlist PR #167: `git push origin --delete
+    # merged-a # cleanup` read "#" and "cleanup" as branch names). Not
+    # shlex's commenters: it also cuts `a#b` in the middle of a word, so the
+    # ask would name branch "a" while bash deletes "a#b".
+    out, i, n, sq, dq = [], 0, len(text), False, False
+    while i < n:
+        c = text[i]
+        if sq:
+            sq = c != "'"
+        elif c == "\\":
+            out.append(text[i:i + 2])
+            i += 2
+            continue
+        elif dq:
+            dq = c != '"'
+        elif c == "'":
+            sq = True
+        elif c == '"':
+            dq = True
+        elif c == "#" and (i == 0 or text[i - 1] in " \t\n;&|()"):
+            end = text.find("\n", i)
+            i = n if end < 0 else end
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
+cmd = strip_comments(cmd.replace("\\\n", " ")).replace("\n", " ; ")
 
 try:
     lex = shlex.shlex(cmd, posix=True, punctuation_chars=True)
@@ -561,10 +978,11 @@ for words in segments:
     names = [b[len("refs/heads/"):] if b.startswith("refs/heads/") else b for b in positional[1:]]
     deletes.append((positional[0], names))
 
-if int(os.environ.get("SAFETY_READER_DELETE") or 0) > len(deletes):
-    # The per-command reader saw more remote deletes than this parser can
-    # place (v1.69.0 review: an ask named one branch while a second delete,
-    # spelled --{d..d}elete, went through with it). Disagree -> block.
+if int(os.environ.get("SAFETY_READER_DELETE") or 0) != len(deletes):
+    # The per-command reader and this parser must count the same plain
+    # deletes (v1.69.0 review: an ask named one branch while a second delete,
+    # spelled --{d..d}elete, went through with it; MCU-Watchlist PR #167:
+    # exactly n, in either direction). Disagree -> block.
     verdict("BLOCK could not identify every branch being deleted; run each as a plain `git push <remote> --delete <branch>`")
 
 if not deletes:
