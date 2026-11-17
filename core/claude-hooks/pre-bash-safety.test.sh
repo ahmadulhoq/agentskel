@@ -1831,5 +1831,49 @@ floor BLOCKED "$(printf 'cat > notes.md <<'"'"'EOF'"'"'\nDon'"'"'t rm it'"'"'s s
 floor BLOCKED 'rm -- -rf'
 floor BLOCKED 'gh pr create --title "hook" --body "Blocks rm path -rf now"'
 
+# --- agentskel v1.69.0 differential (2026-11-18): with the reader switched
+# off, the floor let the override through a push that prunes or mirrors (the
+# force-push floor rule is overridable; --prune / --mirror were only the
+# reader's), and the merged-delete parser missed a delete inside backticks
+# or $( ) once the comment after it was read as a comment ---
+floor BLOCKED 'AGENTSKEL_UNSAFE=i-understand git push -f --prune origin'
+floor BLOCKED 'AGENTSKEL_UNSAFE=i-understand git push --mirror origin'
+floor BLOCKED 'AGENTSKEL_UNSAFE=i-understand git push origin --prune'
+floor BLOCKED 'git push --prune origin'
+floor BLOCKED 'AGENTSKEL_UNSAFE=i-understand git push "--mirror" origin'
+# a variable in front is an option built from a variable: overridable
+floor ALLOWED 'AGENTSKEL_UNSAFE=i-understand git push origin $x--mirror'
+floor ALLOWED 'git fetch --prune'
+floor ALLOWED 'git push origin main && git fetch --prune'
+floor BLOCKED 'echo `git push origin --delete unmerged` # ; git push origin --delete merged-a'
+floor BLOCKED 'echo `git push origin --delete unmerged` # note'
+floor BLOCKED 'echo $(git push origin --delete unmerged) # note'
+floor BLOCKED 'x=$(git push origin :unmerged) # note'
+check ALLOWED 'git fetch --prune'
+check ALLOWED 'git remote prune origin --dry-run'
+# ...and an rm in a subshell or substitution: the reader read `$x-rf` as a
+# name (PR #61's reader read the empty-variable form; MCU's leaves that to the
+# floor), and the floor only found an rm after a space or ; & |, so `(rm`,
+# `$(rm` and a backtick hid it; inside one the floor's doubtful reading did
+# not count `$x-rf` either
+check BLOCKED '(rm $x-rf /tmp/zz)'
+check BLOCKED '(rm $9-rf y)'
+check BLOCKED '(rm `:`-rf y)'
+check BLOCKED '(rm $x--force -r y)'
+check BLOCKED 'echo $(rm $x-rf y)'
+check BLOCKED 'echo `rm $x-rf y`'
+floor BLOCKED '(rm -rf y)'
+floor BLOCKED 'echo $(rm -rf y)'
+floor BLOCKED 'echo `rm -rf y`'
+floor BLOCKED '{ rm -r -f y; }'
+floor BLOCKED '(rm $x-rf /tmp/zz)'
+floor BLOCKED '(rm `:`-rf y)'
+floor BLOCKED 'echo $(rm $x--force -r y)'
+check ALLOWED 'rm "$OUT-firmware.bin"'
+check ALLOWED '(rm $x-report.txt "$y-final-firmware.bin")'
+floor ALLOWED 'rm "$OUT-firmware.bin"'
+floor ALLOWED '(rm $x-report.txt "$y-final-firmware.bin")'
+floor ALLOWED '(cd sub && rm -f a.jpg); ffmpeg -i a.mp4 -frames:v 1 b.jpg'
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
