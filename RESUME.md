@@ -1,7 +1,7 @@
 # Session Resume
 
 ## Status: IDLE | IN_PROGRESS
-IN_PROGRESS — v1.69.0 PR #61 (branch feat/v1.69.0-bash-safety-upstream, pushed 592e0e7): now also MCU-Watchlist #167 + #179 merged in (2026-11-18). Waiting on: CI on 592e0e7; the user's merge; open items in the PR's 'Please decide' (independent review blocked by API safeguards, BL-014, BL-011, BL-012, BL-013 rest). Docker daemon stopped mid-session (Linux runs then fell to CI).
+IN_PROGRESS — v1.69.0 PR #61 (branch feat/v1.69.0-bash-safety-upstream, pushed 728d401 after the 2026-11-20 self-review): now also MCU-Watchlist #167 + #179 merged in (2026-11-18). Waiting on: CI on 592e0e7; the user's merge; open items in the PR's 'Please decide' (independent review blocked by API safeguards, BL-014, BL-011, BL-012, BL-013 rest). Docker daemon stopped mid-session (Linux runs then fell to CI).
 
 ## Last Completed Task
 - v1.69.0 part 3 (PR #61, open, 2026-11-18): MCU-Watchlist #167 + #179 merged — suites three-way merged (1,373 cases), reader = MCU #179's + agentskel rules, MCU's quadratic NEUTRAL_AWK not ported (691 s at 160k hyphens on MCU main), owner decisions (ours/theirs blocked, branch -M/-C by repo state, nested deletes blocked, variable-built push options overridable), 11,599-cmd × 6-hook differential, 4 gaps fixed. Commits 2e8d67f 9a0bc49 3176976 26a7f4b 592e0e7. After merge: post-merge cleanup; MCU syncs via Step 5n and drops its deviation + repo-rules note.

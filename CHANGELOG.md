@@ -4,6 +4,23 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-11-20 — v1.69.0 (same PR #61): self-review of the MCU merge
+
+User asked for a review before merge. The `code-review` skill (forked) died at
+once with the same API safeguards error as the reviewer agents; not reworded.
+Self-review (author, not independent) of the hook's new code and the reader's
+ported parts found 3 gaps, fixed tests-first (commits 8d21aa1 tests, 728d401 fix):
+(1) REGRESSION — stored repo-config aliases called bare (`git wipe` =
+reset --hard / `!rm -rf` / stash drop) were allowed: MCU's no-option shortcut
+in check_command skips the alias; PR #61 blocked them but had NO test, so the
+merge lost it silently. Now a stored-alias fixture repo in the suite.
+(2) `git checkout -p <path>` allowed although docs said blocked (only --patch
+was). (3) floor-only: `git push origin -- +main` passed (the +refspec rule read
+the push cut at `--`; refspecs follow `--`). Suite 1,386/1,386 macOS; CI on
+728d401. Also noted: MCU main has 8 new TD-024 commits on pre-memory-push.sh /
+stop-verify.sh (not the safety hook) — a separate upstream candidate.
+affected: none (hook files only)
+
 ## 2026-11-18 — v1.69.0 (same PR #61): MCU-Watchlist #167 + #179 merged in
 
 Brief: port MCU's per-command rewrite (#167; later #179) into core/claude-hooks
