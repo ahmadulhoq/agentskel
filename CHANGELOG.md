@@ -259,7 +259,7 @@ and this PR's 668 failed 112 there.
     heredoc bodies, prose that mentions rm, flags of another command on the
     line, hyphenated names, `-- -f`, read-only GraphQL. One exception predates
     this work: `git branch -f main origin/main`, which v1.68.1 blocked only by
-    accident (filed as BL-014).
+    accident (filed as BL-014, fixed below).
   - **PR #61 blocks, merged allows (329):** all intended (ffmpeg and friends,
     `"$BRANCH-fix"`, `checkout-index --prefix`, `cp * -rf`, variables that
     bash really runs harmlessly), once the four fixes below were in.
@@ -303,6 +303,14 @@ and this PR's 668 failed 112 there.
   - With the reader off, the floor cut the push at `--` for refspecs too, so
     `git push origin -- +main` (a force push) passed. The `+refspec` rule now
     reads the whole push; only options stop at `--`.
+- **BL-014 (owner, 2026-11-21): a forced create onto an existing branch.**
+  `git branch -f <branch> [<start>]`, `git checkout -B` and `git switch -C` /
+  `--force-create` move an existing branch, and its own commits survive only
+  in the reflog. No version of the hook blocked them; v1.68.1 caught `git
+  branch -f main origin/main` only by accident. They now follow the `-M/-C`
+  rule: blocked when the branch exists or can't be checked. Allowed: a new
+  branch, `branch -f` of the current branch (git refuses), and `-B` / `-C` of
+  the current branch with no start point (nothing moves). 27 cases.
 
 **Accepted limits**, documented in AUTONOMY-MODES and filed:
 - **BL-013:** values that exist only at run time, the same class as the

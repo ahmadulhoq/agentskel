@@ -1246,7 +1246,7 @@ def has(shorts, letter):
 
 SESSION_CWD = ""            # from the hook (SAFETY_CWD): where the command runs
 ELSEWHERE = False           # the command may run git in another repo (cd, -C, GIT_DIR, ...)
-CREATES = False             # a command in the line may create a branch
+CREATES = 0                 # commands in the line that may create a branch
 _REPO = {}
 
 
@@ -1296,6 +1296,48 @@ def branch_move_overwrites(names):
     if new == old:
         return False            # renaming a branch onto itself changes nothing
     return new.lower() in heads  # case-insensitive: refs are files on macOS
+
+
+def option_value(args, letter, long=None):
+    """The value given to short option `letter` (`-B x`, `-Bx`, `-qB x`) or
+    to `--<long>` (`--force-create x`, `--force-create=x`) before `--`; None
+    when the option is not there."""
+    for k, a in enumerate(args):
+        if a == "--":
+            break
+        v = bare(a)
+        if long and v.startswith("--"):
+            opt = v[2:].split("=", 1)[0]
+            if opt and opt != "force" and len(opt) > 5 and long.startswith(opt):
+                return v.split("=", 1)[1] if "=" in v else (args[k + 1] if k + 1 < len(args) else "")
+            continue
+        if v.startswith("-") and letter in v[1:]:
+            rest = v[v.index(letter, 1) + 1:]
+            return rest if rest else (args[k + 1] if k + 1 < len(args) else "")
+    return None
+
+
+def branch_reset_overwrites(target, start, refuses_current, self_creates):
+    """A forced create (`branch -f`, `checkout -B`, `switch -C`) of <target>:
+    may it move an existing branch? (BL-014, owner 2026-11-21: the same rule
+    as -M/-C.) Allowed when the branch does not exist; and for the current
+    branch when git refuses (`branch -f`) or there is no start point (the
+    reset changes nothing). Blocked when it can't be checked."""
+    if target is None:
+        return False                    # no such option here
+    created_elsewhere = CREATES - (1 if self_creates else 0) > 0
+    if (not target or ELSEWHERE or created_elsewhere
+            or MAYBE_EXPANSION.search(target) or PLACEHOLDER in target):
+        return True
+    state = repo_state()
+    if state is None:
+        return True
+    heads, current = state
+    if target.lower() not in heads:
+        return False
+    if target == current and (refuses_current or start is None):
+        return False
+    return True
 
 
 def single_path(word):
@@ -1400,6 +1442,11 @@ def git_rule(sub, args, depth, plain_ok=False, defining=False):
         if move_copy and force_mc and ("*" in shorts or defining or branch_move_overwrites(operands)):
             return ("git branch --move/--copy --force (-M / -C) onto a branch that exists (or "
                     "cannot be checked) — replaces it"), "block"
+        if ((has(shorts, "f") or is_option(longs, "force")) and not delete and not move_copy
+                and branch_reset_overwrites(operands[0] if operands else None,
+                                            operands[1] if len(operands) > 1 else None, True, False)):
+            return ("git branch -f onto a branch that exists (or cannot be checked) — moves it; its "
+                    "own commits survive only in the reflog"), "block"
     elif sub == "clean":
         longs, shorts, _, _ = git_options(args, "e", ("exclude",), VALID_SHORTS["clean"])
         if has(shorts, "f") or is_option(longs, "force"):
@@ -1412,6 +1459,10 @@ def git_rule(sub, args, depth, plain_ok=False, defining=False):
         longs, shorts, names, after = git_options(args, "bB", CHECKOUT_VALUE_LONGS, VALID_SHORTS["checkout"])
         if has(shorts, "f") or is_option(longs, "force"):
             return "git checkout --force / -f — discards uncommitted changes", "block"
+        if has(shorts, "B") and branch_reset_overwrites(option_value(args, "B"), names[0] if names else None,
+                                                        False, True):
+            return ("git checkout -B onto a branch that exists (or cannot be checked) — moves it; its "
+                    "own commits survive only in the reflog"), "block"
         targets = names + (after or [])
         if targets and ("*" in longs or has(shorts, "p")
                         or is_option(longs, "ours", "theirs", "conflict", "patch")):
@@ -1427,9 +1478,15 @@ def git_rule(sub, args, depth, plain_ok=False, defining=False):
                 or (len(names) == 1 and (looks_like_path(names[0]) or single_path(names[0])))):
             return "git checkout <commit> [--] <path> — discards those paths' uncommitted changes", "block"
     elif sub == "switch":
-        longs, shorts, _, _ = git_options(args, "cC", ("orphan", "conflict"), VALID_SHORTS["switch"])
+        longs, shorts, names, _ = git_options(args, "cC", ("orphan", "conflict"), VALID_SHORTS["switch"])
         if has(shorts, "f") or is_option(longs, "force", "discard-changes"):
             return "git switch --force / -f / --discard-changes — discards uncommitted changes", "block"
+        target = option_value(args, "C", "force-create") if (
+            has(shorts, "C") or any(len(o) > 5 and "force-create".startswith(o) for o in longs)) else None
+        rest = [n for n in names if n != target]
+        if branch_reset_overwrites(target, rest[0] if rest else None, False, True):
+            return ("git switch -C onto a branch that exists (or cannot be checked) — moves it; its "
+                    "own commits survive only in the reflog"), "block"
     elif sub == "reset":
         longs, _, _, _ = git_options(args, valid=VALID_SHORTS["reset"])
         if is_option(longs, "hard"):
@@ -2108,8 +2165,9 @@ if __name__ == "__main__":
     SESSION_CWD = os.environ.get("SAFETY_CWD", "")
     ELSEWHERE = bool(re.search(r"(^|[^A-Za-z0-9_])(cd|pushd|popd)([^A-Za-z0-9_]|$)|GIT_(DIR|WORK_TREE|COMMON_DIR)"
                                r"|--git-dir|--work-tree|git\s+(?:-c\s+\S+\s+|-\S+\s+)*-C\s", data, re.I))
-    CREATES = bool(re.search(r"(checkout|switch)[^;&|\n]*\s-[A-Za-z]*[bBcC]|update-ref|fetch|pull|worktree"
-                             r"|branch\s+(?:--?[A-Za-z-]*[tu][A-Za-z-]*\s+)*[^-\s]", data))
+    CREATES = len(list(re.finditer(
+        r"(checkout|switch)[^;&|\n]*\s(?:-[A-Za-z]*[bBcC]|--(?:create|force-create|orphan))|update-ref|fetch|pull"
+        r"|worktree|branch\s+(?:--?[A-Za-z-]*[tu][A-Za-z-]*\s+)*[^-\s]", data)))
     try:
         signal.signal(signal.SIGALRM, on_timeout)
         signal.alarm(TIME_LIMIT)
