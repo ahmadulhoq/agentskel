@@ -1,5 +1,345 @@
 # agentskel Changelog
 
+## v1.69.0 — 2026-11-05
+
+### pre-bash-safety: upstreamed from MCU-Watchlist, every tool, gaps closed
+
+MCU-Watchlist carried a much stronger safety hook as a project-local fix
+(PRs #164, #165, merge commits 1e853ef3 and 32a8c635), developed over five
+rounds of independent adversarial review. Until now, a sync would have
+overwritten it with the weaker skeleton hook. This release makes that hook
+the skeleton's, and extends it.
+
+**Ported verbatim (behaviour and tests preserved):**
+- `core/claude-hooks/pre-bash-commands.py` (new). Recursive force `rm` and
+  force `git branch` delete are decided by a reader that splits the command
+  the way bash does: quotes, `$''`, brace expansion including the command
+  word, `${ }`, `$( )`, backticks, `<( )`/`>( )`, `$(( ))`, `$[ ]`, extglob,
+  `case` patterns, redirections and comments. The old coarse regexes run as
+  a floor, so the reader can only ADD blocks. The floor neutralises a hyphen
+  only when a literal filename character precedes it, so real hyphenated
+  files (`the-fantastic-four-first-steps.json`) are no longer blocked.
+- `core/claude-hooks/pre-bash-heredocs.py` (new). Heredoc bodies are skipped
+  only for a few exact whole-command text-writing shapes: `git commit -F -`,
+  `gh … --body-file -`, `cat > FILE`, `tee FILE > /dev/null`. Each may sit
+  behind `cd`/`git add &&`, and needs a quoted end marker, an exact end line
+  and nothing after it. Three earlier "recognise heredocs anywhere" designs
+  were each defeated in review, and that approach is not coming back.
+- Hook: the `AGENTSKEL_UNSAFE=i-understand` override (first word of a
+  single command, never for remote deletes); `git restore`;
+  `git clean --force`; `git worktree remove -f`; force branch delete in
+  every spelling; quoted `gh api --method "DELETE"`; `NAME=value` /
+  `NAME+=value` before a remote delete; here-strings instead of
+  `echo | grep` (that failed open under pipefail on long commands);
+  `python3 -I` on every call.
+- **Accepted, documented limit** (kept in `pre-bash-commands.py`): a delete
+  flag assembled at run time, from a substitution's output or word
+  splitting, cannot be seen before bash runs. Allowing real hyphenated
+  filenames necessarily allows these.
+- Suite: MCU-Watchlist's 387 cases, now `pre-bash-safety.test.sh`. They are
+  a superset of our previous 63. It takes an optional hook path, so sync
+  can test the **installed** hook. Against the v1.68.1 hook: 134 failures.
+
+**Fixed beyond the port:**
+- **macOS:** `LC_ALL=C` on both awk calls. In a UTF-8 locale, macOS awk
+  splits a non-breaking space in half and dies. The floor then blocked by
+  accident, and the split-flag rule failed OPEN. MCU-Watchlist's own copy
+  scores 386/387 on macOS; the skeleton copy passes its suite 387/387.
+- **Regex-level gaps** (maintainer decision; 19 cases, all allowed before):
+  - a path-qualified git (`/usr/bin/git`, `./git`);
+  - any global option before the subcommand (`git --no-pager …`, `-P`,
+    `--git-dir=…`); only git's value-taking globals consume the next word,
+    so `git --no-pager log --grep restore` stays allowed;
+  - `git push origin +main` (a `+refspec` force push);
+  - the remote-delete check skipping a path-qualified git.
+
+  All git rules now share one `GIT_CMD` prefix. It matches everything the
+  old prefix did, so the change can only add blocks.
+
+**Every tool** (maintainer decision): Gemini CLI, Cursor, Windsurf and Codex
+get `core/<tool>-hooks/pre-bash-safety.sh`, a thin wrapper around the same
+engine (installed next to it as `pre-bash-safety-engine.sh`, with both
+helpers). The wrapper converts the tool's hook JSON in and the verdict out,
+and is wired first, with no matcher, on every shell command.
+- Outside Claude Code, a merged remote-branch delete is **blocked**, not
+  asked (`AGENTSKEL_NO_ASK=1`). None of the other tools has a verified
+  approval prompt.
+- A missing engine blocks loudly rather than leaving every command
+  unchecked.
+- New `pre-bash-safety-tools.test.sh`: 81 cases covering each tool's input
+  and output contract, plus a config-wiring check. The full rule suite also
+  passes through the Gemini and Codex wrappers.
+
+**Override guard** (maintainer decision): the agent can type the override
+itself, so there's a new core-behavior rule, "Never self-approve a
+safety-hook override". It allows the override only after the user has
+approved that exact command in the current exchange. The rule is in all 14
+rule files and is fingerprinted by the validator; the block message says the
+same. Hook behaviour is unchanged.
+
+**Install / sync:**
+- setup-skeleton Step 5b3 and the sync hook-refresh table name the new
+  files.
+- New sync **Step 5n** installs the engine, helpers and wrappers, wires each
+  wrapper, and runs the suites against the installed hooks.
+- **BL-006 fixed:** Steps 5k/5l said to copy the Claude-format script into
+  the other tools' folders, where it reads an empty command and allows
+  everything.
+- MCU-Watchlist can drop its "never overwrite the hook on sync" carve-out
+  after taking Step 5n.
+- CI runs the wrapper suite too.
+
+**Every rule decided per command** (BL-007, BL-008, BL-009, BL-010; first
+filed during this release, then fixed in it at the maintainer's request).
+Tests first: 72 new cases, of which 35 destructive commands were ALLOWED and
+9 harmless ones BLOCKED by the hook before this work.
+- **BL-010:** the per-command reader now decides every rule, not just `rm`
+  and `git branch`:
+  - git push force, including `-uf` clusters, `+refspec`, `--mirror` and
+    `--prune`;
+  - reset --hard;
+  - checkout `-f` / `--` / `.` / `<tree-ish> <paths>`;
+  - switch `-f` / `--discard-changes`;
+  - restore;
+  - clean force;
+  - worktree remove force;
+  - stash drop / clear;
+  - find `-delete` / `-exec rm`;
+  - gh api writes.
+
+  Long options count by unambiguous prefix, as git accepts them.
+- **BL-007:** because the reader re-reads `bash -c`, `eval`, `ssh`, `$( )`
+  and backticks as commands, every rule now sees inside nested shells.
+- **Remote branch deletes:**
+  - A plain top-level delete is reported to the hook, whose ask/block
+    verdict then runs even when its regex prefilter misses the spelling
+    (`\git`, `'git'`).
+  - A delete anywhere nested is blocked, because nothing can ask about a
+    command it cannot see.
+  - If the verdict cannot place a delete that the reader saw, it blocks.
+- **BL-009, gh api:** `-f`/`-F`/`--field`/`--raw-field`/`--input` imply
+  POST without `-X`, so these are blocked as writes. `gh api graphql` is
+  allowed only for an inline query that is not a mutation and does not come
+  from a file, `--input` or `$( )`. Any `$` in the query must be one that
+  bash does not expand: a GraphQL `$variable` and a shell `"$M"` look the
+  same after quote removal, so the raw command is scanned.
+- **BL-008:** the git / find / gh api regexes stay as a floor, but each now
+  stops at the end of one command (`[^;&|]*`), so a flag of the NEXT command
+  no longer counts. The floor reads a copy of the command where:
+  - a separator inside quotes is part of the word (quoting cannot hide a
+    flag);
+  - a redirection `&` is not a separator;
+  - a hyphen inside a word (`update-ref`, `turn-it-off`) cannot read as an
+    option.
+
+  That copy is built in Python: a first awk version took 535 s on a
+  200,000-character command under macOS awk.
+- **Crash fallback:** when the reader cannot run, the fallback also blocks
+  the git / find / gh api words.
+
+**Old-vs-new differential:** the ported MCU hook before the per-command work
+(cf5b1c9) against the final hook, over every suite command plus generated
+variants (4,571 commands, bash 5.2). 91 commands the old hook blocked are now allowed, and each one is
+a false positive:
+- a later command's `-f` (`git push origin main && ls -f`);
+- `+` that does not start a refspec (`feat+x`);
+- `--hard` as a grep pattern;
+- a safe `branch --delete`, or `worktree remove` without force;
+- `git restore --staged`;
+- a GraphQL read sent with `-X POST`.
+
+No timeouts.
+
+**Adversarial review round.** Two independent reviewers probed the hook
+after the per-command work: one took the git rules; the other took gh, find,
+the floor, the override and deletes. Every finding got a test before its
+fix: 163 new cases. Before the fixes, the hook allowed 123 destructive
+commands, blocked 2 harmless ones, and took 61 s on a word of 80,000
+hyphens. A hook that runs past Claude Code's timeout lets the command
+through.
+- **Reading like bash:**
+  - brace sequences `{a..b}`;
+  - backticks up to the next unescaped backtick;
+  - heredoc bodies that cannot swallow the lines after them;
+  - `\r` as an ordinary character;
+  - `(( ))` as arithmetic, where `#` is not a comment;
+  - zsh `${ }` and glob qualifiers `*(e:'…':)`, read as code.
+- **Command names** are matched the way the shell and the file system find
+  them:
+  - any case (`GIT reset --hard`, since macOS file systems are
+    case-insensitive);
+  - globs (`/usr/bin/gi?`), zsh `=git`, dashed builtins (`git-reset`);
+  - an always-empty expansion glued on (`${x}git`, `--ha$()rd`).
+
+  Long options count from a one-letter unambiguous prefix (`git reset
+  --h`), and `--shallow-file` takes a value.
+- **git aliases** are resolved from `-c alias.*`, `--config-env`,
+  `GIT_CONFIG_*`, a `git config alias.*` in the same command, and aliases
+  already stored in the repo. Also blocked:
+  - storing a destructive or shell alias;
+  - config that makes a plain command destructive (`remote.*.mirror`,
+    `remote.*.push=+…`, `clean.requireForce=false`);
+  - destructive plumbing: `update-ref -d`, `read-tree --reset -u`,
+    `checkout-index -f`, `send-pack --force`, `reflog delete`/`expire`,
+    `submodule update`/`deinit -f`, `branch -M`/`-C`.
+- **checkout of one path:** `./`, `..`, `:/`, a glob,
+  `--ours`/`--theirs`/`--conflict`/`-p`, or a file that exists in the
+  session folder. `git restore --staged` alone only unstages, like `git
+  reset <file>`, and is allowed; with `--worktree` it is blocked.
+- **find / fd** running any remover (`rm`, `unlink`, `shred`, or a shell
+  script that runs one), including through wrappers.
+- **gh:**
+  - delete / remove subcommands (`gh repo delete`, `gh issue delete`,
+    `gh release delete-asset`, `gh label delete`, …), which no rule
+    covered before; `gh alias delete` and `gh extension remove` touch only
+    local config and stay allowed;
+  - gh's own flags before `api`, and short-flag bundles (`-iX DELETE`);
+  - any method that is not a literal `GET` / `HEAD` counts as a write;
+  - `gh alias set` values are read as gh commands.
+- **Override:** refused for a command that runs its arguments as code
+  (`$'…'`, `<<<`, `bash`, `sh`, `eval`, `env`, `sudo`, `xargs`, `ssh`,
+  `python`, …). A nested remote delete is never overridable.
+- **Remote-delete verdict:**
+  - redirections are not branch names;
+  - `cd` / `pushd` / `popd`, `GIT_DIR`, `GIT_WORK_TREE` or `GIT_CONFIG*` in
+    the same command block, because the merged check could run in a
+    different repo;
+  - it blocks when the reader counted more deletes than it can place;
+  - a `pushurl` is checked.
+- **Speed:** both floor copies are built by one linear-time Python pass.
+  MCU's awk rm floor was quadratic too.
+
+Re-running every reviewer probe on the fixed hook found one more gap,
+`gh label delete`, now fixed. Everything else it let through falls in the
+accepted limits below.
+
+**MCU-Watchlist PRs #167 and #179 merged in (2026-11-17/18).** MCU-Watchlist
+kept developing the hook after PR #165. PR #167 decides every git rule from
+one command's own words (six review rounds). PR #179 scopes the rm floor and
+reads flags written in a variable or an `echo` in the same command. Both were
+written in parallel with this PR's own per-command work, from the same base,
+so neither hook passed the other's suite: MCU's 1,038 cases failed 170 here,
+and this PR's 668 failed 112 there.
+- **How:** a three-way merge of the suites from their common ancestor (MCU
+  32a8c635 = this PR's 77d074b). No shared case changed its expected result on
+  either side. Red: 174 of 1,340 failing against this PR's previous hook. The
+  reader is MCU's as of #179, with this PR's rules ported onto it, each driven
+  by its own failing cases:
+  - gh and find / fd rules;
+  - any-case and `=cmd` names, `{a..b}`, zsh glob qualifiers, `\r`, backtick
+    bodies read de-escaped, `re$()set` / `dr$()op`;
+  - restore / reflog / submodule rules;
+  - aliases from the whole line and the repo config, and `!` alias arguments;
+  - deletes asked about only as top-level commands.
+- **Hook:** MCU's reader protocol (`ASK-DELETE n`, an exact count; `CRASH
+  [GIT] [RM]`, where a crash on git push blocks with no override). #179's
+  scoped rm floor. The git floor stops at `--` (#167).
+- **Not ported:** MCU's `NEUTRAL_AWK` pass. It walks back over a word for every
+  hyphen, so its time grows with the square of a hyphen run. On MCU-Watchlist
+  main, a must-block command followed by 160,000 hyphens took 691 s, past
+  Claude Code's 600 s timeout, which lets the command run. Here the same rule
+  is `FLOOR_PY`'s linear `rmseg` mode: 0.1 s.
+- **Owner decisions (2026-11-17): block what can lose work, allow the rest.**
+  - `git checkout --ours/--theirs <path>`: blocked (MCU allows it).
+  - `git branch -M/-C` (and `-f -m`, `--move --force`): blocked only when the
+    target branch exists or can't be checked. MCU allows every single-name
+    form and blocks every two-name form.
+  - A delete in quoted text chained after one that could be asked about:
+    blocked (MCU asks).
+  - Push options or refspecs built from a variable: blocked, overridable (as
+    MCU).
+  - Flags written in the same command are seen (#179), which closes BL-013's
+    first probe.
+  - Floor exception: the rm floor no longer catches a delete that the old rule
+    caught only because an unrelated word held the letters `-rf`.
+- **Differential:** 11,599 commands (every suite command plus nine chained or
+  wrapped variants), each run through four hooks: v1.68.1, PR #61's previous
+  hook, the merged hook, and each of those with its reader switched off.
+  - **v1.68.1 blocks, merged allows (373):** all intended: the override,
+    heredoc bodies, prose that mentions rm, flags of another command on the
+    line, hyphenated names, `-- -f`, read-only GraphQL. One exception predates
+    this work: `git branch -f main origin/main`, which v1.68.1 blocked only by
+    accident (filed as BL-014, fixed below).
+  - **PR #61 blocks, merged allows (329):** all intended (ffmpeg and friends,
+    `"$BRANCH-fix"`, `checkout-index --prefix`, `cp * -rf`, variables that
+    bash really runs harmlessly), once the four fixes below were in.
+  - **PR #61 allows, merged blocks (908):** MCU's catches. No new wrong
+    refusals beyond the decisions above.
+  - **Floor alone (the reader switched off):** against PR #61's floor, the
+    merged floor newly allows 14 base commands. Twelve are #179's intended
+    fixes (`rm x.jpg; ffmpeg … -frames:v …`, `rm x.jpg; echo -fr`, `rm -i --
+    -frames:v`, a PR body that mentions rm, …); the other two are `git clean
+    -n -- -f` and `git push origin main -- -f`. That is what the brief
+    predicted (about 17 such fixes, plus `-- -f`). The other variants it
+    newly allows were caught only through the letters of `ffmpeg -frames:v` or
+    a `# note -rf` comment on the same line (the accepted floor exception).
+    Overall the merged floor blocks more: 4,733 against 4,640. Against
+    v1.68.1, the floor alone allows 456 that v1.68.1 blocked, and PR #61's
+    floor already allowed 441 of the same kinds (its per-command narrowing,
+    the override and heredoc bodies).
+  - No timeouts. The slowest calls were batches paused while the machine
+    slept.
+- **Fixed from the differential, tests first:**
+  - With the reader off, the override passed `git push -f --prune` (the floor
+    had only the overridable force-push rule). A floor rule now blocks a
+    literal `--mirror` / `--prune` with no override; `$x--mirror` stays an
+    overridable option built from a variable.
+  - The merged-delete parser missed a delete inside backticks once a comment
+    followed it.
+  - An rm in `( )`, `$( )` or backticks: the reader read `$x-rf` as a name,
+    and the floor only found an rm after a space or `; & |`.
+- **Independent review:** both reviewer agents stopped immediately with an API
+  safeguards error, before probing anything, and so did the `code-review` skill
+  (2026-11-20). None was rerun by rewording.
+- **Self-review (2026-11-20; the author, so not independent), three gaps,
+  each fixed tests first:**
+  - **A regression:** git aliases already stored in the repo's config, called
+    with no option (`git wipe` with `alias.wipe = reset --hard`, `!rm -rf …`,
+    `stash drop`), were allowed. MCU's reader skips a git command with no
+    option or refspec, and the alias text was never read. PR #61 blocked
+    these but had no case for them; there is now a stored-alias test repo.
+  - `git checkout -p <path>` was allowed, while the docs said it was blocked;
+    only `--patch` was caught.
+  - With the reader off, the floor cut the push at `--` for refspecs too, so
+    `git push origin -- +main` (a force push) passed. The `+refspec` rule now
+    reads the whole push; only options stop at `--`.
+- **BL-014 (owner, 2026-11-21): a forced create onto an existing branch.**
+  `git branch -f <branch> [<start>]`, `git checkout -B` and `git switch -C` /
+  `--force-create` move an existing branch, and its own commits survive only
+  in the reflog. No version of the hook blocked them; v1.68.1 caught `git
+  branch -f main origin/main` only by accident. They now follow the `-M/-C`
+  rule: blocked when the branch exists or can't be checked. Allowed: a new
+  branch, `branch -f` of the current branch (git refuses), and `-B` / `-C` of
+  the current branch with no start point (nothing moves). 27 cases.
+
+**Accepted limits**, documented in AUTONOMY-MODES and filed:
+- **BL-013:** values that exist only at run time, the same class as the
+  delete flag above. A flag written as a plain value in the same command is
+  seen since the MCU merge (`x=--hard; git reset $x`); still not seen:
+  - arrays, and values from an earlier separate command (`git "${x[@]}"`);
+  - a command name from a substitution or variable (`$(command -v git)`);
+  - arguments from stdin (`xargs`, `parallel`);
+  - shell functions and aliases.
+
+  Also interpreters given list-form arguments (`python3 -c
+  'subprocess.run([...])'`).
+- **BL-011:** the hook's own files. A Bash write, or the Edit / Write tools,
+  can change them.
+- **BL-012:** the hook's own failure. A timeout lets the command run, unless
+  its settings entry has `"onFailure": "block"` (Claude Code v2.1.295+).
+
+Verified:
+- before the MCU merge: rules 668/668 and wrappers 81/81 on bash 5.2
+  (docker) and macOS bash 3.2; MCU-Watchlist's unmodified 387-case suite
+  387/387 on both shells;
+- after it: rules 1,386/1,386 on macOS bash 3.2 (the merge commit's 1,341
+  also on bash 5.2 in docker; the final Linux run is CI's); wrappers 81/81;
+  MCU-Watchlist's unmodified #179 suite 1,025/1,038 from this repo, all 13
+  failures maintainer decisions (3 `--ours`/`--theirs`, 1 echo after a
+  delete, 9 `branch -M/-C` that depend on which branches the repo has).
+
+affected: setup-skeleton, sync-skeleton
+
 ## v1.68.1 — 2026-11-02
 
 ### Fix: validator check 12 failed on main right after merging v1.68.0

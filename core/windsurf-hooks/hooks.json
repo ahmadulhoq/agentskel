@@ -3,6 +3,9 @@
   "hooks": {
     "pre_run_command": [
       {
+        "command": ".windsurf/hooks/pre-bash-safety.sh"
+      },
+      {
         "command": ".windsurf/hooks/pre-commit-check.sh",
         "matcher": "git.*commit"
       },

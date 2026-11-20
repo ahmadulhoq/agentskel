@@ -45,6 +45,7 @@ and functions. See the `codebase-navigator` skill for guidance. Do not grep for 
 - **Present each PR URL on its own line** in the end-of-turn summary (one per line, format `PR #N: <url>`), not inline/comma-separated.
 - **Post-merge cleanup is mandatory** once the user confirms a merge — run the `git-flow` cleanup procedure (checkout default, pull, delete local branch, prune origin, update RESUME) BEFORE any next task.
 - **Honor user-specified commit granularity** for the duration of the workflow — if the user says "smaller commits" / "atomic commits" / "commit per file", apply to every commit until the workflow ends, not just the next one. Default when none given: one commit per logical change. Surface chosen granularity in the plan.
+- **Never self-approve a safety-hook override.** `AGENTSKEL_UNSAFE=i-understand` (the pre-bash-safety escape hatch) may be used only after the user has approved that exact command in the current exchange. When the hook blocks a command, stop and ask; never reword a command to get past it — a variant that slips through is a bug to report.
 
 ## Security — Non-Negotiable
 

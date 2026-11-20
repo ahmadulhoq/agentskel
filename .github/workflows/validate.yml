@@ -26,5 +26,7 @@ jobs:
         run: bash scripts/validate.test.sh
       - name: Commit hook suite (all four tools)
         run: bash core/claude-hooks/pre-commit-check.test.sh
-      - name: Safety hook suite
+      - name: Safety hook suite (rules)
         run: bash core/claude-hooks/pre-bash-safety.test.sh
+      - name: Safety hook suite (Gemini / Cursor / Windsurf / Codex wrappers)
+        run: bash core/claude-hooks/pre-bash-safety-tools.test.sh

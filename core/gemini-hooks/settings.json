@@ -6,6 +6,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": ".gemini/hooks/pre-bash-safety.sh",
+            "name": "agentskel-pre-bash-safety",
+            "description": "Block destructive shell commands (agentskel's shared rule engine; runs first)."
+          },
+          {
+            "type": "command",
             "command": ".gemini/hooks/pre-commit-check.sh",
             "name": "agentskel-pre-commit",
             "description": "Block git commit if a skill/workflow description in the commit exceeds 1024 chars; skeleton repo: VERSION consistency."
