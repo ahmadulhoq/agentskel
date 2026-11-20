@@ -299,8 +299,11 @@ git_floor() {
 
 # --- Force pushes ---
 PUSH_SEG=$(git_floor_seg push)
+# Refspecs are still read after `--` (`git push origin -- +main` force-pushes),
+# so the +refspec rule reads the push uncut; only options stop at `--`.
+PUSH_ALL=$(grep -oE "$GIT_CMD"'push([[:space:]][^;&|]*)?' <<<"$CMD_GITFLOOR" || true)
 if git_floor push '--force([[:space:]]|=|$)|--force[-_]with[-_]lease|-f([[:space:]]|$)' \
-   || { [ -n "$PUSH_SEG" ] && grep -qE 'push[[:space:]]+([^;&|]*[[:space:]])?["'\'']?\+[^:[:space:]"'\'']' <<<"$PUSH_SEG"; }; then
+   || { [ -n "$PUSH_ALL" ] && grep -qE 'push[[:space:]]+([^;&|]*[[:space:]])?["'\'']?\+[^:[:space:]"'\'']' <<<"$PUSH_ALL"; }; then
     # The second pattern (v1.69.0): a `+` refspec (`+main`, `+HEAD:main`)
     # force-pushes that ref with no --force flag at all. `+:x` is a delete,
     # decided by the remote-delete verdict below. Bounded to one command, so

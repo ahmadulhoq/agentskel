@@ -289,8 +289,20 @@ and this PR's 668 failed 112 there.
   - An rm in `( )`, `$( )` or backticks: the reader read `$x-rf` as a name,
     and the floor only found an rm after a space or `; & |`.
 - **Independent review:** both reviewer agents stopped immediately with an API
-  safeguards error, before probing anything. They were not rerun by rewording
-  the brief. The review is still open (see the PR).
+  safeguards error, before probing anything, and so did the `code-review` skill
+  (2026-11-20). None was rerun by rewording.
+- **Self-review (2026-11-20; the author, so not independent), three gaps,
+  each fixed tests first:**
+  - **A regression:** git aliases already stored in the repo's config, called
+    with no option (`git wipe` with `alias.wipe = reset --hard`, `!rm -rf …`,
+    `stash drop`), were allowed. MCU's reader skips a git command with no
+    option or refspec, and the alias text was never read. PR #61 blocked
+    these but had no case for them; there is now a stored-alias test repo.
+  - `git checkout -p <path>` was allowed, while the docs said it was blocked;
+    only `--patch` was caught.
+  - With the reader off, the floor cut the push at `--` for refspecs too, so
+    `git push origin -- +main` (a force push) passed. The `+refspec` rule now
+    reads the whole push; only options stop at `--`.
 
 **Accepted limits**, documented in AUTONOMY-MODES and filed:
 - **BL-013:** values that exist only at run time, the same class as the
@@ -312,7 +324,7 @@ Verified:
 - before the MCU merge: rules 668/668 and wrappers 81/81 on bash 5.2
   (docker) and macOS bash 3.2; MCU-Watchlist's unmodified 387-case suite
   387/387 on both shells;
-- after it: rules 1,373/1,373 on macOS bash 3.2 (the merge commit's 1,341
+- after it: rules 1,386/1,386 on macOS bash 3.2 (the merge commit's 1,341
   also on bash 5.2 in docker; the final Linux run is CI's); wrappers 81/81;
   MCU-Watchlist's unmodified #179 suite 1,025/1,038 from this repo, all 13
   failures maintainer decisions (3 `--ours`/`--theirs`, 1 echo after a

@@ -1413,7 +1413,8 @@ def git_rule(sub, args, depth, plain_ok=False, defining=False):
         if has(shorts, "f") or is_option(longs, "force"):
             return "git checkout --force / -f — discards uncommitted changes", "block"
         targets = names + (after or [])
-        if targets and ("*" in longs or is_option(longs, "ours", "theirs", "conflict", "patch")):
+        if targets and ("*" in longs or has(shorts, "p")
+                        or is_option(longs, "ours", "theirs", "conflict", "patch")):
             # agentskel's owner (2026-11-17): --ours / --theirs <path> overwrites
             # the file, discarding edits or a hand resolution (MCU-Watchlist allows it)
             return "git checkout --ours/--theirs/--conflict/--patch <path> — overwrites those files", "block"
@@ -1907,7 +1908,11 @@ def check_command(cmd, depth=0, raw=(frozenset(), False), top=True):
         j = git_subcommand(target, at)
         if j >= len(target):
             continue
-        if target is words and j == at + 1 and not env and not tail[j + 1]:
+        # The shortcut below skips a git command with no option or refspec.
+        # Not for an alias: its text carries the options (`git wipe` with
+        # alias.wipe = reset --hard stored in the repo; MCU-merge review).
+        if (target is words and j == at + 1 and not env and not tail[j + 1]
+                and sub_name(words[j]).lower() not in ALIASES):
             sub = sub_name(words[j])
             if sub == "checkout":
                 rest = words[j + 1:]
