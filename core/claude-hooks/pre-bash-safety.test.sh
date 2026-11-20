@@ -251,7 +251,7 @@ check BLOCKED 'git branch -d --force x'
 check BLOCKED 'git branch --del --forc x'
 check BLOCKED 'git -C /other/repo branch -d -f x'
 check ALLOWED 'git branch -d merged-x && ls -f'
-check ALLOWED 'git branch -f main origin/main'
+# (`git branch -f main origin/main` moved to the BL-014 cases: it depends on the repo)
 # --- review of PR #165: a long command is checked in full ---
 # `echo "$CMD" | grep -q` under pipefail failed OPEN once the command was long
 # enough for grep's early exit to break the pipe (blocked at 74 KB, allowed at
@@ -1000,7 +1000,7 @@ check ALLOWED 'git clean -n -e keep-f'
 check ALLOWED 'git push origin x && tail -f log'
 check ALLOWED 'git push -u origin topic-f'
 check ALLOWED 'git push origin main && npm install --force'
-check ALLOWED 'git push origin main && git branch -f main origin/main'
+# (`git push origin main && git branch -f main origin/main` moved to the BL-014 cases)
 check ALLOWED 'git push -o ci.skip origin x'
 check ALLOWED 'git commit -m "push -f was refused" && git push origin main'
 check ALLOWED 'git branch -d old-D'
@@ -1641,6 +1641,44 @@ check_in BLOCKED "$R" 'GIT_DIR=/tmp/x git branch -M solo'
 check_in BLOCKED "$R" 'git branch -M $(echo merged-a)'
 check_in BLOCKED "$R" 'bash -c "git branch -M merged-a"'
 check_in ALLOWED "$R" 'git add -A && git commit -m init && git branch -M solo && git push -u origin solo'
+# BL-014 (owner, 2026-11-21): a forced create onto an existing branch moves
+# it, and its own commits survive only in the reflog: `git branch -f`,
+# `git checkout -B`, `git switch -C`. Same rule as -M/-C: blocked when the
+# branch exists or can't be checked. `branch -f` of the current branch is
+# refused by git; `checkout -B` / `switch -C` of the current branch with no
+# start point resets it to where it is.
+check_in BLOCKED "$R" 'git branch -f merged-a'
+check_in BLOCKED "$R" 'git branch -f unmerged main'
+check_in BLOCKED "$R" 'git branch --force squashed HEAD~1'
+check_in BLOCKED "$R" 'git branch -f MERGED-B origin/main'
+check_in BLOCKED "$R" 'git push origin main && git branch -f merged-b origin/main'
+check_in BLOCKED "$R" 'git branch -f "$B" main'
+check_in ALLOWED "$R" 'git branch -f brand-new'
+check_in ALLOWED "$R" 'git branch -f brand-new main'
+check_in ALLOWED "$R" 'git branch -f main'
+# moved here from the PR #165 and v1.69.0 sections, where they ran in whatever repo
+# the suite runs in: a `-f` in a later command is not a force push, and `main` is the
+# current branch here, which git refuses to move
+check_in ALLOWED "$R" 'git branch -f main origin/main'
+check_in ALLOWED "$R" 'git push origin main && git branch -f main origin/main'
+check_in BLOCKED "$R" 'git checkout -B merged-a'
+check_in BLOCKED "$R" 'git checkout -B main origin/main'
+check_in BLOCKED "$R" 'git checkout -qB unmerged'
+check_in BLOCKED "$R" 'git checkout -Bunmerged'
+check_in BLOCKED "$R" 'git checkout -B "$B"'
+check_in BLOCKED "$R" 'git checkout -b t9 && git checkout -B t9 HEAD~1'
+check_in ALLOWED "$R" 'git checkout -B main'
+check_in ALLOWED "$R" 'git checkout -B feature-new'
+check_in ALLOWED "$R" 'git checkout -B feature-new origin/main'
+check_in ALLOWED "$R" 'git checkout -b fresh'
+check_in BLOCKED "$R" 'git switch -C unmerged'
+check_in BLOCKED "$R" 'git switch -C main HEAD~1'
+check_in BLOCKED "$R" 'git switch --force-create squashed'
+check_in BLOCKED "$R" 'git switch --force-create=squashed'
+check_in BLOCKED "$R" 'cd .. && git switch -C x'
+check_in ALLOWED "$R" 'git switch -C topic-new'
+check_in ALLOWED "$R" 'git switch -C main'
+check_in ALLOWED "$R" 'git switch -c topic-new2'
 # 9. a brace bomb no longer blinds the reader (it keeps the word unexpanded)
 check BLOCKED "echo {a,b}{a,b}{a,b}{a,b}{a,b}{a,b}{a,b}{a,b}{a,b}; git push --mirror origin"
 check BLOCKED "echo {a,b}{a,b}{a,b}{a,b}{a,b}{a,b}{a,b}{a,b}{a,b}; git \$'\\x70ush' --mirror origin"
