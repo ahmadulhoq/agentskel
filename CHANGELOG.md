@@ -4,6 +4,26 @@
      Format: ## [DATE] — [Short Description]
      Include: what changed, why, files affected, any risks. -->
 
+## 2026-11-21 — v1.69.0 (same PR #61): BL-014; MCU TD-024 hooks looked at
+
+User: "do 014 in this pr, then look at the 2 other hooks". BL-014: git branch -f,
+checkout -B, switch -C/--force-create follow the -M/-C repo-state rule
+(branch_reset_overwrites + option_value; CREATES became a count so checkout -B
+doesn't flag itself). 27 cases, tests first (6c4331d, 3777efc); 2 older
+`git branch -f main origin/main` cases moved into $R (cwd-dependent). First
+version crashed the reader on every `switch -c` (names discarded by `_`) — the
+hook's fallback turned that into blocks, caught by the BL-014 block run.
+Suite 1,413/1,413 macOS; CI green on 3777efc.
+
+MCU PR #191 (TD-024, merged 2026-11-16): hooks named by a relative path in
+settings.json are not found from any folder but the repo root (exit 127), and
+Claude Code then runs the command UNCHECKED. MCU: 479 of 3,584 commands. Verified
+here: the same `echo` naming a hard reset is blocked from the repo root and
+allowed from .memory/. agentskel's template (core/claude-hooks/settings.json)
+and the gemini/cursor/windsurf/codex configs all use relative paths. Filed
+BL-015 (P0) and BL-016 (port TD-024's stop-verify / pre-memory-push). Plan
+presented; not implemented.
+
 ## 2026-11-20 — v1.69.0 (same PR #61): self-review of the MCU merge
 
 User asked for a review before merge. The `code-review` skill (forked) died at
