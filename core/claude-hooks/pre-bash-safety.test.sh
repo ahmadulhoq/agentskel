@@ -1875,5 +1875,32 @@ floor ALLOWED 'rm "$OUT-firmware.bin"'
 floor ALLOWED '(rm $x-report.txt "$y-final-firmware.bin")'
 floor ALLOWED '(cd sub && rm -f a.jpg); ffmpeg -i a.mp4 -frames:v 1 b.jpg'
 
+# --- review of the MCU merge (2026-11-20) ---
+# Aliases already stored in the repo's config, called with no option: MCU's
+# reader skips a git command with no option or refspec, so the alias was
+# never expanded (PR #61 blocked these; it had no case for them).
+A="$TMP/aliases"; mkdir -p "$A"; gq "$A" init -q
+gq "$A" config alias.wipe 'reset --hard'
+gq "$A" config alias.nuke '!rm -rf build'
+gq "$A" config alias.drop 'stash drop'
+gq "$A" config alias.st 'status'
+check_in BLOCKED "$A" 'git wipe'
+check_in BLOCKED "$A" 'git wipe HEAD'
+check_in BLOCKED "$A" 'git nuke'
+check_in BLOCKED "$A" 'git drop'
+check_in BLOCKED "$A" 'git WIPE'
+check_in ALLOWED "$A" 'git st'
+check_in ALLOWED "$A" 'git status'
+# checkout -p / --patch with a path discards the hunks it is told to (the
+# docs said blocked; only --patch was)
+check BLOCKED 'git checkout -p src/a.ts'
+check BLOCKED 'git checkout -p HEAD~1 -- src/a.ts'
+check BLOCKED 'git checkout --patch src/a.ts'
+# after `--`, git push still reads refspecs: a +refspec there is a force push,
+# for the floor too (it is cut at `--` for options only)
+floor BLOCKED 'git push origin -- +main'
+check BLOCKED 'git push origin -- +main'
+floor ALLOWED 'git push origin main -- -f'
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
